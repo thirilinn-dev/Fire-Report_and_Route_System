@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fire Report System</title>
+    <style>
+        
+        .lang-btn {
+            float: right;
+            padding: 8px 15px;
+            cursor: pointer;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="lang-btn" id="langToggle" onclick="toggleLanguage()">English</button>
+
+    <h2 id="title-text">🔥 အရေးပေါ် မီးလောင်မှု သတင်းပို့ရန်</h2>
+    
+    <form method="POST" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <label id="phone-label">သတင်းပို့သူ ဖုန်းနံပါတ်:</label><br>
+        <input type="text" name="reporter_phone" required placeholder="09xxxxxxxxx"><br><br>
+
+        <label id="scale-label">မီးလောင်မှုအဆင့် (Fire Scale):</label><br>
+        <select name="fire_scale" id="fire-scale-select">
+            <option value="1" id="opt-1">အဆင့် ၁ (အသေးစား)</option>
+            <option value="2" id="opt-2">အဆင့် ၂ (အလတ်စား)</option>
+            <option value="3" id="opt-3">အဆင့် ၃ (အကြီးစား)</option>
+        </select><br><br>
+
+        <label id="photo-label">မီးလောင်မှု အခြေအနေ ဓာတ်ပုံတင်ရန် (ရွေးချယ်နိုင်သည်):</label><br>
+        <input type="file" name="fire_image" accept="image/*"><br><br>
+
+        <input type="hidden" id="lat" name="latitude">
+        <input type="hidden" id="lng" name="longitude">
+
+        <button type="submit" id="submitBtn" disabled>တည်နေရာ ဖတ်နေဆဲဖြစ်၍ ခေတ္တစောင့်ပါ...</button>
+    </form>
+
+    <script>
+       
+        let currentLang = "my"; 
+
+        const languages = {
+            en: {
+                title: "🔥 Emergency Fire Reporting",
+                phoneLabel: "Reporter's Phone Number:",
+                scaleLabel: "Fire Severity Scale:",
+                photoLabel: "Upload Fire Condition Photo (Optional):",
+                opt1: "Level 1 (Minor)",
+                opt2: "Level 2 (Medium)",
+                opt3: "Level 3 (Major)",
+                loadingGPS: "Fetching location, please wait...",
+                readyBtn: "🚨 Report Fire Now",
+                toggleText: "မြန်မာ"
+            },
+            my: {
+                title: "🔥 အရေးပေါ် မီးလောင်မှု သတင်းပို့ရန်",
+                phoneLabel: "သတင်းပို့သူ ဖုန်းနံပါတ်:",
+                scaleLabel: "မီးလောင်မှုအဆင့် (Fire Scale):",
+                photoLabel: "မီးလောင်မှု အခြေအနေ ဓာတ်ပုံတင်ရန် (ရွေးချယ်နိုင်သည်):",
+                opt1: "အဆင့် ၁ (အသေးစား)",
+                opt2: "အဆင့် ၂ (အလတ်စား)",
+                opt3: "အဆင့် ၃ (အကြီးစား)",
+                loadingGPS: "တည်နေရာ ဖတ်နေဆဲဖြစ်၍ ခေတ္တစောင့်ပါ...",
+                readyBtn: "🚨 အခုချက်ချင်း သတင်းပို့မည်",
+                toggleText: "English"
+            }
+        };
+
+        
+        function toggleLanguage() {
+            currentLang = (currentLang === "my") ? "en" : "my";
+            updateUI();
+        }
+
+        function updateUI() {
+            const data = languages[currentLang];
+            document.getElementById("title-text").innerText = data.title;
+            document.getElementById("phone-label").innerText = data.phoneLabel;
+            document.getElementById("scale-label").innerText = data.scaleLabel;
+            document.getElementById("photo-label").innerText = data.photoLabel;
+            document.getElementById("opt-1").innerText = data.opt1;
+            document.getElementById("opt-2").innerText = data.opt2;
+            document.getElementById("opt-3").innerText = data.opt3;
+            document.getElementById("langToggle").innerText = data.toggleText;
+            
+            
+            let btn = document.getElementById("submitBtn");
+            if (btn.disabled) {
+                btn.innerText = data.loadingGPS;
+            } else {
+                btn.innerText = data.readyBtn;
+            }
+        }
+
+        
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError);
+        }
+
+        function showPosition(position) {
+            document.getElementById("lat").value = position.coords.latitude;
+            document.getElementById("lng").value = position.coords.longitude;
+            
+            let btn = document.getElementById("submitBtn");
+            btn.disabled = false;
+            btn.style.backgroundColor = "red";
+            btn.style.color = "white";
+            updateUI(); 
+        }
+
+        function showError(error) {
+            alert("Location access is required / တည်နေရာ သိခွင့်ပြုရန် လိုအပ်ပါသည်။");
+        }
+    </script>
+</body>
+</html>

@@ -16,7 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from Tbl_firereport import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('report/',views.report_fire,name='report_fire'),
 ]
