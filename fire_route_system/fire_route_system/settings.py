@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'fireapp',
     'Tbl_user',
+    'Tbl_firestation',
 ]
 
 MIDDLEWARE = [
