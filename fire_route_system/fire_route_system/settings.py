@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'Tbl_firestation',
     'Tbl_firereport',
     'Tbl_dispatch',
+    'Tbl_watersources',
+
 ]
 
 MIDDLEWARE = [
