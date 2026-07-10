@@ -1,0 +1,10 @@
+<h2>Add Water Source</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button type="submit">Save</button>
+</form>
+
+<a href="{% url 'water_list' %}">Back</a>

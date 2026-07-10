@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Water Sources</title>
+</head>
+<body>
+
+<h2>Water Sources</h2>
+
+<a href="{% url 'water_add' %}">Add Water Source</a>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Latitude</th>
+        <th>Longitude</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+
+    {% for water in waters %}
+    <tr>
+        <td>{{ water.source_id }}</td>
+        <td>{{ water.source_type }}</td>
+        <td>{{ water.description }}</td>
+        <td>{{ water.latitude }}</td>
+        <td>{{ water.longitude }}</td>
+        <td>{{ water.status }}</td>
+
+        <td>
+            <a href="{% url 'water_edit' water.source_id %}">Edit</a>
+
+            <a href="{% url 'water_delete' water.source_id %}">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+</body>
+</html>

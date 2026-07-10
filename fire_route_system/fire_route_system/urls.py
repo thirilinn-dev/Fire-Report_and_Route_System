@@ -23,3 +23,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('Tbl_user.urls')),
 ]
+from django.urls import path, include
+
+urlpatterns = [
+    path('waters/', include('Tbl_watersources.urls')),
+]

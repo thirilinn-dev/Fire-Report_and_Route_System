@@ -1,0 +1,13 @@
+<h2>Delete Water Source</h2>
+
+<p>Are you sure you want to delete?</p>
+
+<p>{{ water.source_type }}</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    <button type="submit">Delete</button>
+</form>
+
+<a href="{% url 'water_list' %}">Cancel</a>
