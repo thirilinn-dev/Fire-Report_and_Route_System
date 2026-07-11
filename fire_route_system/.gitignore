@@ -1,0 +1,6 @@
+venv/
+<<<<<<< HEAD
+fire_route_system/db.sqlite3
+=======
+fire_route_system/db.sqlite3
+>>>>>>> 8411e2b0841025dabce418887528ea5942e93fad
