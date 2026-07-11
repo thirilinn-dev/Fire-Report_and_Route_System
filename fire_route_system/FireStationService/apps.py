@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class TblFirestationConfig(AppConfig):
-    name = 'Tbl_firestation'
+class FireStationServiceConfig(AppConfig):
+    name = 'FireStationService'

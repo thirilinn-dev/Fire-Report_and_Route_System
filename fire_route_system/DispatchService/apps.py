@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class TblDispatchConfig(AppConfig):
-    name = 'Tbl_dispatch'
+class DispatchServiceConfig(AppConfig):
+    name = 'DispatchService'

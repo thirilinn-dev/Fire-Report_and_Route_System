@@ -38,10 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'fireapp',
-    'Tbl_user',
-    'Tbl_firestation',
-    'Tbl_firereport',
-    'Tbl_watersources',
+    'DataAccess',
+    'UserService',
+    'FireReportService',
+    'FireStationService',
+    'WaterSourcesService',
+    'DispatchService',
 ]
 
 MIDDLEWARE = [
@@ -59,7 +61,7 @@ ROOT_URLCONF = 'fire_route_system.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR/'Tbl_firereport' / 'templates'],
+        'DIRS': [BASE_DIR/'FireReportService' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

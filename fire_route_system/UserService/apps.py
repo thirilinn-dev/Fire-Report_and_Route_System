@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class TblUserConfig(AppConfig):
-    name = 'Tbl_user'
+class UserServiceConfig(AppConfig):
+    name = 'UserService'

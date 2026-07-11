@@ -1,3 +1,4 @@
+from django import forms
 from .models import Dispatch
 
 class DispatchForm(forms.ModelForm):
