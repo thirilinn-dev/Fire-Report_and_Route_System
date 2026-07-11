@@ -13,7 +13,7 @@ from Tbl_firereport import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('report/',views.report_fire,name='report_fire'),
+    path('report/',include('Tbl_firereport.urls')),
 ]
 
 
