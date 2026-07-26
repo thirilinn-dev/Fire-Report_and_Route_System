@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Fire Stations - Fire Route System{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <h1>🚒 Fire Stations</h1>
+    <a href="{% url 'firestation_create' %}" class="btn btn-orange">➕ Register Fire Station</a>
+</div>
+
+<div class="card" style="padding: 1.5rem;">
+    {% if stations %}
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Station ID</th>
+                        <th>Name</th>
+                        <th>Address</th>
+                        <th>Contact Number</th>
+                        <th>Coordinates (Lat, Lng)</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for station in stations %}
+                        <tr>
+                            <td><strong>#{{ station.station_id }}</strong></td>
+                            <td>{{ station.name }}</td>
+                            <td>{{ station.address }}</td>
+                            <td>{{ station.contact_number }}</td>
+                            <td>
+                                <a href="https://www.google.com/maps?q={{ station.latitude }},{{ station.longitude }}" target="_blank" style="color: var(--color-black); text-decoration: underline;">
+                                    {{ station.latitude|floatformat:4 }}, {{ station.longitude|floatformat:4 }} ↗
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge badge-{% if station.status|lower == 'maintenance' %}dispatched{% elif station.status|lower == 'inactive' %}inactive{% else %}active{% endif %}">
+                                    {{ station.status }}
+                                </span>
+                            </td>
+                            <td style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="{% url 'firestation_update' station.station_id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
+                                <a href="{% url 'firestation_delete' station.station_id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
+            <p style="font-size: 1.2rem; margin-bottom: 1rem;">No fire stations registered yet.</p>
+            <a href="{% url 'firestation_create' %}" class="btn btn-orange">Register the First Station</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

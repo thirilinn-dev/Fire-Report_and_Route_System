@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete User Account - Fire Route System{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h1>Delete User Account</h1>
+
+    <div class="card" style="border-color: var(--btn-red);">
+        <h3 style="color: var(--btn-red); margin-bottom: 1rem;">⚠️ Warning: This action cannot be undone!</h3>
+        <p style="margin-bottom: 1.5rem; font-size: 1.05rem;">
+            Are you sure you want to delete the user account <strong>"{{ user.username }}"</strong> (ID: #{{ user.id }}, Role: {{ user.role.role_name }})?
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button type="submit" class="btn btn-red">Delete Permanently</button>
+                <a href="{% url 'user_list' %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

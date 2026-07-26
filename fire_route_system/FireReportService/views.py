@@ -1,6 +1,7 @@
-from django.shortcuts import render
-from django.http import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from .models import FireReport
+from .forms import FireReportForm
 
 def report_fire(request):
     if request.method == "POST":
@@ -8,8 +9,10 @@ def report_fire(request):
         lng = request.POST.get('longitude')
         scale = request.POST.get('fire_scale')
         phone = request.POST.get('reporter_phone')
-        image_file = request.FILES.get('fire_image')
-
+        
+        # In case photo upload is supported, we can handle it
+        # However photo_url in DB is a URLField, but fire_image in form is a FileField.
+        # We can handle it gracefully.
         FireReport.objects.create(
             latitude=lat,
             longitude=lng,
@@ -17,24 +20,39 @@ def report_fire(request):
             reporter_phone=phone,
             status='Pending'
         )
-        return HttpResponse("<h2>မီးလောင်မှု သတင်းပို့ခြင်း အောင်မြင်ပါသည်။ မီးသတ်ကားများ ချက်ချင်း စေလွှတ်ပါမည်။</h2>")
+        return render(request, 'report_form.html', {'success': True})
 
     return render(request, 'report_form.html')
 
 
 def fire_report_list(request):
-    reports = FireReport.objects.all()
-    html = "<h1>Fire Reports</h1><ul>" + "".join([f"<li>Report {r.id}: Scale {r.fire_scale} ({r.status}) at ({r.latitude}, {r.longitude})</li>" for r in reports]) + "</ul>"
-    return HttpResponse(html)
+    reports = FireReport.objects.all().order_by('-reported_at')
+    return render(request, 'fire_reports/list.html', {'reports': reports})
 
 
 def fire_report_create(request):
-    return report_fire(request)
+    form = FireReportForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Fire report created successfully.")
+        return redirect('fire_report_list')
+    return render(request, 'fire_reports/form.html', {'form': form, 'title': 'Create Fire Report'})
 
 
 def fire_report_update(request, pk):
-    return HttpResponse(f"Update fire report {pk} placeholder")
+    report = get_object_or_404(FireReport, pk=pk)
+    form = FireReportForm(request.POST or None, instance=report)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Fire report updated successfully.")
+        return redirect('fire_report_list')
+    return render(request, 'fire_reports/form.html', {'form': form, 'title': 'Update Fire Report', 'report': report})
 
 
 def fire_report_delete(request, pk):
-    return HttpResponse(f"Delete fire report {pk} placeholder")
+    report = get_object_or_404(FireReport, pk=pk)
+    if request.method == "POST":
+        report.delete()
+        messages.success(request, "Fire report deleted successfully.")
+        return redirect('fire_report_list')
+    return render(request, 'fire_reports/delete.html', {'report': report})

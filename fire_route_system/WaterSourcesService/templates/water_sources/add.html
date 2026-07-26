@@ -1,10 +1,35 @@
-<h2>Add Water Source</h2>
+{% extends 'base.html' %}
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
+{% block title %}Add Water Source - Fire Route System{% endblock %}
 
-    <button type="submit">Save</button>
-</form>
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h1>Add Water Source</h1>
 
-<a href="{% url 'water_list' %}">Back</a>
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <span style="font-size: 0.8rem; color: var(--gray-dark);">{{ field.help_text }}</span>
+                    {% endif %}
+                    {% if field.errors %}
+                        <div style="color: var(--btn-red); font-size: 0.85rem; margin-top: 0.25rem;">
+                            {{ field.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
+                <button type="submit" class="btn btn-orange">Save Water Source</button>
+                <a href="{% url 'water_list' %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Emergency Dispatches - Fire Route System{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <h1>📋 Emergency Dispatches</h1>
+    <a href="{% url 'dispatch_create' %}" class="btn btn-orange">🚒 New Dispatch Deployment</a>
+</div>
+
+<div class="card" style="padding: 1.5rem;">
+    {% if dispatches %}
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dispatch ID</th>
+                        <th>Incident</th>
+                        <th>Responding Station</th>
+                        <th>Water Source</th>
+                        <th>Operator</th>
+                        <th>Dispatched At</th>
+                        <th>Resolved At</th>
+                        <th>Resources Deployed</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dispatch in dispatches %}
+                        <tr>
+                            <td><strong>#{{ dispatch.id }}</strong></td>
+                            <td>
+                                <a href="{% url 'fire_report_update' dispatch.report.id %}" style="color: var(--color-black); font-weight: 600;">
+                                    Report #{{ dispatch.report.id }} (Scale {{ dispatch.report.fire_scale }})
+                                </a>
+                            </td>
+                            <td>{{ dispatch.station.name }}</td>
+                            <td>{{ dispatch.source.source_type }} (#{{ dispatch.source.source_id }})</td>
+                            <td>{{ dispatch.operator.username }}</td>
+                            <td>{{ dispatch.dispatched_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                {% if dispatch.resolved_at %}
+                                    <span class="badge badge-active">{{ dispatch.resolved_at|date:"Y-m-d H:i" }}</span>
+                                {% else %}
+                                    <span class="badge badge-pending">Active</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ dispatch.resources_deployed|default:"-" }}</td>
+                            <td style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="{% url 'dispatch_update' dispatch.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
+                                <a href="{% url 'dispatch_delete' dispatch.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
+            <p style="font-size: 1.2rem; margin-bottom: 1rem;">No dispatch operations logged yet.</p>
+            <a href="{% url 'dispatch_create' %}" class="btn btn-orange">Log the First Dispatch</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,125 +1,285 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Fire Report System</title>
-    <style>
-        
-        .lang-btn {
-            float: right;
-            padding: 8px 15px;
-            cursor: pointer;
-            background-color: #333;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-    </style>
-</head>
-<body>
+{% extends 'base.html' %}
 
+{% block title %}🚨 Report Fire - Fire Route System{% endblock %}
+
+{% block extra_css %}
+.emergency-card {
+    max-width: 600px;
+    margin: 2rem auto;
+    border: 2px solid var(--btn-red);
+    box-shadow: 0 8px 30px rgba(195, 0, 16, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.emergency-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(90deg, var(--btn-red), var(--btn-orange));
+}
+
+.lang-btn {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    padding: 0.5rem 1rem;
+    font-weight: 700;
+    background-color: var(--color-black);
+    color: var(--bg-white);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all var(--transition-speed);
+}
+
+.lang-btn:hover {
+    background-color: var(--btn-orange);
+}
+
+.gps-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--btn-red);
+    background-color: #ffebee;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
+}
+
+.gps-badge.ready {
+    color: #2e7d32;
+    background-color: #e8f5e9;
+}
+
+.success-container {
+    text-align: center;
+    padding: 2rem 0;
+}
+
+.success-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.big-emergency-btn {
+    width: 100%;
+    font-size: 1.25rem;
+    padding: 1.25rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+    font-weight: 800;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.big-emergency-btn:disabled {
+    background-color: var(--btn-orange);
+    color: var(--bg-white);
+    cursor: not-allowed;
+    opacity: 0.8;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+.big-emergency-btn:not(:disabled) {
+    background-color: var(--btn-red);
+    color: var(--bg-white);
+    box-shadow: 0 6px 20px rgba(195, 0, 16, 0.3);
+}
+
+.big-emergency-btn:not(:disabled):hover {
+    background-color: var(--color-black);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+{% endblock %}
+
+{% block content %}
+<div class="card emergency-card">
+    {% if not success %}
     <button class="lang-btn" id="langToggle" onclick="toggleLanguage()">English</button>
+    {% endif %}
 
-    <h2 id="title-text">🔥 အရေးပေါ် မီးလောင်မှု သတင်းပို့ရန်</h2>
-    
-    <form method="POST" action="" enctype="multipart/form-data">
-        {% csrf_token %}
+    <div id="form-content">
+        {% if success %}
+        <div class="success-container">
+            <div class="success-icon">✅</div>
+            <h2 id="success-title">သတင်းပို့ခြင်း အောင်မြင်ပါသည်</h2>
+            <p id="success-desc" style="font-size: 1.1rem; margin-bottom: 2rem;">မီးသတ်ကားများနှင့် ကယ်ဆယ်ရေးအဖွဲ့များ ချက်ချင်း စေလွှတ်ပါမည်။</p>
+            <a href="{% url 'report_fire' %}" class="btn btn-black">သတင်းအသစ် ထပ်ပို့ရန် / Send Another Report</a>
+        </div>
+        {% else %}
+        <h2 id="title-text" style="padding-right: 6rem; margin-bottom: 0.5rem;">🔥 အရေးပေါ် မီးလောင်မှု သတင်းပို့ရန်</h2>
         
-        <label id="phone-label">သတင်းပို့သူ ဖုန်းနံပါတ်:</label><br>
-        <input type="text" name="reporter_phone" required placeholder="09xxxxxxxxx"><br><br>
+        <div id="gps-status" class="gps-badge">
+            <span class="dot">📍</span> <span id="gps-text">တည်နေရာကို ရယူရန် စောင့်ဆိုင်းနေပါသည်...</span>
+        </div>
 
-        <label id="scale-label">မီးလောင်မှုအဆင့် (Fire Scale):</label><br>
-        <select name="fire_scale" id="fire-scale-select">
-            <option value="1" id="opt-1">အဆင့် ၁ (အသေးစား)</option>
-            <option value="2" id="opt-2">အဆင့် ၂ (အလတ်စား)</option>
-            <option value="3" id="opt-3">အဆင့် ၃ (အကြီးစား)</option>
-        </select><br><br>
+        <form method="POST" action="" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label id="phone-label">သတင်းပို့သူ ဖုန်းနံပါတ်:</label>
+                <input type="tel" name="reporter_phone" required placeholder="09xxxxxxxxx" pattern="[0-9+]{7,15}">
+            </div>
 
-        <label id="photo-label">မီးလောင်မှု အခြေအနေ ဓာတ်ပုံတင်ရန် (ရွေးချယ်နိုင်သည်):</label><br>
-        <input type="file" name="fire_image" accept="image/*"><br><br>
+            <div class="form-group">
+                <label id="scale-label">မီးလောင်မှုအဆင့် (Fire Scale):</label>
+                <select name="fire_scale" id="fire-scale-select">
+                    <option value="1" id="opt-1">အဆင့် ၁ (အသေးစား)</option>
+                    <option value="2" id="opt-2">အဆင့် ၂ (အလတ်စား)</option>
+                    <option value="3" id="opt-3">အဆင့် ၃ (အကြီးစား)</option>
+                </select>
+            </div>
 
-        <input type="hidden" id="lat" name="latitude">
-        <input type="hidden" id="lng" name="longitude">
+            <div class="form-group">
+                <label id="photo-label">မီးလောင်မှု အခြေအနေ ဓာတ်ပုံတင်ရန် (ရွေးချယ်နိုင်သည်):</label>
+                <input type="file" name="fire_image" accept="image/*" class="file-input">
+            </div>
 
-        <button type="submit" id="submitBtn" disabled>တည်နေရာ ဖတ်နေဆဲဖြစ်၍ ခေတ္တစောင့်ပါ...</button>
-    </form>
+            <input type="hidden" id="lat" name="latitude">
+            <input type="hidden" id="lng" name="longitude">
 
-    <script>
-       
-        let currentLang = "my"; 
+            <button type="submit" id="submitBtn" class="big-emergency-btn" disabled>
+                တည်နေရာ ဖတ်နေဆဲဖြစ်၍ ခေတ္တစောင့်ပါ...
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
 
-        const languages = {
-            en: {
-                title: "🔥 Emergency Fire Reporting",
-                phoneLabel: "Reporter's Phone Number:",
-                scaleLabel: "Fire Severity Scale:",
-                photoLabel: "Upload Fire Condition Photo (Optional):",
-                opt1: "Level 1 (Minor)",
-                opt2: "Level 2 (Medium)",
-                opt3: "Level 3 (Major)",
-                loadingGPS: "Fetching location, please wait...",
-                readyBtn: "🚨 Report Fire Now",
-                toggleText: "မြန်မာ"
-            },
-            my: {
-                title: "🔥 အရေးပေါ် မီးလောင်မှု သတင်းပို့ရန်",
-                phoneLabel: "သတင်းပို့သူ ဖုန်းနံပါတ်:",
-                scaleLabel: "မီးလောင်မှုအဆင့် (Fire Scale):",
-                photoLabel: "မီးလောင်မှု အခြေအနေ ဓာတ်ပုံတင်ရန် (ရွေးချယ်နိုင်သည်):",
-                opt1: "အဆင့် ၁ (အသေးစား)",
-                opt2: "အဆင့် ၂ (အလတ်စား)",
-                opt3: "အဆင့် ၃ (အကြီးစား)",
-                loadingGPS: "တည်နေရာ ဖတ်နေဆဲဖြစ်၍ ခေတ္တစောင့်ပါ...",
-                readyBtn: "🚨 အခုချက်ချင်း သတင်းပို့မည်",
-                toggleText: "English"
-            }
-        };
+{% block extra_js %}
+<script>
+    let currentLang = "my"; 
 
-        
-        function toggleLanguage() {
-            currentLang = (currentLang === "my") ? "en" : "my";
-            updateUI();
+    const languages = {
+        en: {
+            title: "🔥 Emergency Fire Reporting",
+            phoneLabel: "Reporter's Phone Number:",
+            scaleLabel: "Fire Severity Scale:",
+            photoLabel: "Upload Fire Condition Photo (Optional):",
+            opt1: "Level 1 (Minor)",
+            opt2: "Level 2 (Medium)",
+            opt3: "Level 3 (Major)",
+            loadingGPS: "Fetching location, please wait...",
+            readyBtn: "🚨 Report Fire Now",
+            toggleText: "မြန်မာ",
+            gpsWaiting: "Waiting for GPS location access...",
+            gpsReady: "GPS location acquired successfully",
+            successTitle: "Report Submitted Successfully",
+            successDesc: "Fire rescue teams and engines will be dispatched immediately."
+        },
+        my: {
+            title: "🔥 အရေးပေါ် မီးလောင်မှု သတင်းပို့ရန်",
+            phoneLabel: "သတင်းပို့သူ ဖုန်းနံပါတ်:",
+            scaleLabel: "မီးလောင်မှုအဆင့် (Fire Scale):",
+            photoLabel: "မီးလောင်မှု အခြေအနေ ဓာတ်ပုံတင်ရန် (ရွေးချယ်နိုင်သည်):",
+            opt1: "အဆင့် ၁ (အသေးစား)",
+            opt2: "အဆင့် ၂ (အလတ်စား)",
+            opt3: "အဆင့် ၃ (အကြီးစား)",
+            loadingGPS: "တည်နေရာ ဖတ်နေဆဲဖြစ်၍ ခေတ္တစောင့်ပါ...",
+            readyBtn: "🚨 အခုချက်ချင်း သတင်းပို့မည်",
+            toggleText: "English",
+            gpsWaiting: "တည်နေရာကို ရယူရန် စောင့်ဆိုင်းနေပါသည်...",
+            gpsReady: "တည်နေရာကို အောင်မြင်စွာ ရရှိပြီးပါပြီ",
+            successTitle: "သတင်းပို့ခြင်း အောင်မြင်ပါသည်",
+            successDesc: "မီးသတ်ကားများနှင့် ကယ်ဆယ်ရေးအဖွဲ့များ ချက်ချင်း စေလွှတ်ပါမည်။"
         }
+    };
 
-        function updateUI() {
-            const data = languages[currentLang];
-            document.getElementById("title-text").innerText = data.title;
-            document.getElementById("phone-label").innerText = data.phoneLabel;
-            document.getElementById("scale-label").innerText = data.scaleLabel;
-            document.getElementById("photo-label").innerText = data.photoLabel;
-            document.getElementById("opt-1").innerText = data.opt1;
-            document.getElementById("opt-2").innerText = data.opt2;
-            document.getElementById("opt-3").innerText = data.opt3;
-            document.getElementById("langToggle").innerText = data.toggleText;
-            
-            
-            let btn = document.getElementById("submitBtn");
+    function toggleLanguage() {
+        currentLang = (currentLang === "my") ? "en" : "my";
+        updateUI();
+    }
+
+    function updateUI() {
+        const data = languages[currentLang];
+        
+        const titleText = document.getElementById("title-text");
+        if (titleText) titleText.innerText = data.title;
+        
+        const phoneLabel = document.getElementById("phone-label");
+        if (phoneLabel) phoneLabel.innerText = data.phoneLabel;
+        
+        const scaleLabel = document.getElementById("scale-label");
+        if (scaleLabel) scaleLabel.innerText = data.scaleLabel;
+        
+        const photoLabel = document.getElementById("photo-label");
+        if (photoLabel) photoLabel.innerText = data.photoLabel;
+        
+        const opt1 = document.getElementById("opt-1");
+        if (opt1) opt1.innerText = data.opt1;
+        
+        const opt2 = document.getElementById("opt-2");
+        if (opt2) opt2.innerText = data.opt2;
+        
+        const opt3 = document.getElementById("opt-3");
+        if (opt3) opt3.innerText = data.opt3;
+        
+        const langToggle = document.getElementById("langToggle");
+        if (langToggle) langToggle.innerText = data.toggleText;
+        
+        const successTitle = document.getElementById("success-title");
+        if (successTitle) successTitle.innerText = data.successTitle;
+        
+        const successDesc = document.getElementById("success-desc");
+        if (successDesc) successDesc.innerText = data.successDesc;
+
+        let btn = document.getElementById("submitBtn");
+        if (btn) {
             if (btn.disabled) {
                 btn.innerText = data.loadingGPS;
+                document.getElementById("gps-text").innerText = data.gpsWaiting;
             } else {
                 btn.innerText = data.readyBtn;
+                document.getElementById("gps-text").innerText = data.gpsReady;
             }
         }
+    }
 
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+
+    function showPosition(position) {
+        const latInput = document.getElementById("lat");
+        const lngInput = document.getElementById("lng");
+        if (latInput && lngInput) {
+            latInput.value = position.coords.latitude;
+            lngInput.value = position.coords.longitude;
+        }
         
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(showPosition, showError);
-        }
-
-        function showPosition(position) {
-            document.getElementById("lat").value = position.coords.latitude;
-            document.getElementById("lng").value = position.coords.longitude;
-            
-            let btn = document.getElementById("submitBtn");
+        let btn = document.getElementById("submitBtn");
+        if (btn) {
             btn.disabled = false;
-            btn.style.backgroundColor = "red";
-            btn.style.color = "white";
-            updateUI(); 
         }
+        
+        let gpsStatus = document.getElementById("gps-status");
+        if (gpsStatus) {
+            gpsStatus.classList.add("ready");
+        }
+        
+        updateUI(); 
+    }
 
-        function showError(error) {
-            alert("Location access is required / တည်နေရာ သိခွင့်ပြုရန် လိုအပ်ပါသည်။");
-        }
-    </script>
-</body>
-</html>
+    function showError(error) {
+        alert("Location access is required / တည်နေရာ သိခွင့်ပြုရန် လိုအပ်ပါသည်။");
+    }
+</script>
+{% endblock %}

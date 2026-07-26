@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Users List - Fire Route System{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <h1>👥 User Accounts</h1>
+    <a href="{% url 'user_create' %}" class="btn btn-orange">➕ Create User</a>
+</div>
+
+<div class="card" style="padding: 1.5rem;">
+    {% if users %}
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Phone Number</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td><strong>#{{ user.id }}</strong></td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.phone_number|default:"-" }}</td>
+                            <td>
+                                <span class="badge" style="border: 1px solid var(--color-black); color: var(--color-black);">
+                                    {{ user.role.role_name }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge badge-{% if user.status|lower == 'active' %}active{% elif user.status|lower == 'inactive' %}inactive{% else %}dispatched{% endif %}">
+                                    {{ user.status }}
+                                </span>
+                            </td>
+                            <td style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="{% url 'user_update' user.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
+                                <a href="{% url 'user_delete' user.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
+            <p style="font-size: 1.2rem; margin-bottom: 1rem;">No users created yet.</p>
+            <a href="{% url 'user_create' %}" class="btn btn-orange">Create the First User Account</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

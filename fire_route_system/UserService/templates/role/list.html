@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}User Roles - Fire Route System{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <h1>🛡️ User Roles</h1>
+    <a href="{% url 'role_create' %}" class="btn btn-orange">➕ Create Role</a>
+</div>
+
+<div class="card" style="padding: 1.5rem;">
+    {% if roles %}
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Role ID</th>
+                        <th>Role Name</th>
+                        <th>Description</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for role in roles %}
+                        <tr>
+                            <td><strong>#{{ role.id }}</strong></td>
+                            <td>{{ role.role_name }}</td>
+                            <td>{{ role.description|default:"-" }}</td>
+                            <td>{{ role.created_at|date:"Y-m-d H:i" }}</td>
+                            <td style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="{% url 'role_update' role.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
+                                <a href="{% url 'role_delete' role.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
+            <p style="font-size: 1.2rem; margin-bottom: 1rem;">No user roles defined yet.</p>
+            <a href="{% url 'role_create' %}" class="btn btn-orange">Create the First Role</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

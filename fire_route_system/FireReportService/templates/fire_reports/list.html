@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Incidents List - Fire Route System{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <h1>🔥 Active Fire Incidents</h1>
+    <a href="{% url 'fire_report_create' %}" class="btn btn-orange">🚨 Log New Incident</a>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="card" style="padding: 1rem; border-left: 5px solid {% if message.tags == 'success' %}#2e7d32{% else %}var(--btn-red){% endif %}; margin-bottom: 1.5rem; background-color: #f9f9f9;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card" style="padding: 1.5rem;">
+    {% if reports %}
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Reporter Phone</th>
+                        <th>Severity Scale</th>
+                        <th>Location (Lat, Lng)</th>
+                        <th>Status</th>
+                        <th>Reported At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                        <tr>
+                            <td><strong>#{{ report.id }}</strong></td>
+                            <td>{{ report.reporter_phone|default:"Anonymous" }}</td>
+                            <td>
+                                <span class="badge" style="background-color: {% if report.fire_scale == 3 %}#ffebee{% elif report.fire_scale == 2 %}#fff3e0{% else %}#e8f5e9{% endif %}; color: {% if report.fire_scale == 3 %}var(--btn-red){% elif report.fire_scale == 2 %}var(--btn-orange){% else %}#2e7d32{% endif %}; border: 1px solid currentColor;">
+                                    Scale {{ report.fire_scale }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="https://www.google.com/maps?q={{ report.latitude }},{{ report.longitude }}" target="_blank" style="color: var(--color-black); text-decoration: underline;">
+                                    {{ report.latitude|floatformat:4 }}, {{ report.longitude|floatformat:4 }} ↗
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ report.status|lower }}">
+                                    {{ report.status }}
+                                </span>
+                            </td>
+                            <td>{{ report.reported_at|date:"Y-m-d H:i" }}</td>
+                            <td style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="{% url 'fire_report_update' report.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
+                                <a href="{% url 'fire_report_delete' report.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
+            <p style="font-size: 1.2rem; margin-bottom: 1rem;">No fire incidents logged yet.</p>
+            <a href="{% url 'report_fire' %}" class="btn btn-orange">Go to Emergency Reporting Form</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

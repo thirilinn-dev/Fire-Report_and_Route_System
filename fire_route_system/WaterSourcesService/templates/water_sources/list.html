@@ -1,43 +1,57 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Water Sources</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-<h2>Water Sources</h2>
+{% block title %}Water Sources - Fire Route System{% endblock %}
 
-<a href="{% url 'water_add' %}">Add Water Source</a>
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <h1>💧 Water Sources</h1>
+    <a href="{% url 'water_add' %}" class="btn btn-orange">➕ Add Water Source</a>
+</div>
 
-<table border="1" cellpadding="8">
-    <tr>
-        <th>ID</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Latitude</th>
-        <th>Longitude</th>
-        <th>Status</th>
-        <th>Action</th>
-    </tr>
-
-    {% for water in waters %}
-    <tr>
-        <td>{{ water.source_id }}</td>
-        <td>{{ water.source_type }}</td>
-        <td>{{ water.description }}</td>
-        <td>{{ water.latitude }}</td>
-        <td>{{ water.longitude }}</td>
-        <td>{{ water.status }}</td>
-
-        <td>
-            <a href="{% url 'water_edit' water.source_id %}">Edit</a>
-
-            <a href="{% url 'water_delete' water.source_id %}">Delete</a>
-        </td>
-    </tr>
-    {% endfor %}
-
-</table>
-
-</body>
-</html>
+<div class="card" style="padding: 1.5rem;">
+    {% if waters %}
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Source ID</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Coordinates (Lat, Lng)</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for water in waters %}
+                        <tr>
+                            <td><strong>#{{ water.source_id }}</strong></td>
+                            <td>{{ water.source_type }}</td>
+                            <td>{{ water.description|default:"-" }}</td>
+                            <td>
+                                <a href="https://www.google.com/maps?q={{ water.latitude }},{{ water.longitude }}" target="_blank" style="color: var(--color-black); text-decoration: underline;">
+                                    {{ water.latitude|floatformat:4 }}, {{ water.longitude|floatformat:4 }} ↗
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge badge-{% if water.status|lower == 'operational' %}active{% elif water.status|lower == 'unavailable' %}inactive{% else %}dispatched{% endif %}">
+                                    {{ water.status }}
+                                </span>
+                            </td>
+                            <td style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="{% url 'water_edit' water.source_id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
+                                <a href="{% url 'water_delete' water.source_id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
+            <p style="font-size: 1.2rem; margin-bottom: 1rem;">No water sources recorded yet.</p>
+            <a href="{% url 'water_add' %}" class="btn btn-orange">Add the First Water Source</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

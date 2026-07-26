@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, api_views
 
 urlpatterns = [
 
@@ -14,5 +14,9 @@ urlpatterns = [
     path('delete/<int:station_id>/',
          views.firestation_delete,
          name='firestation_delete'),
+
+    # API endpoints
+    path('api/firestations/', api_views.firestation_list_create, name='api_firestation_list_create'),
+    path('api/firestations/<int:station_id>/', api_views.firestation_detail, name='api_firestation_detail'),
 
 ]
