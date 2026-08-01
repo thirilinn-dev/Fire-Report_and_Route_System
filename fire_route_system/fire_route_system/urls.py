@@ -6,6 +6,6 @@ urlpatterns = [
     path('', include('FireStationService.urls')),
     path('report/', include('FireReportService.urls')),
     path('', include('UserService.urls')),
-    path('waters/', include('WaterSourcesService.urls')),
     path('', include('DispatchService.urls')),
+    path('map/', include('maps.urls')),
 ]

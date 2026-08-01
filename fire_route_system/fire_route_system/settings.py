@@ -41,8 +41,8 @@ INSTALLED_APPS = [
     'UserService',
     'FireReportService',
     'FireStationService',
-    'WaterSourcesService',
     'DispatchService',
+    'maps',
 ]
 
 MIDDLEWARE = [

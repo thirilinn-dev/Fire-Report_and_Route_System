@@ -2,14 +2,13 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
-from DataAccess.models import Dispatch, FireReport, FireStation, WaterSource, User
+from DataAccess.models import Dispatch, FireReport, FireStation, User
 
 def serialize_dispatch(dispatch):
     return {
         'id': dispatch.id,
         'report_id': dispatch.report_id,
         'station_id': dispatch.station_id,
-        'source_id': dispatch.source_id,
         'operator_id': dispatch.operator_id,
         'dispatched_at': dispatch.dispatched_at.isoformat() if dispatch.dispatched_at else None,
         'resolved_at': dispatch.resolved_at.isoformat() if dispatch.resolved_at else None,
@@ -28,7 +27,7 @@ def dispatch_list_create(request):
         except (json.JSONDecodeError, TypeError):
             return JsonResponse({'error': 'Invalid JSON body'}, status=400)
 
-        required_fields = ['report_id', 'station_id', 'source_id', 'operator_id']
+        required_fields = ['report_id', 'station_id', 'operator_id']
         for field in required_fields:
             if field not in data:
                 return JsonResponse({'error': f'{field} is required'}, status=400)
@@ -45,11 +44,6 @@ def dispatch_list_create(request):
             return JsonResponse({'error': f"FireStation with id {data['station_id']} does not exist"}, status=400)
 
         try:
-            source = WaterSource.objects.get(pk=data['source_id'])
-        except WaterSource.DoesNotExist:
-            return JsonResponse({'error': f"WaterSource with id {data['source_id']} does not exist"}, status=400)
-
-        try:
             operator = User.objects.get(pk=data['operator_id'])
         except User.DoesNotExist:
             return JsonResponse({'error': f"User (Operator) with id {data['operator_id']} does not exist"}, status=400)
@@ -64,7 +58,6 @@ def dispatch_list_create(request):
             dispatch = Dispatch.objects.create(
                 report=report,
                 station=station,
-                source=source,
                 operator=operator,
                 resolved_at=resolved_at_val,
                 resources_deployed=data.get('resources_deployed')
@@ -92,7 +85,7 @@ def dispatch_detail(request, pk):
             return JsonResponse({'error': 'Invalid JSON body'}, status=400)
 
         if request.method == 'PUT':
-            required_fields = ['report_id', 'station_id', 'source_id', 'operator_id']
+            required_fields = ['report_id', 'station_id', 'operator_id']
             for field in required_fields:
                 if field not in data:
                     return JsonResponse({'error': f'{field} is required for PUT'}, status=400)
@@ -100,9 +93,8 @@ def dispatch_detail(request, pk):
             try:
                 report = FireReport.objects.get(pk=data['report_id'])
                 station = FireStation.objects.get(pk=data['station_id'])
-                source = WaterSource.objects.get(pk=data['source_id'])
                 operator = User.objects.get(pk=data['operator_id'])
-            except (FireReport.DoesNotExist, FireStation.DoesNotExist, WaterSource.DoesNotExist, User.DoesNotExist) as e:
+            except (FireReport.DoesNotExist, FireStation.DoesNotExist, User.DoesNotExist) as e:
                 return JsonResponse({'error': str(e)}, status=400)
 
             resolved_at_val = None
@@ -113,7 +105,6 @@ def dispatch_detail(request, pk):
 
             dispatch.report = report
             dispatch.station = station
-            dispatch.source = source
             dispatch.operator = operator
             dispatch.resolved_at = resolved_at_val
             dispatch.resources_deployed = data.get('resources_deployed')
@@ -128,11 +119,6 @@ def dispatch_detail(request, pk):
                     dispatch.station = FireStation.objects.get(pk=data['station_id'])
                 except FireStation.DoesNotExist:
                     return JsonResponse({'error': f"FireStation with id {data['station_id']} does not exist"}, status=400)
-            if 'source_id' in data:
-                try:
-                    dispatch.source = WaterSource.objects.get(pk=data['source_id'])
-                except WaterSource.DoesNotExist:
-                    return JsonResponse({'error': f"WaterSource with id {data['source_id']} does not exist"}, status=400)
             if 'operator_id' in data:
                 try:
                     dispatch.operator = User.objects.get(pk=data['operator_id'])

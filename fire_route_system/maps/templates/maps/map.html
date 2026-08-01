@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Interactive Location Map - Fire Route System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .map-page-layout {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .landmark-sidebar {
+        width: 380px;
+        min-width: 320px;
+        background-color: var(--bg-white);
+        border-right: 1px solid var(--gray-medium);
+        display: flex;
+        flex-direction: column;
+        padding: 2rem;
+        box-sizing: border-box;
+        height: 100%;
+        overflow: hidden;
+        transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+    }
+    .landmark-list {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 0.25rem;
+    }
+    .location-item-card {
+        transition: all 0.2s ease;
+        padding: 1rem;
+        border: 1px solid var(--gray-medium);
+        border-radius: 8px;
+        cursor: pointer;
+        background-color: var(--bg-white);
+        margin-bottom: 0.75rem;
+    }
+    .location-item-card:hover {
+        border-color: var(--btn-orange) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(226, 82, 37, 0.08);
+    }
+    .map-container {
+        flex: 1;
+        height: 100%;
+        position: relative;
+    }
+
+    @media (max-width: 900px) {
+        .map-page-layout {
+            flex-direction: column-reverse;
+        }
+        .landmark-sidebar {
+            width: 100%;
+            height: 40vh;
+            border-right: none;
+            border-top: 1px solid var(--gray-medium);
+            padding: 1.5rem;
+        }
+        .map-container {
+            width: 100%;
+            height: 60vh;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+<div class="map-page-layout">
+    <!-- Landmark Sidebar Panel -->
+    <aside class="landmark-sidebar">
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem;">
+            <h2 style="margin-bottom: 0; font-size: 1.5rem;">📍 Landmark Registry</h2>
+            <p style="font-size: 0.9rem; color: var(--gray-dark); line-height: 1.4; margin: 0;">
+                Explore and fly to designated landmarks across the Mandalay command area.
+            </p>
+        </div>
+        <div class="landmark-list">
+            {% if locations %}
+                {% for loc in locations %}
+                <div class="location-item-card" onclick="flyToCoordinates({{ loc.latitude }}, {{ loc.longitude }})">
+                    <h4 style="margin: 0 0 0.25rem 0; font-size: 1rem; font-weight: 700;">📍 {{ loc.name }}</h4>
+                    <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: var(--gray-dark); line-height: 1.4;">{{ loc.description }}</p>
+                    <span style="font-family: monospace; font-size: 0.75rem; color: var(--btn-orange);">Lat: {{ loc.latitude|floatformat:4 }}, Lng: {{ loc.longitude|floatformat:4 }}</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 2rem 0; color: var(--gray-dark);">
+                    <p>No landmarks found.</p>
+                </div>
+            {% endif %}
+        </div>
+    </aside>
+
+    <!-- Map container -->
+    <div id="map" class="map-container"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Set up strict bounding box for Mandalay Region
+        const southWest = L.latLng(21.7500, 95.9000);
+        const northEast = L.latLng(22.2000, 96.2500);
+        const bounds = L.latLngBounds(southWest, northEast);
+
+        // Initialize local Leaflet map centered strictly on Mandalay
+        const map = L.map('map', {
+            zoomControl: true,
+            scrollWheelZoom: true,
+            maxBounds: bounds,
+            maxBoundsViscosity: 1.0,
+            minZoom: 11
+        }).setView([21.9750, 96.0830], 13);
+
+        window.mapInstance = map; // Expose globally for interactive elements
+
+        // OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const markerGroup = L.featureGroup();
+
+        // Custom Gold/Amber Pill Pin for Landmarks
+        const landmarkIcon = L.divIcon({
+            className: 'custom-marker-landmark',
+            html: `<div style="background-color: #FFB300; width: 14px; height: 14px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 8px rgba(255, 179, 0, 0.6); transform: scale(1.1);"></div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        // Load landmark list from Django context JSON
+        const locations = {{ locations_json|safe }};
+        
+        locations.forEach(loc => {
+            const popupHTML = `
+                <div class="popup-content" style="min-width: 180px;">
+                    <h3 style="color: #FFB300; font-size: 1rem; margin: 0 0 0.5rem 0; font-weight:700; display:flex; align-items:center; gap:0.25rem;">📍 ${loc.name}</h3>
+                    <p style="font-size: 0.85rem; color: var(--gray-dark); margin: 0; line-height:1.4;">${loc.description}</p>
+                </div>
+            `;
+            const marker = L.marker([loc.latitude, loc.longitude], { icon: landmarkIcon }).bindPopup(popupHTML);
+            markerGroup.addLayer(marker);
+        });
+
+        markerGroup.addTo(map);
+
+        // Auto-fit coordinates bounds on load
+        if (markerGroup.getLayers().length > 0) {
+            map.fitBounds(markerGroup.getBounds(), { padding: [50, 50] });
+        }
+
+        // Prevent Leaflet canvas gray boxes by invalidating size
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 200);
+
+        window.addEventListener('resize', function() {
+            map.invalidateSize();
+        });
+    });
+
+    // Global helper for centering viewport from list clicks
+    window.flyToCoordinates = function(lat, lng) {
+        if (window.mapInstance) {
+            window.mapInstance.flyTo([lat, lng], 14, {
+                animate: true,
+                duration: 1.5
+            });
+        }
+    }
+</script>
+{% endblock %}

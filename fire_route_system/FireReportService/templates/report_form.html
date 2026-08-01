@@ -109,9 +109,7 @@
 
 {% block content %}
 <div class="card emergency-card">
-    {% if not success %}
     <button class="lang-btn" id="langToggle" onclick="toggleLanguage()">English</button>
-    {% endif %}
 
     <div id="form-content">
         {% if success %}
@@ -119,7 +117,7 @@
             <div class="success-icon">✅</div>
             <h2 id="success-title">သတင်းပို့ခြင်း အောင်မြင်ပါသည်</h2>
             <p id="success-desc" style="font-size: 1.1rem; margin-bottom: 2rem;">မီးသတ်ကားများနှင့် ကယ်ဆယ်ရေးအဖွဲ့များ ချက်ချင်း စေလွှတ်ပါမည်။</p>
-            <a href="{% url 'report_fire' %}" class="btn btn-black">သတင်းအသစ် ထပ်ပို့ရန် / Send Another Report</a>
+            <a href="{% url 'report_fire' %}" id="success-btn" class="btn btn-black">သတင်းအသစ် ထပ်ပို့ရန်</a>
         </div>
         {% else %}
         <h2 id="title-text" style="padding-right: 6rem; margin-bottom: 0.5rem;">🔥 အရေးပေါ် မီးလောင်မှု သတင်းပို့ရန်</h2>
@@ -164,7 +162,7 @@
 
 {% block extra_js %}
 <script>
-    let currentLang = "my"; 
+    let currentLang = localStorage.getItem("lang") || "my"; 
 
     const languages = {
         en: {
@@ -181,7 +179,8 @@
             gpsWaiting: "Waiting for GPS location access...",
             gpsReady: "GPS location acquired successfully",
             successTitle: "Report Submitted Successfully",
-            successDesc: "Fire rescue teams and engines will be dispatched immediately."
+            successDesc: "Fire rescue teams and engines will be dispatched immediately.",
+            successBtn: "Send Another Report"
         },
         my: {
             title: "🔥 အရေးပေါ် မီးလောင်မှု သတင်းပို့ရန်",
@@ -197,12 +196,14 @@
             gpsWaiting: "တည်နေရာကို ရယူရန် စောင့်ဆိုင်းနေပါသည်...",
             gpsReady: "တည်နေရာကို အောင်မြင်စွာ ရရှိပြီးပါပြီ",
             successTitle: "သတင်းပို့ခြင်း အောင်မြင်ပါသည်",
-            successDesc: "မီးသတ်ကားများနှင့် ကယ်ဆယ်ရေးအဖွဲ့များ ချက်ချင်း စေလွှတ်ပါမည်။"
+            successDesc: "မီးသတ်ကားများနှင့် ကယ်ဆယ်ရေးအဖွဲ့များ ချက်ချင်း စေလွှတ်ပါမည်။",
+            successBtn: "သတင်းအသစ် ထပ်ပို့ရန်"
         }
     };
 
     function toggleLanguage() {
         currentLang = (currentLang === "my") ? "en" : "my";
+        localStorage.setItem("lang", currentLang);
         updateUI();
     }
 
@@ -239,17 +240,30 @@
         const successDesc = document.getElementById("success-desc");
         if (successDesc) successDesc.innerText = data.successDesc;
 
+        const successBtn = document.getElementById("success-btn");
+        if (successBtn) successBtn.innerText = data.successBtn;
+
         let btn = document.getElementById("submitBtn");
+        let gpsStatus = document.getElementById("gps-status");
+        let gpsText = document.getElementById("gps-text");
+        
         if (btn) {
             if (btn.disabled) {
                 btn.innerText = data.loadingGPS;
-                document.getElementById("gps-text").innerText = data.gpsWaiting;
             } else {
                 btn.innerText = data.readyBtn;
-                document.getElementById("gps-text").innerText = data.gpsReady;
             }
         }
+        
+        if (gpsText) {
+            const isReady = gpsStatus && gpsStatus.classList.contains("ready");
+            gpsText.innerText = isReady ? data.gpsReady : data.gpsWaiting;
+        }
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        updateUI();
+    });
 
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(showPosition, showError);

@@ -1,7 +1,7 @@
 import json
 from django.test import TestCase, Client
 from django.urls import reverse
-from DataAccess.models import Role, User, FireReport, FireStation, WaterSource, Dispatch
+from DataAccess.models import Role, User, FireReport, FireStation, Dispatch
 
 class DispatchServiceAPITests(TestCase):
     def setUp(self):
@@ -31,17 +31,9 @@ class DispatchServiceAPITests(TestCase):
             longitude=96.15,
             status="Active"
         )
-        self.source = WaterSource.objects.create(
-            source_type="Hydrant",
-            description="Near station",
-            latitude=16.84,
-            longitude=96.14,
-            status="Operational"
-        )
         self.dispatch1 = Dispatch.objects.create(
             report=self.report,
             station=self.station,
-            source=self.source,
             operator=self.operator,
             resources_deployed="2 fire engines, 5 firefighters"
         )
@@ -68,7 +60,6 @@ class DispatchServiceAPITests(TestCase):
         payload = {
             'report_id': new_report.pk,
             'station_id': self.station.pk,
-            'source_id': self.source.pk,
             'operator_id': self.operator.pk,
             'resources_deployed': '1 water tanker'
         }
@@ -83,7 +74,6 @@ class DispatchServiceAPITests(TestCase):
         payload = {
             'report_id': 999, # Non-existent report
             'station_id': self.station.pk,
-            'source_id': self.source.pk,
             'operator_id': self.operator.pk,
             'resources_deployed': 'Error case'
         }
@@ -102,7 +92,6 @@ class DispatchServiceAPITests(TestCase):
         payload = {
             'report_id': self.report.pk,
             'station_id': self.station.pk,
-            'source_id': self.source.pk,
             'operator_id': self.operator.pk,
             'resources_deployed': 'Updated resources description',
             'resolved_at': '2026-07-11T12:00:00Z'

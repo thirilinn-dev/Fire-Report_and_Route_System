@@ -40,9 +40,11 @@
                                     {{ user.status }}
                                 </span>
                             </td>
-                            <td style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <a href="{% url 'user_update' user.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
-                                <a href="{% url 'user_delete' user.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem; align-items: center; white-space: nowrap;">
+                                    <a href="{% url 'user_update' user.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
+                                    <a href="{% url 'user_delete' user.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}

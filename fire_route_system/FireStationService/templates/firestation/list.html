@@ -2,58 +2,529 @@
 
 {% block title %}Fire Stations - Fire Route System{% endblock %}
 
-{% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-    <h1>🚒 Fire Stations</h1>
-    <a href="{% url 'firestation_create' %}" class="btn btn-orange">➕ Register Fire Station</a>
-</div>
+{% block extra_css %}
+<style>
+    .stations-page-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+        background-color: var(--bg-white);
+    }
+    .stations-header {
+        padding: 2.5rem 2.5rem 1rem 2.5rem;
+        border-bottom: 1px solid var(--gray-medium);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        flex-shrink: 0;
+    }
+    .stations-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    /* Tabs styling */
+    .station-tabs {
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 2px solid var(--gray-medium);
+        padding-bottom: 0.25rem;
+    }
+    .tab-btn {
+        background: none;
+        border: none;
+        padding: 0.5rem 1.25rem;
+        font-family: var(--font-family);
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--gray-dark);
+        cursor: pointer;
+        border-radius: 6px 6px 0 0;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    .tab-btn:hover {
+        color: var(--color-black);
+        background-color: var(--gray-light);
+    }
+    .tab-btn.active {
+        color: var(--btn-orange);
+    }
+    .tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: var(--btn-orange);
+        border-radius: 3px 3px 0 0;
+    }
 
-<div class="card" style="padding: 1.5rem;">
-    {% if stations %}
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Station ID</th>
-                        <th>Name</th>
-                        <th>Address</th>
-                        <th>Contact Number</th>
-                        <th>Coordinates (Lat, Lng)</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
+    /* Views Layout */
+    .stations-view-container {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+    }
+    .view-panel {
+        display: none;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+    }
+    .view-panel.active {
+        display: block;
+    }
+    .scrollable-view {
+        overflow-y: auto;
+        padding: 2rem 2.5rem 2.5rem 2.5rem;
+    }
+
+    /* Card View Grid */
+    .stations-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+    .station-card {
+        background-color: var(--bg-white);
+        border: 1px solid var(--gray-medium);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.25s ease;
+    }
+    .station-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        border-color: var(--btn-orange);
+    }
+    .station-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background-color: var(--gray-medium);
+    }
+    .station-card.status-active::before {
+        background-color: #2e7d32;
+    }
+    .station-card.status-maintenance::before {
+        background-color: var(--btn-orange);
+    }
+    .station-card.status-inactive::before {
+        background-color: #37474f;
+    }
+
+    /* Left side details modal box */
+    .station-details-panel {
+        position: absolute;
+        top: 1.5rem;
+        left: 1.5rem;
+        width: 320px;
+        max-width: calc(100% - 3rem);
+        background-color: var(--bg-white);
+        border: 1px solid var(--gray-medium);
+        border-radius: 8px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        padding: 1.5rem;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        transform: translateX(-50px);
+        opacity: 0;
+        pointer-events: none;
+    }
+    .station-details-panel.show {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .panel-close-btn {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gray-dark);
+        cursor: pointer;
+        line-height: 1;
+        transition: color 0.2s ease;
+    }
+    .panel-close-btn:hover {
+        color: var(--btn-orange);
+    }
+
+    @media (max-width: 900px) {
+        .stations-header {
+            padding: 1.5rem 1.5rem 1rem 1.5rem;
+        }
+        .scrollable-view {
+            padding: 1.5rem;
+        }
+        .station-details-panel {
+            top: 1rem;
+            left: 1rem;
+            width: auto;
+            right: 1rem;
+            transform: translateY(20px);
+        }
+        .station-details-panel.show {
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_layout %}
+<div class="stations-page-container">
+    <!-- Stations Header Section -->
+    <div class="stations-header">
+        <div class="stations-title-row">
+            <h1 style="margin: 0; font-size: 2rem;">🚒 Fire Stations</h1>
+            <a href="{% url 'firestation_create' %}" class="btn btn-orange">➕ Register Fire Station</a>
+        </div>
+        <div class="station-tabs">
+            <button class="tab-btn active" data-view="table">Table View</button>
+            <button class="tab-btn" data-view="card">Card View</button>
+            <button class="tab-btn" data-view="map">Map View</button>
+        </div>
+    </div>
+
+    <!-- Views Container -->
+    <div class="stations-view-container">
+        
+        <!-- Table View Panel -->
+        <div id="table-view-panel" class="view-panel active scrollable-view">
+            <div class="card">
+                {% if stations %}
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Station ID</th>
+                                    <th>Name</th>
+                                    <th>Address</th>
+                                    <th>Contact Number</th>
+                                    <th>Coordinates (Lat, Lng)</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for station in stations %}
+                                    <tr>
+                                        <td><strong>#{{ station.station_id }}</strong></td>
+                                        <td>{{ station.name }}</td>
+                                        <td>{{ station.address }}</td>
+                                        <td>{{ station.contact_number }}</td>
+                                        <td>
+                                            <a href="https://www.google.com/maps?q={{ station.latitude }},{{ station.longitude }}" target="_blank" style="color: var(--color-black); text-decoration: underline;">
+                                                {{ station.latitude|floatformat:4 }}, {{ station.longitude|floatformat:4 }} ↗
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-{% if station.status|lower == 'maintenance' %}dispatched{% elif station.status|lower == 'inactive' %}inactive{% else %}active{% endif %}">
+                                                {{ station.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div style="display: flex; gap: 0.5rem; align-items: center; white-space: nowrap;">
+                                                <button class="btn btn-outline locate-btn" data-lat="{{ station.latitude }}" data-lng="{{ station.longitude }}" data-id="{{ station.station_id }}" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Map</button>
+                                                <a href="{% url 'firestation_update' station.station_id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
+                                                <a href="{% url 'firestation_delete' station.station_id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
+                        <p style="font-size: 1.2rem; margin-bottom: 1rem;">No fire stations registered yet.</p>
+                        <a href="{% url 'firestation_create' %}" class="btn btn-orange">Register the First Station</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Card View Panel -->
+        <div id="card-view-panel" class="view-panel scrollable-view">
+            {% if stations %}
+                <div class="stations-grid">
                     {% for station in stations %}
-                        <tr>
-                            <td><strong>#{{ station.station_id }}</strong></td>
-                            <td>{{ station.name }}</td>
-                            <td>{{ station.address }}</td>
-                            <td>{{ station.contact_number }}</td>
-                            <td>
-                                <a href="https://www.google.com/maps?q={{ station.latitude }},{{ station.longitude }}" target="_blank" style="color: var(--color-black); text-decoration: underline;">
-                                    {{ station.latitude|floatformat:4 }}, {{ station.longitude|floatformat:4 }} ↗
-                                </a>
-                            </td>
-                            <td>
+                        <div class="station-card status-{{ station.status|lower }}">
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: var(--color-black);">🚒 {{ station.name }}</h3>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem; flex: 1;">
+                                <div style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.9rem; color: var(--gray-dark);">
+                                    <span style="font-size: 1rem;">📍</span>
+                                    <p style="margin: 0; line-height: 1.4;">{{ station.address }}</p>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--gray-dark);">
+                                    <span style="font-size: 1rem;">📞</span>
+                                    <p style="margin: 0;">{{ station.contact_number }}</p>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-family: monospace; color: var(--btn-orange);">
+                                    <span style="font-size: 1rem;">🌐</span>
+                                    <span>{{ station.latitude|floatformat:4 }}, {{ station.longitude|floatformat:4 }}</span>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 0.75rem; border-top: 1px solid var(--gray-medium);">
                                 <span class="badge badge-{% if station.status|lower == 'maintenance' %}dispatched{% elif station.status|lower == 'inactive' %}inactive{% else %}active{% endif %}">
                                     {{ station.status }}
                                 </span>
-                            </td>
-                            <td style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <a href="{% url 'firestation_update' station.station_id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
-                                <a href="{% url 'firestation_delete' station.station_id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
-                            </td>
-                        </tr>
+                                <button class="btn btn-outline locate-btn" data-lat="{{ station.latitude }}" data-lng="{{ station.longitude }}" data-id="{{ station.station_id }}" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 6px;">
+                                    🗺️ View on Map
+                                </button>
+                            </div>
+
+                            <div style="display: flex; gap: 0.5rem; width: 100%; margin-top: 0.5rem;">
+                                <a href="{% url 'firestation_update' station.station_id %}" class="btn btn-outline" style="flex: 1; padding: 0.4rem; text-align: center; font-size: 0.85rem;">Edit</a>
+                                <a href="{% url 'firestation_delete' station.station_id %}" class="btn btn-red" style="flex: 1; padding: 0.4rem; text-align: center; font-size: 0.85rem;">Delete</a>
+                            </div>
+                        </div>
                     {% endfor %}
-                </tbody>
-            </table>
+                </div>
+            {% else %}
+                <div class="card" style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
+                    <p style="font-size: 1.2rem; margin-bottom: 1rem;">No fire stations registered yet.</p>
+                    <a href="{% url 'firestation_create' %}" class="btn btn-orange">Register the First Station</a>
+                </div>
+            {% endif %}
         </div>
-    {% else %}
-        <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
-            <p style="font-size: 1.2rem; margin-bottom: 1rem;">No fire stations registered yet.</p>
-            <a href="{% url 'firestation_create' %}" class="btn btn-orange">Register the First Station</a>
+
+        <!-- Map View Panel -->
+        <div id="map-view-panel" class="view-panel" style="position: relative;">
+            <div id="station-map" style="width: 100%; height: 100%; z-index: 1;"></div>
+            
+            <!-- Left-Side Details Sliding Panel -->
+            <div id="station-details-panel" class="station-details-panel">
+                <button class="panel-close-btn" onclick="closeDetailsPanel()">&times;</button>
+                <div class="panel-content">
+                    <h3 id="panel-station-name" style="color: #2196F3; font-size: 1.25rem; font-weight: 800; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">🚒 Station Name</h3>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                            <span style="font-weight: 700; font-size: 0.8rem; text-transform: uppercase; color: var(--gray-dark);">Address</span>
+                            <span id="panel-station-address" style="font-size: 0.95rem; line-height: 1.4; color: var(--color-black);"></span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                            <span style="font-weight: 700; font-size: 0.8rem; text-transform: uppercase; color: var(--gray-dark);">Contact</span>
+                            <span id="panel-station-contact" style="font-size: 0.95rem; color: var(--color-black);"></span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                            <span style="font-weight: 700; font-size: 0.8rem; text-transform: uppercase; color: var(--gray-dark);">Status</span>
+                            <div>
+                                <span id="panel-station-status-badge" class="badge"></span>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                            <span style="font-weight: 700; font-size: 0.8rem; text-transform: uppercase; color: var(--gray-dark);">Coordinates</span>
+                            <span id="panel-station-coords" style="font-size: 0.95rem; font-family: monospace; color: var(--btn-orange);"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    {% endif %}
+
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let stationsData = [];
+    let mapInitialized = false;
+    let stationMap = null;
+    let markersMap = {};
+
+    function initMap() {
+        if (mapInitialized) return;
+
+        // Set up strict bounding box for Mandalay Region
+        const southWest = L.latLng(21.7500, 95.9000);
+        const northEast = L.latLng(22.2000, 96.2500);
+        const bounds = L.latLngBounds(southWest, northEast);
+
+        stationMap = L.map('station-map', {
+            zoomControl: true,
+            scrollWheelZoom: true,
+            maxBounds: bounds,
+            maxBoundsViscosity: 1.0,
+            minZoom: 11
+        }).setView([21.9750, 96.0830], 13);
+
+        // OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(stationMap);
+
+        const markerGroup = L.featureGroup();
+
+        // Custom Blue Pill Pin for Stations
+        const stationIcon = L.divIcon({
+            className: 'custom-marker-station',
+            html: `<div style="background-color: #2196F3; width: 14px; height: 14px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 8px rgba(33, 150, 243, 0.6); transform: scale(1.1);"></div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        // Load active Fire Stations via API
+        fetch('/api/firestations/')
+            .then(res => res.json())
+            .then(stations => {
+                stationsData = stations;
+                stations.forEach(station => {
+                    const marker = L.marker([station.latitude, station.longitude], { icon: stationIcon });
+                    
+                    // Marker Click Behavior: open sliding panel and fly to coordinate
+                    marker.on('click', function() {
+                        openDetailsPanel(station);
+                        stationMap.setView([station.latitude, station.longitude], 14, {
+                            animate: true,
+                            duration: 1.2
+                        });
+                    });
+
+                    markerGroup.addLayer(marker);
+                    markersMap[station.station_id] = marker;
+                });
+
+                markerGroup.addTo(stationMap);
+
+                // Auto-fit coordinates bounds on load
+                if (markerGroup.getLayers().length > 0) {
+                    stationMap.fitBounds(markerGroup.getBounds(), { padding: [50, 50] });
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load map stations:", err);
+            });
+
+        mapInitialized = true;
+
+        // Ensure Leaflet recalculates dimensions after display toggle
+        setTimeout(function() {
+            stationMap.invalidateSize();
+        }, 200);
+    }
+
+    function openDetailsPanel(station) {
+        const panel = document.getElementById("station-details-panel");
+        document.getElementById("panel-station-name").innerText = `🚒 ${station.name}`;
+        document.getElementById("panel-station-address").innerText = station.address;
+        document.getElementById("panel-station-contact").innerText = station.contact_number;
+        document.getElementById("panel-station-coords").innerText = `${station.latitude.toFixed(4)}, ${station.longitude.toFixed(4)}`;
+        
+        // Setup Status Badge
+        const badge = document.getElementById("panel-station-status-badge");
+        badge.innerText = station.status;
+        badge.className = "badge"; // Clear existing classes
+        
+        const statusLower = station.status.toLowerCase();
+        if (statusLower === 'maintenance') {
+            badge.classList.add("badge-maintenance");
+        } else if (statusLower === 'inactive') {
+            badge.classList.add("badge-inactive");
+        } else {
+            badge.classList.add("badge-active");
+        }
+
+        panel.classList.add("show");
+    }
+
+    function closeDetailsPanel() {
+        const panel = document.getElementById("station-details-panel");
+        if (panel) {
+            panel.classList.remove("show");
+        }
+    }
+
+    // Toggle tab functionality
+    document.addEventListener("DOMContentLoaded", function() {
+        const tabs = document.querySelectorAll(".tab-btn");
+        const panels = document.querySelectorAll(".view-panel");
+
+        tabs.forEach(tab => {
+            tab.addEventListener("click", function() {
+                const targetView = tab.getAttribute("data-view");
+
+                // Toggle tabs active class
+                tabs.forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+
+                // Toggle view panels active class
+                panels.forEach(p => p.classList.remove("active"));
+                const targetPanel = document.getElementById(`${targetView}-view-panel`);
+                if (targetPanel) {
+                    targetPanel.classList.add("active");
+                }
+
+                // If switching to Map view, initialize Map
+                if (targetView === "map") {
+                    initMap();
+                    if (stationMap) {
+                        setTimeout(() => {
+                            stationMap.invalidateSize();
+                        }, 100);
+                    }
+                } else {
+                    // Close sliding details panel when moving away from Map View
+                    closeDetailsPanel();
+                }
+            });
+        });
+
+        // Event delegation for "View on Map" / "Map" buttons
+        document.addEventListener("click", function(e) {
+            const locateBtn = e.target.closest(".locate-btn");
+            if (locateBtn) {
+                const lat = parseFloat(locateBtn.getAttribute("data-lat"));
+                const lng = parseFloat(locateBtn.getAttribute("data-lng"));
+                const id = parseInt(locateBtn.getAttribute("data-id"));
+
+                // Find and activate map tab
+                const mapTab = document.querySelector('.tab-btn[data-view="map"]');
+                if (mapTab) {
+                    mapTab.click();
+                }
+
+                // Wait briefly for display transition, fly and select marker
+                setTimeout(() => {
+                    if (stationMap) {
+                        stationMap.setView([lat, lng], 14, { animate: true, duration: 1.2 });
+                        
+                        const marker = markersMap[id];
+                        if (marker) {
+                            // Find station data in cached stationsData array and show left panel details
+                            const station = stationsData.find(s => s.station_id === id);
+                            if (station) {
+                                openDetailsPanel(station);
+                            }
+                        }
+                    }
+                }, 300);
+            }
+        });
+    });
+</script>
 {% endblock %}

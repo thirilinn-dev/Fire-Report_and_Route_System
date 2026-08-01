@@ -17,7 +17,6 @@
                         <th>Dispatch ID</th>
                         <th>Incident</th>
                         <th>Responding Station</th>
-                        <th>Water Source</th>
                         <th>Operator</th>
                         <th>Dispatched At</th>
                         <th>Resolved At</th>
@@ -35,7 +34,6 @@
                                 </a>
                             </td>
                             <td>{{ dispatch.station.name }}</td>
-                            <td>{{ dispatch.source.source_type }} (#{{ dispatch.source.source_id }})</td>
                             <td>{{ dispatch.operator.username }}</td>
                             <td>{{ dispatch.dispatched_at|date:"Y-m-d H:i" }}</td>
                             <td>
@@ -46,9 +44,11 @@
                                 {% endif %}
                             </td>
                             <td>{{ dispatch.resources_deployed|default:"-" }}</td>
-                            <td style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <a href="{% url 'dispatch_update' dispatch.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
-                                <a href="{% url 'dispatch_delete' dispatch.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem; align-items: center; white-space: nowrap;">
+                                    <a href="{% url 'dispatch_update' dispatch.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
+                                    <a href="{% url 'dispatch_delete' dispatch.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}
