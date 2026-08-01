@@ -99,6 +99,7 @@ def role_detail(request, pk):
 
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
+
 @csrf_exempt
 def user_list_create(request):
     if request.method == 'GET':
