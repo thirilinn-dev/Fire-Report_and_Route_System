@@ -74,10 +74,19 @@ class FireReport(models.Model):
         help_text="Captured manual phone input if available"
     )
     latitude = models.FloatField(
+        null=True,
+        blank=True,
         help_text="Captured via HTML5 Geolocation API"
     )
     longitude = models.FloatField(
+        null=True,
+        blank=True,
         help_text="Captured via HTML5 Geolocation API"
+    )
+    address = models.TextField(
+        null=True,
+        blank=True,
+        help_text="Manual address input if GPS is disabled"
     )
     fire_scale = models.IntegerField(
         help_text="Severity Scale: 1, 2, or 3"
@@ -97,6 +106,12 @@ class FireReport(models.Model):
         auto_now_add=True,
         help_text="Timestamp when the report was created"
     )
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        super().clean()
+        if not self.address and (self.latitude is None or self.longitude is None):
+            raise ValidationError("Either GPS location coordinates or a manual address must be provided.")
 
     def __str__(self):
         return f"Report {self.id} - Scale {self.fire_scale} ({self.status})"
@@ -124,4 +139,26 @@ class Location(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Tbl_Notification(models.Model):
+    report = models.ForeignKey(FireReport, on_delete=models.CASCADE, related_name='notifications')
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "tbl_notifications"
+
+    def __str__(self):
+        return f"Notification {self.id} for Report {self.report_id}"
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=FireReport)
+def create_notification_on_pending_report(sender, instance, created, **kwargs):
+    if created and instance.status == 'Pending':
+        Tbl_Notification.objects.create(report=instance)
+
 

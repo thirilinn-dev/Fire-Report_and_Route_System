@@ -8,4 +8,5 @@ urlpatterns = [
     path('', include('UserService.urls')),
     path('', include('DispatchService.urls')),
     path('map/', include('maps.urls')),
+    path('dashboard/', include('dashboard.urls')),
 ]

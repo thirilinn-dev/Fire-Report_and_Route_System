@@ -20,6 +20,8 @@
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --bg-white: #FFFFFF;
@@ -691,12 +693,22 @@
 
         <nav class="nav-links">
             <a href="{% url 'report_fire' %}" class="nav-emergency-btn">🚨 Emergency Report</a>
+            <a href="{% url 'dashboard' %}" id="nav-dashboard">📊 CAD Dashboard</a>
+            <a href="{% url 'triage_queue' %}" id="nav-triage" style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                <span>📥 Triage Queue</span>
+                {% if unread_notifications_count > 0 %}
+                    <span class="notification-badge" style="background-color: var(--btn-red, #c30010); color: white; border-radius: 50%; padding: 0.1rem 0.35rem; font-size: 0.7rem; font-weight: 700; min-width: 18px; text-align: center; box-sizing: border-box; line-height: 1;">
+                        {{ unread_notifications_count }}
+                    </span>
+                {% endif %}
+            </a>
             <a href="{% url 'fire_report_list' %}" id="nav-incidents">Incidents</a>
             <a href="{% url 'firestation_list' %}" id="nav-stations">Stations</a>
             <a href="{% url 'map_view' %}" id="nav-maps">Interactive Map</a>
             <a href="{% url 'dispatch_list' %}" id="nav-dispatch">Dispatches</a>
             <a href="{% url 'user_list' %}" id="nav-users">Users</a>
             <a href="{% url 'role_list' %}" id="nav-roles">Roles</a>
+            <a href="{% url 'report_portal' %}" id="nav-portal">📋 Report Portal</a>
         </nav>
         
         <!-- Theme Toggle -->
@@ -704,6 +716,14 @@
             <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Theme">
                 <span class="theme-icon">☀️</span>
                 <span class="theme-text">Light Mode</span>
+            </button>
+        </div>
+
+        <!-- Language Toggle -->
+        <div class="theme-toggle-container" style="margin-top: 0.5rem;">
+            <button id="globalLangToggleBtn" class="theme-toggle-btn" aria-label="Toggle Language" onclick="toggleGlobalLanguage()">
+                <span id="globalLangToggleIcon" class="theme-icon">🇲🇲</span>
+                <span id="globalLangToggleText" class="theme-text">မြန်မာ</span>
             </button>
         </div>
     </aside>
@@ -795,6 +815,10 @@
                             }
                             modalBody.appendChild(form);
 
+                            // Initialize form UI and GPS
+                            if (typeof window.updateUI === "function") window.updateUI();
+                            if (typeof window.fetchGPS === "function") window.fetchGPS();
+
                             // Bind cancel link or buttons to close modal
                             const cancelBtns = form.querySelectorAll("a.btn-outline, button.btn-outline, .btn-secondary, a[href*='list'], a[href='/']");
                             cancelBtns.forEach(btn => {
@@ -829,18 +853,24 @@
                                     if (postHtml) {
                                         const postDoc = parser.parseFromString(postHtml, "text/html");
                                         const postForm = postDoc.querySelector("form");
-                                        if (postForm) {
+                                        const successContainer = postDoc.querySelector(".success-container");
+                                        const targetContent = successContainer || postForm;
+                                        
+                                        if (targetContent) {
                                             modalBody.innerHTML = "";
-                                            if (heading) {
+                                            if (heading && !successContainer) {
                                                 const reTitle = document.createElement("h3");
                                                 reTitle.innerText = heading.innerText;
                                                 reTitle.style.marginBottom = "1.5rem";
                                                 modalBody.appendChild(reTitle);
                                             }
-                                            modalBody.appendChild(postForm);
+                                            modalBody.appendChild(targetContent);
+
+                                            // Re-initialize UI
+                                            if (typeof window.updateUI === "function") window.updateUI();
                                             
                                             // Re-bind cancel buttons
-                                            const reCancelBtns = postForm.querySelectorAll("a.btn-outline, button.btn-outline, .btn-secondary, a[href*='list'], a[href='/']");
+                                            const reCancelBtns = targetContent.querySelectorAll("a.btn-outline, button.btn-outline, .btn-secondary, a[href*='list'], a[href='/'], #success-btn");
                                             reCancelBtns.forEach(btn => {
                                                 btn.addEventListener("click", function(e) {
                                                     e.preventDefault();
@@ -871,6 +901,8 @@
         document.addEventListener("DOMContentLoaded", function() {
             const currentUrl = window.location.pathname;
             const links = [
+                { id: "nav-dashboard", path: "/dashboard/" },
+                { id: "nav-triage", path: "/report/triage-queue/" },
                 { id: "nav-incidents", path: "/report/fire-reports/" },
                 { id: "nav-stations", path: "/" },
                 { id: "nav-maps", path: "/map/" },
@@ -925,6 +957,280 @@
                     }
                 });
             }
+        });
+
+        // Global Language Switcher Logic
+        const globalTranslations = {
+            en: {
+                navEmergency: "🚨 Emergency Report",
+                navDashboard: "📊 CAD Dashboard",
+                navTriage: "📥 Triage Queue",
+                navIncidents: "Incidents",
+                navStations: "Stations",
+                navMaps: "Interactive Map",
+                navDispatch: "Dispatches",
+                navUsers: "Users",
+                navRoles: "Roles",
+                navPortal: "📋 Report Portal",
+                langBtnText: "မြန်မာ",
+                langBtnIcon: "🇲🇲"
+            },
+            my: {
+                navEmergency: "🚨 အရေးပေါ် သတင်းပို့ရန်",
+                navDashboard: "📊 CAD Dashboard",
+                navTriage: "📥 Triage Queue",
+                navIncidents: "မီးလောင်မှုမှတ်တမ်းများ",
+                navStations: "မီးသတ်စခန်းများ",
+                navMaps: "အပြန်အလှန်မြေပုံ",
+                navDispatch: "တာဝန်ပေးစေလွှတ်မှုများ",
+                navUsers: "အသုံးပြုသူများ",
+                navRoles: "အခန်းကဏ္ဍများ",
+                navPortal: "📋 သတင်းထုတ်ပြန်ချက်",
+                langBtnText: "English",
+                langBtnIcon: "🇺🇸"
+            }
+        };
+
+        window.applyGlobalLanguage = function(lang) {
+            const data = globalTranslations[lang];
+            if (!data) return;
+
+            const navEmergency = document.querySelector(".nav-emergency-btn");
+            if (navEmergency) navEmergency.innerText = data.navEmergency;
+
+            const navDashboard = document.getElementById("nav-dashboard");
+            if (navDashboard) navDashboard.innerText = data.navDashboard;
+
+            const navTriage = document.getElementById("nav-triage");
+            if (navTriage) {
+                const textSpan = navTriage.querySelector("span:first-child") || navTriage;
+                if (textSpan) textSpan.innerText = data.navTriage;
+            }
+
+            const navIncidents = document.getElementById("nav-incidents");
+            if (navIncidents) navIncidents.innerText = data.navIncidents;
+
+            const navStations = document.getElementById("nav-stations");
+            if (navStations) navStations.innerText = data.navStations;
+
+            const navMaps = document.getElementById("nav-maps");
+            if (navMaps) navMaps.innerText = data.navMaps;
+
+            const navDispatch = document.getElementById("nav-dispatch");
+            if (navDispatch) navDispatch.innerText = data.navDispatch;
+
+            const navUsers = document.getElementById("nav-users");
+            if (navUsers) navUsers.innerText = data.navUsers;
+
+            const navRoles = document.getElementById("nav-roles");
+            if (navRoles) navRoles.innerText = data.navRoles;
+
+            const navPortal = document.getElementById("nav-portal");
+            if (navPortal) navPortal.innerText = data.navPortal;
+
+            const langBtnText = document.getElementById("globalLangToggleText");
+            if (langBtnText) langBtnText.innerText = data.langBtnText;
+
+            const langBtnIcon = document.getElementById("globalLangToggleIcon");
+            if (langBtnIcon) langBtnIcon.innerText = data.langBtnIcon;
+
+            window.dispatchEvent(new CustomEvent("languageChanged", { detail: { lang: lang } }));
+        };
+
+        window.toggleGlobalLanguage = function() {
+            let currentLang = localStorage.getItem("lang") || "my";
+            currentLang = (currentLang === "my") ? "en" : "my";
+            localStorage.setItem("lang", currentLang);
+            window.applyGlobalLanguage(currentLang);
+        };
+
+        // Set initial language state on load
+        document.addEventListener("DOMContentLoaded", function() {
+            const currentLang = localStorage.getItem("lang") || "my";
+            window.applyGlobalLanguage(currentLang);
+        });
+
+        // Emergency Reporting Form Logic (Global fallback to handle AJAX modal scope)
+        window.toggleLanguage = function() {
+            let currentLang = localStorage.getItem("lang") || "my";
+            currentLang = (currentLang === "my") ? "en" : "my";
+            localStorage.setItem("lang", currentLang);
+            if (typeof window.applyGlobalLanguage === "function") {
+                window.applyGlobalLanguage(currentLang);
+            }
+            window.updateUI();
+        };
+
+        const formLanguages = {
+            en: {
+                title: "🔥 Emergency Fire Reporting",
+                phoneLabel: "Reporter's Phone Number (Optional):",
+                photoLabel: "Upload Fire Condition Photo (Optional):",
+                locationChoice: "Choose Location Reporting Method:",
+                tabGPS: "📡 GPS Coordinates",
+                tabAddr: "✍️ Manual Address",
+                gpsFetch: "📡 Acquire GPS Location",
+                gpsWaiting: "Waiting to acquire coordinates...",
+                gpsReady: "GPS coordinates acquired successfully",
+                addressLabel: "Describe Location / Landmark Address:",
+                addressPlaceholder: "Enter street name, ward, landmark or specific area details...",
+                submitBtn: "🚨 Report Fire Now",
+                toggleText: "မြန်မာ",
+                successTitle: "Report Submitted Successfully",
+                successDesc: "Fire rescue teams and engines will be dispatched immediately.",
+                successBtn: "Send Another Report"
+            },
+            my: {
+                title: "🔥 အရေးပေါ် မီးလောင်မှု သတင်းပို့ရန်",
+                phoneLabel: "သတင်းပို့သူ ဖုန်းနံပါတ် (မဖြစ်မနေ မဟုတ်ပါ):",
+                photoLabel: "မီးလောင်မှု အခြေအနေ ဓာတ်ပုံတင်ရန် (ရွေးချယ်နိုင်သည်):",
+                locationChoice: "သတင်းပို့မည့်နည်းလမ်း ရွေးချယ်ပါ:",
+                tabGPS: "📡 GPS တည်နေရာ",
+                tabAddr: "✍️ လိပ်စာ အသေးစိတ်",
+                gpsFetch: "📡 လက်ရှိတည်နေရာကို ရယူမည်",
+                gpsWaiting: "တည်နေရာကို ရယူရန် စောင့်ဆိုင်းနေပါသည်...",
+                gpsReady: "တည်နေရာကို အောင်မြင်စွာ ရရှိပြီးပါပြီ",
+                addressLabel: "မီးလောင်မှု တည်နေရာ လိပ်စာ:",
+                addressPlaceholder: "လမ်း၊ ရပ်ကွက်၊ မြို့နယ် သို့မဟုတ် အနီးနားရှိ ထင်ရှားသော နေရာ...",
+                submitBtn: "🚨 အခုချက်ချင်း သတင်းပို့မည်",
+                toggleText: "English",
+                successTitle: "သတင်းပို့ခြင်း အောင်မြင်ပါသည်",
+                successDesc: "မီးသတ်ကားများနှင့် ကယ်ဆယ်ရေးအဖွဲ့များ ချက်ချင်း စေလွှတ်ပါမည်။",
+                successBtn: "သတင်းအသစ် ထပ်ပို့ရန်"
+            }
+        };
+
+        window.updateUI = function() {
+            let currentLang = localStorage.getItem("lang") || "my";
+            const data = formLanguages[currentLang];
+            if (!data) return;
+            
+            const titleText = document.getElementById("title-text");
+            if (titleText) titleText.innerText = data.title;
+            
+            const phoneLabel = document.getElementById("phone-label");
+            if (phoneLabel) phoneLabel.innerText = data.phoneLabel;
+            
+            const locationChoiceLabel = document.getElementById("location-choice-label");
+            if (locationChoiceLabel) locationChoiceLabel.innerText = data.locationChoice;
+
+            const tabGPS = document.getElementById("btn-tab-gps");
+            if (tabGPS) tabGPS.innerText = data.tabGPS;
+
+            const tabAddr = document.getElementById("btn-tab-addr");
+            if (tabAddr) tabAddr.innerText = data.tabAddr;
+
+            const gpsFetch = document.getElementById("btn-gps-fetch");
+            if (gpsFetch) gpsFetch.innerText = data.gpsFetch;
+
+            const addressLabel = document.getElementById("address-label");
+            if (addressLabel) addressLabel.innerText = data.addressLabel;
+
+            const addressInput = document.getElementById("address-input");
+            if (addressInput) addressInput.placeholder = data.addressPlaceholder;
+
+            const photoLabel = document.getElementById("photo-label");
+            if (photoLabel) photoLabel.innerText = data.photoLabel;
+            
+            const langToggle = document.getElementById("langToggle");
+            if (langToggle) langToggle.innerText = data.toggleText;
+            
+            const successTitle = document.getElementById("success-title");
+            if (successTitle) successTitle.innerText = data.successTitle;
+            
+            const successDesc = document.getElementById("success-desc");
+            if (successDesc) successDesc.innerText = data.successDesc;
+
+            const successBtn = document.getElementById("success-btn");
+            if (successBtn) successBtn.innerText = data.successBtn;
+
+            const submitBtn = document.getElementById("submitBtn");
+            if (submitBtn) submitBtn.innerText = data.submitBtn;
+
+            let gpsStatus = document.getElementById("gps-status");
+            let gpsText = document.getElementById("gps-text");
+            if (gpsText) {
+                const isReady = gpsStatus && gpsStatus.classList.contains("ready");
+                gpsText.innerText = isReady ? data.gpsReady : data.gpsWaiting;
+            }
+        };
+
+        window.switchLocationMode = function(mode) {
+            const locationModeInput = document.getElementById("location_mode");
+            if (locationModeInput) locationModeInput.value = mode;
+
+            const gpsTab = document.getElementById("btn-tab-gps");
+            const addrTab = document.getElementById("btn-tab-addr");
+            const gpsBlock = document.getElementById("gps-block");
+            const addrBlock = document.getElementById("address-block");
+
+            if (mode === "gps") {
+                if (gpsTab) gpsTab.classList.add("active");
+                if (addrTab) addrTab.classList.remove("active");
+                if (gpsBlock) gpsBlock.style.display = "block";
+                if (addrBlock) addrBlock.style.display = "none";
+                window.fetchGPS();
+            } else {
+                if (gpsTab) gpsTab.classList.remove("active");
+                if (addrTab) addrTab.classList.add("active");
+                if (gpsBlock) gpsBlock.style.display = "none";
+                if (addrBlock) addrBlock.style.display = "block";
+            }
+        };
+
+        window.fetchGPS = function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const latInput = document.getElementById("lat");
+                    const lngInput = document.getElementById("lng");
+                    if (latInput && lngInput) {
+                        latInput.value = position.coords.latitude;
+                        lngInput.value = position.coords.longitude;
+                    }
+                    
+                    let gpsStatus = document.getElementById("gps-status");
+                    if (gpsStatus) {
+                        gpsStatus.classList.add("ready");
+                    }
+                    
+                    window.updateUI();
+                }, function(error) {
+                    console.warn("GPS acquire error:", error);
+                    let gpsText = document.getElementById("gps-text");
+                    let currentLang = localStorage.getItem("lang") || "my";
+                    if (gpsText) {
+                        gpsText.innerText = currentLang === "en" ? "⚠️ Failed to fetch GPS coordinates" : "⚠️ GPS တည်နေရာ မရရှိနိုင်ပါ";
+                    }
+
+                    const titleText = currentLang === "en" ? "Location Access Required" : "တည်နေရာသိခွင့်ပြုရန် လိုအပ်ပါသည်";
+                    const bodyText = currentLang === "en" 
+                        ? "Location access is disabled. Would you like to enable location settings to share coordinates?" 
+                        : "တည်နေရာသိခွင့်ပြုချက်ကို ပိတ်ထားပါသည်။ တည်နေရာမျှဝေခွင့်ပြုရန် ဆက်တင်များကို ဖွင့်လိုပါသလား?";
+                    
+                    if (typeof Swal !== "undefined") {
+                        Swal.fire({
+                            title: titleText,
+                            text: bodyText,
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: currentLang === "en" ? "Share Location" : "တည်နေရာမျှဝေမည်",
+                            cancelButtonText: currentLang === "en" ? "Enter Address" : "လိပ်စာရိုက်ထည့်မည်",
+                            confirmButtonColor: '#e65100',
+                            cancelButtonColor: '#3085d6'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.fetchGPS();
+                            } else {
+                                window.switchLocationMode('address');
+                            }
+                        });
+                    }
+                });
+            }
+        };
+
+        window.addEventListener("languageChanged", function(e) {
+            window.updateUI();
         });
     </script>
 </body>

@@ -199,6 +199,26 @@
             <h1 style="margin: 0; font-size: 2rem;">🚒 Fire Stations</h1>
             <a href="{% url 'firestation_create' %}" class="btn btn-orange">➕ Register Fire Station</a>
         </div>
+        
+        <!-- Search bar -->
+        <div class="search-bar-container" style="max-width: 500px; width: 100%;">
+            <form method="GET" action="" style="display: flex; gap: 0.5rem; width: 100%;">
+                <div class="search-input-wrapper" style="position: relative; flex: 1; display: flex; align-items: center;">
+                    <span style="position: absolute; left: 0.75rem; color: var(--gray-dark, #666666); pointer-events: none; font-size: 1rem; line-height: 1;">🔍</span>
+                    <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Search by name, contact, status..." 
+                           style="width: 100%; padding: 0.5rem 1rem 0.5rem 2.25rem; font-family: var(--font-family, inherit); font-size: 0.9rem; line-height: 1.4; border: 1px solid var(--gray-medium, #e0e0e0); border-radius: 8px; background-color: var(--bg-white, #ffffff); color: var(--color-black, #000000); box-sizing: border-box;">
+                </div>
+                <button type="submit" class="btn btn-orange" style="padding: 0.5rem 1.25rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; white-space: nowrap; height: 38px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                    Search
+                </button>
+                {% if query %}
+                    <a href="{{ request.path }}" class="btn btn-outline" style="padding: 0.5rem 1.25rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; height: 38px; box-sizing: border-box;">
+                        Clear
+                    </a>
+                {% endif %}
+            </form>
+        </div>
+
         <div class="station-tabs">
             <button class="tab-btn active" data-view="table">Table View</button>
             <button class="tab-btn" data-view="card">Card View</button>
@@ -257,8 +277,13 @@
                     </div>
                 {% else %}
                     <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
-                        <p style="font-size: 1.2rem; margin-bottom: 1rem;">No fire stations registered yet.</p>
-                        <a href="{% url 'firestation_create' %}" class="btn btn-orange">Register the First Station</a>
+                        {% if query %}
+                            <p style="font-size: 1.2rem; margin-bottom: 1rem;">No matching fire stations found for "{{ query }}".</p>
+                            <a href="{{ request.path }}" class="btn btn-orange" style="text-decoration: none;">Clear Search Filter</a>
+                        {% else %}
+                            <p style="font-size: 1.2rem; margin-bottom: 1rem;">No fire stations registered yet.</p>
+                            <a href="{% url 'firestation_create' %}" class="btn btn-orange">Register the First Station</a>
+                        {% endif %}
                     </div>
                 {% endif %}
             </div>
@@ -305,8 +330,13 @@
                 </div>
             {% else %}
                 <div class="card" style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
-                    <p style="font-size: 1.2rem; margin-bottom: 1rem;">No fire stations registered yet.</p>
-                    <a href="{% url 'firestation_create' %}" class="btn btn-orange">Register the First Station</a>
+                    {% if query %}
+                        <p style="font-size: 1.2rem; margin-bottom: 1rem;">No matching fire stations found for "{{ query }}".</p>
+                        <a href="{{ request.path }}" class="btn btn-orange" style="text-decoration: none;">Clear Search Filter</a>
+                    {% else %}
+                        <p style="font-size: 1.2rem; margin-bottom: 1rem;">No fire stations registered yet.</p>
+                        <a href="{% url 'firestation_create' %}" class="btn btn-orange">Register the First Station</a>
+                    {% endif %}
                 </div>
             {% endif %}
         </div>

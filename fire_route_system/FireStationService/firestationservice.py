@@ -5,10 +5,21 @@ from .models import FireStation
 # READ (Display All)
 # ==========================
 def firestation_list(request):
-    stations = FireStation.objects.all()
+    from django.db.models import Q
+    query = request.GET.get('q', '').strip()
+
+    if query:
+        stations = FireStation.objects.filter(
+            Q(name__icontains=query) |
+            Q(contact_number__icontains=query) |
+            Q(status__icontains=query)
+        )
+    else:
+        stations = FireStation.objects.all()
 
     context = {
-        "stations": stations
+        "stations": stations,
+        "query": query
     }
 
     return render(request, "firestation/list.html", context)

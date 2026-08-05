@@ -43,6 +43,18 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(226, 82, 37, 0.08);
     }
+    .status-badge {
+        display: inline-block;
+        padding: 0.15rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-top: 0.4rem;
+    }
+    .status-active { background-color: rgba(46,125,50,0.12); color: #2e7d32; }
+    .status-inactive { background-color: rgba(55,71,79,0.1); color: #37474f; }
     .map-container {
         flex: 1;
         height: 100%;
@@ -70,26 +82,35 @@
 
 {% block main_layout %}
 <div class="map-page-layout">
-    <!-- Landmark Sidebar Panel -->
+    <!-- Fire Station Sidebar Panel -->
     <aside class="landmark-sidebar">
         <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem;">
-            <h2 style="margin-bottom: 0; font-size: 1.5rem;">📍 Landmark Registry</h2>
-            <p style="font-size: 0.9rem; color: var(--gray-dark); line-height: 1.4; margin: 0;">
-                Explore and fly to designated landmarks across the Mandalay command area.
+            <h2 style="margin-bottom: 0; font-size: 1.5rem;" id="map-sidebar-title">🚒 Fire Stations</h2>
+            <p style="font-size: 0.9rem; color: var(--gray-dark); line-height: 1.4; margin: 0;" id="map-sidebar-subtitle">
+                All fire stations in the Mandalay city area.
             </p>
         </div>
         <div class="landmark-list">
-            {% if locations %}
-                {% for loc in locations %}
-                <div class="location-item-card" onclick="flyToCoordinates({{ loc.latitude }}, {{ loc.longitude }})">
-                    <h4 style="margin: 0 0 0.25rem 0; font-size: 1rem; font-weight: 700;">📍 {{ loc.name }}</h4>
-                    <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: var(--gray-dark); line-height: 1.4;">{{ loc.description }}</p>
-                    <span style="font-family: monospace; font-size: 0.75rem; color: var(--btn-orange);">Lat: {{ loc.latitude|floatformat:4 }}, Lng: {{ loc.longitude|floatformat:4 }}</span>
+            {% if stations %}
+                {% for station in stations %}
+                {% if station.latitude and station.longitude %}
+                <div class="location-item-card" onclick="flyToCoordinates({{ station.latitude }}, {{ station.longitude }})">
+                    <h4 style="margin: 0 0 0.25rem 0; font-size: 1rem; font-weight: 700;">🚒 {{ station.name }}</h4>
+                    <p style="margin: 0 0 0.25rem 0; font-size: 0.85rem; color: var(--gray-dark); line-height: 1.4;">{{ station.address }}</p>
+                    <p style="margin: 0 0 0.25rem 0; font-size: 0.8rem; color: var(--gray-dark);">📞 {{ station.contact_number }}</p>
+                    <span style="font-family: monospace; font-size: 0.75rem; color: var(--btn-orange);">
+                        Lat: {{ station.latitude|floatformat:4 }}, Lng: {{ station.longitude|floatformat:4 }}
+                    </span>
+                    <br>
+                    <span class="status-badge {% if station.status == 'Active' %}status-active{% else %}status-inactive{% endif %}">
+                        {{ station.status }}
+                    </span>
                 </div>
+                {% endif %}
                 {% endfor %}
             {% else %}
                 <div style="text-align: center; padding: 2rem 0; color: var(--gray-dark);">
-                    <p>No landmarks found.</p>
+                    <p>No fire stations found.</p>
                 </div>
             {% endif %}
         </div>
@@ -117,7 +138,7 @@
             minZoom: 11
         }).setView([21.9750, 96.0830], 13);
 
-        window.mapInstance = map; // Expose globally for interactive elements
+        window.mapInstance = map;
 
         // OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -127,36 +148,49 @@
 
         const markerGroup = L.featureGroup();
 
-        // Custom Gold/Amber Pill Pin for Landmarks
-        const landmarkIcon = L.divIcon({
-            className: 'custom-marker-landmark',
-            html: `<div style="background-color: #FFB300; width: 14px; height: 14px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 8px rgba(255, 179, 0, 0.6); transform: scale(1.1);"></div>`,
+        // Fire Station Icon (red truck pin)
+        const stationIcon = L.divIcon({
+            className: 'custom-marker-station',
+            html: `<div style="background-color: #c30010; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 8px rgba(195, 0, 16, 0.7); transform: scale(1.1);"></div>`,
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+        });
+
+        const inactiveIcon = L.divIcon({
+            className: 'custom-marker-station-inactive',
+            html: `<div style="background-color: #777; width: 14px; height: 14px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 6px rgba(0,0,0,0.3);"></div>`,
             iconSize: [20, 20],
             iconAnchor: [10, 10]
         });
 
-        // Load landmark list from Django context JSON
-        const locations = {{ locations_json|safe }};
-        
-        locations.forEach(loc => {
+        // Load fire station data from Django context JSON
+        const stations = {{ stations_json|safe }};
+
+        stations.forEach(station => {
+            const icon = station.status === 'Active' ? stationIcon : inactiveIcon;
+            const statusColor = station.status === 'Active' ? '#2e7d32' : '#777';
             const popupHTML = `
-                <div class="popup-content" style="min-width: 180px;">
-                    <h3 style="color: #FFB300; font-size: 1rem; margin: 0 0 0.5rem 0; font-weight:700; display:flex; align-items:center; gap:0.25rem;">📍 ${loc.name}</h3>
-                    <p style="font-size: 0.85rem; color: var(--gray-dark); margin: 0; line-height:1.4;">${loc.description}</p>
+                <div class="popup-content" style="min-width: 200px;">
+                    <h3 style="color: #c30010; font-size: 1rem; margin: 0 0 0.4rem 0; font-weight: 700;">🚒 ${station.name}</h3>
+                    <p style="font-size: 0.85rem; color: #333; margin: 0 0 0.25rem 0;">📍 ${station.address}</p>
+                    <p style="font-size: 0.85rem; color: #333; margin: 0 0 0.35rem 0;">📞 ${station.contact_number}</p>
+                    <span style="display: inline-block; padding: 0.15rem 0.6rem; border-radius: 50px; font-size: 0.7rem; font-weight: 700; background-color: ${statusColor}20; color: ${statusColor}; text-transform: uppercase;">
+                        ${station.status}
+                    </span>
                 </div>
             `;
-            const marker = L.marker([loc.latitude, loc.longitude], { icon: landmarkIcon }).bindPopup(popupHTML);
+            const marker = L.marker([station.latitude, station.longitude], { icon: icon }).bindPopup(popupHTML);
             markerGroup.addLayer(marker);
         });
 
         markerGroup.addTo(map);
 
-        // Auto-fit coordinates bounds on load
+        // Auto-fit bounds if stations exist
         if (markerGroup.getLayers().length > 0) {
-            map.fitBounds(markerGroup.getBounds(), { padding: [50, 50] });
+            map.fitBounds(markerGroup.getBounds(), { padding: [60, 60] });
         }
 
-        // Prevent Leaflet canvas gray boxes by invalidating size
+        // Prevent Leaflet canvas gray boxes
         setTimeout(function() {
             map.invalidateSize();
         }, 200);
@@ -169,7 +203,7 @@
     // Global helper for centering viewport from list clicks
     window.flyToCoordinates = function(lat, lng) {
         if (window.mapInstance) {
-            window.mapInstance.flyTo([lat, lng], 14, {
+            window.mapInstance.flyTo([lat, lng], 15, {
                 animate: true,
                 duration: 1.5
             });

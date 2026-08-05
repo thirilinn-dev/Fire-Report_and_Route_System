@@ -2,9 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Role, User
 from .forms import RoleForm, UserForm
 
-
 # ROLE CRUD
-
 
 def role_list(request):
     roles = Role.objects.all()
@@ -45,10 +43,23 @@ def role_delete(request, pk):
 
 # USER CRUD
 
-
 def user_list(request):
-    users = User.objects.all()
-    return render(request, 'user/list.html', {'users': users})
+    query = request.GET.get('q', '').strip()
+
+    if query:
+        from django.db.models import Q
+        users = User.objects.filter(
+            Q(username__icontains=query) |
+            Q(email__icontains=query) |
+            Q(phone_number__icontains=query)
+        )
+    else:
+        users = User.objects.all()
+
+    return render(request, 'user/list.html', {
+        'users': users,
+        'query': query
+    })
 
 
 def user_create(request):

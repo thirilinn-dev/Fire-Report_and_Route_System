@@ -1,9 +1,27 @@
 from django.test import TestCase
 from django.urls import reverse
-from DataAccess.models import Location
+from DataAccess.models import FireStation
 import json
 
 class MapViewTests(TestCase):
+    def setUp(self):
+        self.station1 = FireStation.objects.create(
+            name="Central Fire Station",
+            address="85th Street, Mandalay",
+            contact_number="085-12345",
+            latitude=21.9750,
+            longitude=96.0830,
+            status="Active"
+        )
+        self.station2 = FireStation.objects.create(
+            name="North Fire Station",
+            address="22nd Street, Mandalay",
+            contact_number="085-67890",
+            latitude=22.0100,
+            longitude=96.0900,
+            status="Inactive"
+        )
+
     def test_map_view_status_code(self):
         """
         Requesting the map view URL returns 200 OK status code.
@@ -18,46 +36,32 @@ class MapViewTests(TestCase):
         response = self.client.get(reverse('map_view'))
         self.assertTemplateUsed(response, 'maps/map.html')
 
-    def test_map_view_auto_seeds_locations(self):
+    def test_map_view_passes_stations_to_context(self):
         """
-        When there are no locations in the database, the view auto-seeds them.
+        The map view should pass fire stations to the context.
         """
-        # Ensure database starts empty of locations
-        Location.objects.all().delete()
-        self.assertEqual(Location.objects.count(), 0)
-
-        # Trigger view
         response = self.client.get(reverse('map_view'))
+        self.assertIn('stations', response.context)
+        self.assertEqual(response.context['stations'].count(), 2)
 
-        # Check database now contains the auto-seeded locations
-        self.assertTrue(Location.objects.count() > 0)
-        self.assertIn('locations', response.context)
-        self.assertEqual(len(response.context['locations']), Location.objects.count())
-
-    def test_map_view_serializes_locations_to_json(self):
+    def test_map_view_serializes_stations_to_json(self):
         """
-        Locations are correctly serialized to a JSON string in the context.
+        Stations with coordinates are correctly serialized to JSON in the context.
         """
-        # Delete existing and create 2 specific locations
-        Location.objects.all().delete()
-        loc1 = Location.objects.create(name="Test Station A", latitude=16.1, longitude=96.1, description="Desc A")
-        loc2 = Location.objects.create(name="Test Station B", latitude=16.2, longitude=96.2, description="Desc B")
-
         response = self.client.get(reverse('map_view'))
+        self.assertIn('stations_json', response.context)
+        stations_data = json.loads(response.context['stations_json'])
 
-        self.assertIn('locations_json', response.context)
-        locations_data = json.loads(response.context['locations_json'])
+        self.assertEqual(len(stations_data), 2)
 
-        self.assertEqual(len(locations_data), 2)
-        
-        # Checking first sorted location (Test Station A)
-        self.assertEqual(locations_data[0]['name'], "Test Station A")
-        self.assertEqual(locations_data[0]['latitude'], 16.1)
-        self.assertEqual(locations_data[0]['longitude'], 96.1)
-        self.assertEqual(locations_data[0]['description'], "Desc A")
+        # Verify station fields present
+        names = [s['name'] for s in stations_data]
+        self.assertIn("Central Fire Station", names)
+        self.assertIn("North Fire Station", names)
 
-        # Checking second sorted location (Test Station B)
-        self.assertEqual(locations_data[1]['name'], "Test Station B")
-        self.assertEqual(locations_data[1]['latitude'], 16.2)
-        self.assertEqual(locations_data[1]['longitude'], 96.2)
-        self.assertEqual(locations_data[1]['description'], "Desc B")
+        central = next(s for s in stations_data if s['name'] == "Central Fire Station")
+        self.assertEqual(central['latitude'], 21.9750)
+        self.assertEqual(central['longitude'], 96.0830)
+        self.assertEqual(central['status'], "Active")
+
+

@@ -2,7 +2,6 @@ from .models import Dispatch
 from .forms import DispatchForm
 from django.shortcuts import render, redirect, get_object_or_404
 
-
 def dispatch_list(request):
     dispatches = Dispatch.objects.all()
     return render(request, 'dispatch/list.html', {

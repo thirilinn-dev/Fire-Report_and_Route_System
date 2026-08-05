@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 1.5cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            font-size: 10pt;
+            line-height: 1.4;
+        }
+        h1 {
+            color: #c30010;
+            font-size: 20pt;
+            margin-bottom: 5px;
+            border-bottom: 2px solid #E25225;
+            padding-bottom: 5px;
+        }
+        .meta {
+            font-size: 9pt;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        .stats-table, .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .stats-table th, .stats-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .stats-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        .data-table th, .data-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+            font-size: 9pt;
+        }
+        .data-table th {
+            background-color: #0c0c0c;
+            color: #fff;
+            font-weight: bold;
+        }
+        .badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 8pt;
+            font-weight: bold;
+        }
+        .badge-1 { background-color: #e8f5e9; color: #2e7d32; }
+        .badge-2 { background-color: #fff3e0; color: #f57c00; }
+        .badge-3 { background-color: #ffebee; color: #c30010; }
+    </style>
+</head>
+<body>
+    <h1>Mandalay Fire Response System Report</h1>
+    <div class="meta">
+        <strong>Generated At:</strong> {{ generated_at|date:"Y-m-d H:i" }}<br>
+        <strong>Filters:</strong> Level: {{ filter_level }} | Period: {{ filter_period }} | Start Date: {{ filter_start }} | End Date: {{ filter_end }}
+    </div>
+
+    <h3>Summary Statistics</h3>
+    <table class="stats-table">
+        <tr>
+            <th>Total Incident Reports</th>
+            <td><strong>{{ total_count }}</strong></td>
+        </tr>
+        <tr>
+            <th>Level 1 (Minor)</th>
+            <td>{{ level_1 }}</td>
+        </tr>
+        <tr>
+            <th>Level 2 (Medium)</th>
+            <td>{{ level_2 }}</td>
+        </tr>
+        <tr>
+            <th>Level 3 (Major)</th>
+            <td>{{ level_3 }}</td>
+        </tr>
+    </table>
+
+    <h3>Incident Records</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">No</th>
+                <th style="width: 20%;">Reporter Phone</th>
+                <th style="width: 15%;">Fire Scale</th>
+                <th style="width: 15%;">Status</th>
+                <th style="width: 25%;">Location</th>
+                <th style="width: 20%;">Logged At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in reports %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ report.reporter_phone|default:"Anonymous" }}</td>
+                <td>
+                    <span class="badge badge-{{ report.fire_scale }}">Level {{ report.fire_scale }}</span>
+                </td>
+                <td>{{ report.status }}</td>
+                <td>
+                    {% if report.latitude and report.longitude %}
+                        {{ report.latitude|floatformat:4 }}, {{ report.longitude|floatformat:4 }}
+                    {% else %}
+                        {{ report.address|default:"N/A" }}
+                    {% endif %}
+                </td>
+                <td>{{ report.reported_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; color: #777;">No records match the filter criteria.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

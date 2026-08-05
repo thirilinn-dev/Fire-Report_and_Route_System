@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Triage Queue - Fire Route System{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="margin: 0; font-size: 2rem;">📥 Incident Triage Queue</h1>
+        <p style="margin: 0.25rem 0 0 0; font-size: 0.95rem; color: var(--gray-dark);">Review and confirm incoming citizen reports before they enter active dispatch streams.</p>
+    </div>
+</div>
+
+<div class="card" style="padding: 1.5rem;">
+    {% if notifications %}
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Reporter Phone</th>
+                        <th>Severity Scale</th>
+                        <th>Location</th>
+                        <th>Logged At</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for notif in notifications %}
+                        <tr>
+                            <td><strong>{{ forloop.counter }}</strong></td>
+                            <td>{{ notif.report.reporter_phone|default:"Anonymous" }}</td>
+                            <td>
+                                <span class="badge" style="background-color: {% if notif.report.fire_scale == 3 %}#ffebee{% elif notif.report.fire_scale == 2 %}#fff3e0{% else %}#e8f5e9{% endif %}; color: {% if notif.report.fire_scale == 3 %}var(--btn-red){% elif notif.report.fire_scale == 2 %}var(--btn-orange){% else %}#2e7d32{% endif %}; border: 1px solid currentColor;">
+                                    Scale {{ notif.report.fire_scale }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if notif.report.latitude and notif.report.longitude %}
+                                <a href="https://www.google.com/maps?q={{ notif.report.latitude }},{{ notif.report.longitude }}" target="_blank" style="color: var(--color-black); text-decoration: underline;">
+                                    {{ notif.report.latitude|floatformat:4 }}, {{ notif.report.longitude|floatformat:4 }} ↗
+                                </a>
+                                {% else %}
+                                {{ notif.report.address|default:"N/A" }}
+                                {% endif %}
+                            </td>
+                            <td>{{ notif.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <form method="POST" action="{% url 'confirm_incident' notif.id %}" style="margin: 0; display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-orange" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; height: auto;">
+                                        Confirm Incident
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 4rem 0; color: var(--gray-dark);">
+            <span style="font-size: 3rem; display: block; margin-bottom: 0.5rem;">📥</span>
+            <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem; color: var(--color-black);">Triage queue is empty</h3>
+            <p style="margin: 0; font-size: 0.95rem;">All incoming citizen fire reports have been triaged and confirmed.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

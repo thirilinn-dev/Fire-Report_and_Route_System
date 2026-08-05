@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+
+{% block title %}Report Portal - Fire Route System{% endblock %}
+
+{% block content %}
+<style>
+    .filter-card {
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        background-color: var(--gray-light);
+        border: 1px solid var(--gray-medium);
+        border-radius: 8px;
+    }
+    .filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        align-items: flex-end;
+    }
+    .filter-group {
+        flex: 1;
+        min-width: 150px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .filter-group label {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--color-black);
+    }
+    .filter-group select, .filter-group input {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border: 1px solid var(--gray-medium);
+        background-color: var(--bg-white);
+        color: var(--color-black);
+        font-family: var(--font-family);
+        height: 38px;
+    }
+    .export-btn-container {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+</style>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 id="portal-title" style="margin: 0; font-size: 2rem;">📋 Command Report Portal</h1>
+        <p id="portal-subtitle" style="margin: 0.25rem 0 0 0; font-size: 0.95rem; color: var(--gray-dark);">Filter, analyze, and download fire incident records.</p>
+    </div>
+</div>
+
+<!-- Filter Card -->
+<div class="card filter-card">
+    <form method="GET" action="" class="filter-form" style="display: flex !important; flex-direction: row !important; width: 100%;">
+        <!-- Time Period -->
+        <div class="filter-group">
+            <label id="lbl-period">Time Period:</label>
+            <select name="period" id="filter-period">
+                <option value="All" {% if period == 'All' %}selected{% endif %} id="opt-period-all">All Time</option>
+                <option value="Daily" {% if period == 'Daily' %}selected{% endif %} id="opt-period-daily">Daily (Today)</option>
+                <option value="Monthly" {% if period == 'Monthly' %}selected{% endif %} id="opt-period-monthly">Monthly (Current Month)</option>
+                <option value="Yearly" {% if period == 'Yearly' %}selected{% endif %} id="opt-period-yearly">Yearly (Current Year)</option>
+            </select>
+        </div>
+
+        <!-- Custom Date duration -->
+        <div class="filter-group">
+            <label id="lbl-start-date">Start Date:</label>
+            <input type="date" name="start_date" id="filter-start" value="{{ start_date }}">
+        </div>
+        <div class="filter-group">
+            <label id="lbl-end-date">End Date:</label>
+            <input type="date" name="end_date" id="filter-end" value="{{ end_date }}">
+        </div>
+
+        <!-- Level -->
+        <div class="filter-group">
+            <label id="lbl-level">Fire Scale Level:</label>
+            <select name="level" id="filter-level">
+                <option value="All" {% if level == 'All' %}selected{% endif %} id="opt-level-all">All Levels</option>
+                <option value="1" {% if level == '1' %}selected{% endif %} id="opt-level-1">Level 1 (Minor)</option>
+                <option value="2" {% if level == '2' %}selected{% endif %} id="opt-level-2">Level 2 (Medium)</option>
+                <option value="3" {% if level == '3' %}selected{% endif %} id="opt-level-3">Level 3 (Major)</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-black" id="btn-filter" style="height: 38px; font-weight: 700; padding: 0 1.5rem;">
+            🔍 Filter
+        </button>
+    </form>
+</div>
+
+<!-- Export Buttons -->
+<div class="export-btn-container">
+    <a href="{% url 'export_csv' %}?period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}&level={{ level }}" class="btn btn-orange" id="btn-export-csv" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+        📄 Export CSV
+    </a>
+    <a href="{% url 'export_pdf' %}?period={{ period }}&start_date={{ start_date }}&end_date={{ end_date }}&level={{ level }}" class="btn btn-black" id="btn-export-pdf" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; background-color: var(--btn-red); color: white;">
+        📕 Export PDF
+    </a>
+</div>
+
+<!-- Preview Table -->
+<div class="card" style="padding: 1.5rem;">
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th id="th-phone">Reporter Phone</th>
+                    <th id="th-scale">Fire Scale</th>
+                    <th id="th-status">Status</th>
+                    <th id="th-location">Location</th>
+                    <th id="th-logged">Logged At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                <tr>
+                    <td><strong>{{ forloop.counter }}</strong></td>
+                    <td>{{ report.reporter_phone|default:"Anonymous" }}</td>
+                    <td>
+                        <span class="badge" style="background-color: {% if report.fire_scale == 3 %}#ffebee{% elif report.fire_scale == 2 %}#fff3e0{% else %}#e8f5e9{% endif %}; color: {% if report.fire_scale == 3 %}var(--btn-red){% elif report.fire_scale == 2 %}var(--btn-orange){% else %}#2e7d32{% endif %}; border: 1px solid currentColor;">
+                            Level {{ report.fire_scale }}
+                        </span>
+                    </td>
+                    <td>{{ report.status }}</td>
+                    <td>
+                        {% if report.latitude and report.longitude %}
+                        <a href="https://www.google.com/maps?q={{ report.latitude }},{{ report.longitude }}" target="_blank" style="color: var(--color-black); text-decoration: underline;">
+                            {{ report.latitude|floatformat:4 }}, {{ report.longitude|floatformat:4 }} ↗
+                        </a>
+                        {% else %}
+                        {{ report.address|default:"N/A" }}
+                        {% endif %}
+                    </td>
+                    <td>{{ report.reported_at|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--gray-dark); padding: 3rem 0;" id="td-empty">No records match the filter criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Client-side Translations -->
+<script>
+    (function() {
+        const portalLanguages = {
+            en: {
+                title: "📋 Command Report Portal",
+                subtitle: "Filter, analyze, and download fire incident records.",
+                period: "Time Period:",
+                startDate: "Start Date:",
+                endDate: "End Date:",
+                level: "Fire Scale Level:",
+                filterBtn: "🔍 Filter",
+                exportCSV: "📄 Export CSV",
+                exportPDF: "📕 Export PDF",
+                thPhone: "Reporter Phone",
+                thScale: "Fire Scale",
+                thStatus: "Status",
+                thLocation: "Location",
+                thLogged: "Logged At",
+                empty: "No records match the filter criteria.",
+                periodAll: "All Time",
+                periodDaily: "Daily (Today)",
+                periodMonthly: "Monthly (Current Month)",
+                periodYearly: "Yearly (Current Year)",
+                levelAll: "All Levels",
+                level1: "Level 1 (Minor)",
+                level2: "Level 2 (Medium)",
+                level3: "Level 3 (Major)"
+            },
+            my: {
+                title: "📋 သတင်းထုတ်ပြန်ချက် ပေါ်တယ်",
+                subtitle: "မီးသတ်သတင်းမှတ်တမ်းများကို စစ်ထုတ်ခြင်း၊ ဆန်းစစ်ခြင်းနှင့် ရယူခြင်း။",
+                period: "ကာလအပိုင်းအခြား:",
+                startDate: "စတင်သည့်ရက်စွဲ:",
+                endDate: "ပြီးဆုံးသည့်ရက်စွဲ:",
+                level: "မီးseverityအဆင့်:",
+                filterBtn: "🔍 ရှာဖွေစစ်ထုတ်မည်",
+                exportCSV: "📄 CSV ထုတ်ယူရန်",
+                exportPDF: "📕 PDF ထုတ်ယူရန်",
+                thPhone: "သတင်းပို့သူ ဖုန်းနံပါတ်",
+                thScale: "မီးseverityအဆင့်",
+                thStatus: "အခြေအနေ",
+                thLocation: "တည်နေရာ",
+                thLogged: "မှတ်တမ်းတင်ချိန်",
+                empty: "စစ်ထုတ်မှုနှင့် ကိုက်ညီသော မှတ်တမ်းမရှိပါ။",
+                periodAll: "အချိန်ကာလအားလုံး",
+                periodDaily: "နေ့စဉ် (ယနေ့)",
+                periodMonthly: "လစဉ် (ယခုလ)",
+                periodYearly: "နှစ်စဉ် (ယခုနှစ်)",
+                levelAll: "အဆင့်အားလုံး",
+                level1: "အဆင့် ၁ (အသေးစား)",
+                level2: "အဆင့် ၂ (အလတ်စား)",
+                level3: "အဆင့် ၃ (အကြီးစား)"
+            }
+        };
+
+        function updatePortalUI(lang) {
+            const data = portalLanguages[lang];
+            if (!data) return;
+
+            const title = document.getElementById("portal-title");
+            if (title) title.innerText = data.title;
+
+            const subtitle = document.getElementById("portal-subtitle");
+            if (subtitle) subtitle.innerText = data.subtitle;
+
+            const lblPeriod = document.getElementById("lbl-period");
+            if (lblPeriod) lblPeriod.innerText = data.period;
+
+            const lblStartDate = document.getElementById("lbl-start-date");
+            if (lblStartDate) lblStartDate.innerText = data.startDate;
+
+            const lblEndDate = document.getElementById("lbl-end-date");
+            if (lblEndDate) lblEndDate.innerText = data.endDate;
+
+            const lblLevel = document.getElementById("lbl-level");
+            if (lblLevel) lblLevel.innerText = data.level;
+
+            const btnFilter = document.getElementById("btn-filter");
+            if (btnFilter) btnFilter.innerText = data.filterBtn;
+
+            const btnCSV = document.getElementById("btn-export-csv");
+            if (btnCSV) btnCSV.innerText = data.exportCSV;
+
+            const btnPDF = document.getElementById("btn-export-pdf");
+            if (btnPDF) btnPDF.innerText = data.exportPDF;
+
+            const thPhone = document.getElementById("th-phone");
+            if (thPhone) thPhone.innerText = data.thPhone;
+
+            const thScale = document.getElementById("th-scale");
+            if (thScale) thScale.innerText = data.thScale;
+
+            const thStatus = document.getElementById("th-status");
+            if (thStatus) thStatus.innerText = data.thStatus;
+
+            const thLocation = document.getElementById("th-location");
+            if (thLocation) thLocation.innerText = data.thLocation;
+
+            const thLogged = document.getElementById("th-logged");
+            if (thLogged) thLogged.innerText = data.thLogged;
+
+            const tdEmpty = document.getElementById("td-empty");
+            if (tdEmpty) tdEmpty.innerText = data.empty;
+
+            // Options
+            const optPeriodAll = document.getElementById("opt-period-all");
+            if (optPeriodAll) optPeriodAll.innerText = data.periodAll;
+            const optPeriodDaily = document.getElementById("opt-period-daily");
+            if (optPeriodDaily) optPeriodDaily.innerText = data.periodDaily;
+            const optPeriodMonthly = document.getElementById("opt-period-monthly");
+            if (optPeriodMonthly) optPeriodMonthly.innerText = data.periodMonthly;
+            const optPeriodYearly = document.getElementById("opt-period-yearly");
+            if (optPeriodYearly) optPeriodYearly.innerText = data.periodYearly;
+
+            const optLevelAll = document.getElementById("opt-level-all");
+            if (optLevelAll) optLevelAll.innerText = data.levelAll;
+            const optLevel1 = document.getElementById("opt-level-1");
+            if (optLevel1) optLevel1.innerText = data.level1;
+            const optLevel2 = document.getElementById("opt-level-2");
+            if (optLevel2) optLevel2.innerText = data.level2;
+            const optLevel3 = document.getElementById("opt-level-3");
+            if (optLevel3) optLevel3.innerText = data.level3;
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const currentLang = localStorage.getItem("lang") || "my";
+            updatePortalUI(currentLang);
+        });
+
+        window.addEventListener("languageChanged", function(e) {
+            updatePortalUI(e.detail.lang);
+        });
+    })();
+</script>
+{% endblock %}

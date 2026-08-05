@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Emergency Dispatch Dashboard - Fire Route System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h1 class="dashboard-title">🚒 CAD Control Dashboard</h1>
+        <p class="dashboard-subtitle">Emergency Response and Computer-Aided Dispatch System | Mandalay Region Command</p>
+    </div>
+    <div class="live-indicator">
+        <span class="blink-dot"></span>
+        <span class="live-text">SYSTEM LIVE</span>
+    </div>
+</div>
+
+<!-- Top Row: KPI Cards -->
+<div class="kpi-grid">
+    <!-- Card 1: Active Fires -->
+    <div class="kpi-card danger-card">
+        <div class="kpi-icon">🔥</div>
+        <div class="kpi-data">
+            <span class="kpi-label">Active Incidents</span>
+            <h2 class="kpi-value">{{ total_active_fires }}</h2>
+            <span class="kpi-trend">Pending or Dispatched</span>
+        </div>
+    </div>
+    <!-- Card 2: High Severity -->
+    <div class="kpi-card warning-card">
+        <div class="kpi-icon">⚠️</div>
+        <div class="kpi-data">
+            <span class="kpi-label">High Severity</span>
+            <h2 class="kpi-value">{{ high_severity_fires }}</h2>
+            <span class="kpi-trend">Scale 3 Active Reports</span>
+        </div>
+    </div>
+    <!-- Card 3: Available Stations -->
+    <div class="kpi-card success-card">
+        <div class="kpi-icon">🛡️</div>
+        <div class="kpi-data">
+            <span class="kpi-label">Active Stations</span>
+            <h2 class="kpi-value">{{ available_stations }}</h2>
+            <span class="kpi-trend">Online and Operational</span>
+        </div>
+    </div>
+    <!-- Card 4: Total Dispatches Today -->
+    <div class="kpi-card info-card">
+        <div class="kpi-icon">📋</div>
+        <div class="kpi-data">
+            <span class="kpi-label">Today's Dispatches</span>
+            <h2 class="kpi-value">{{ total_dispatches_today }}</h2>
+            <span class="kpi-trend">Created calendar day</span>
+        </div>
+    </div>
+</div>
+
+<!-- Middle Row: Map & Analytics -->
+<div class="middle-grid">
+    <!-- Map Container -->
+    <div class="dashboard-card map-card">
+        <div class="card-header">
+            <h3>📍 Live Incident & Station Map</h3>
+            <span class="card-action-hint">Double click to zoom, hover pin for summary</span>
+        </div>
+        <div class="map-wrapper-inner">
+            <div id="dashboard-map"></div>
+        </div>
+    </div>
+    <!-- Analytics Chart -->
+    <div class="dashboard-card chart-card">
+        <div class="card-header">
+            <h3>📊 Severity Scale Analysis</h3>
+            <span class="card-action-hint">Historical breakdown of incident scales</span>
+        </div>
+        <div class="chart-wrapper-inner">
+            <canvas id="severityChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Row: Actionable Tables -->
+<div class="bottom-grid">
+    <!-- Pending Reports Table -->
+    <div class="dashboard-card table-card">
+        <div class="card-header">
+            <h3>🚨 Immediate Dispatch Actions Required</h3>
+            <span class="badge badge-pending">{{ pending_reports.count }} PENDING</span>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Reporter Phone</th>
+                        <th>Severity</th>
+                        <th>Location</th>
+                        <th>Reported Time</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if pending_reports %}
+                        {% for report in pending_reports %}
+                        <tr>
+                            <td>#{{ report.id }}</td>
+                            <td>{{ report.reporter_phone|default:"Anonymous" }}</td>
+                            <td>
+                                {% if report.fire_scale == 3 %}
+                                    <span class="severity-badge scale-3">CRITICAL</span>
+                                {% elif report.fire_scale == 2 %}
+                                    <span class="severity-badge scale-2">MEDIUM</span>
+                                {% else %}
+                                    <span class="severity-badge scale-1">LOW</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ report.latitude|floatformat:4 }}, {{ report.longitude|floatformat:4 }}</td>
+                            <td>{{ report.reported_at|date:"g:i A" }}</td>
+                            <td>
+                                <a href="{% url 'dispatch_create' %}?report_id={{ report.id }}" class="btn-dispatch-action">Dispatch Crew</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="no-records">No pending reports requiring attention.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Active Dispatches Table -->
+    <div class="dashboard-card table-card">
+        <div class="card-header">
+            <h3>🚒 Active Dispatches</h3>
+            <span class="badge badge-active">{{ active_dispatches.count }} IN FIELD</span>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dispatch ID</th>
+                        <th>Incident</th>
+                        <th>Responding Station</th>
+                        <th>Operator</th>
+                        <th>Dispatched Time</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if active_dispatches %}
+                        {% for disp in active_dispatches %}
+                        <tr>
+                            <td>#{{ disp.id }}</td>
+                            <td>Report #{{ disp.report.id }} (Scale {{ disp.report.fire_scale }})</td>
+                            <td>{{ disp.station.name }}</td>
+                            <td>{{ disp.operator.username }}</td>
+                            <td>{{ disp.dispatched_at|date:"g:i A" }}</td>
+                            <td>
+                                <a href="{% url 'dispatch_update' disp.id %}" class="btn-manage-action">Resolve</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="no-records">No active dispatches in command.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // --- 1. Map Setup ---
+        // Setup Mandalay Region limits
+        const southWest = L.latLng(21.7500, 95.9000);
+        const northEast = L.latLng(22.2000, 96.2500);
+        const bounds = L.latLngBounds(southWest, northEast);
+
+        // Initialize local Leaflet map
+        const map = L.map('dashboard-map', {
+            zoomControl: true,
+            scrollWheelZoom: true,
+            maxBounds: bounds,
+            maxBoundsViscosity: 1.0,
+            minZoom: 10
+        }).setView([21.9750, 96.0830], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const markerGroup = L.featureGroup();
+
+        // Load active station markers (Blue Pins)
+        const stationIcon = L.divIcon({
+            className: 'custom-marker-station',
+            html: `<div class="marker-pin-station">🚒</div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+        });
+
+        const stations = {{ station_pins_json|safe }};
+        stations.forEach(st => {
+            const popupHTML = `
+                <div class="map-popup-card">
+                    <h4 style="margin:0 0 0.5rem 0; color: #2e7d32;">🚒 Station Online</h4>
+                    <p style="margin:2px 0;"><strong>Name:</strong> ${st.name}</p>
+                    <p style="margin:2px 0;"><strong>Contact:</strong> ${st.contact_number}</p>
+                    <span class="badge badge-active" style="margin-top:0.25rem;">${st.status}</span>
+                </div>
+            `;
+            const marker = L.marker([st.latitude, st.longitude], { icon: stationIcon }).bindPopup(popupHTML);
+            markerGroup.addLayer(marker);
+        });
+
+        // Load active fire markers (Red/Orange Pulsing Pins)
+        const fires = {{ fire_pins_json|safe }};
+        fires.forEach(f => {
+            const fireIcon = L.divIcon({
+                className: 'custom-marker-fire',
+                html: `<div class="marker-pin-fire scale-${f.fire_scale}"><span class="inner-dot"></span><span class="pulse-ring"></span></div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+
+            const popupHTML = `
+                <div class="map-popup-card">
+                    <h4 style="margin:0 0 0.5rem 0; color: var(--btn-red);">🔥 Active Fire Incident</h4>
+                    <p style="margin:2px 0;"><strong>ID:</strong> Incident #${f.id}</p>
+                    <p style="margin:2px 0;"><strong>Severity:</strong> Scale ${f.fire_scale}</p>
+                    <p style="margin:2px 0;"><strong>Reported:</strong> ${f.reported_at}</p>
+                    <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+                        <span class="badge badge-pending">${f.status}</span>
+                        <a href="/dispatch/create/?report_id=${f.id}" class="btn-dispatch-action" style="padding: 2px 8px; font-size: 0.75rem; text-decoration: none; border-radius: 4px; display: inline-block;">Dispatch</a>
+                    </div>
+                </div>
+            `;
+            const marker = L.marker([f.latitude, f.longitude], { icon: fireIcon }).bindPopup(popupHTML);
+            markerGroup.addLayer(marker);
+        });
+
+        markerGroup.addTo(map);
+
+        // Auto-fit to pins
+        if (markerGroup.getLayers().length > 0) {
+            map.fitBounds(markerGroup.getBounds(), { padding: [50, 50] });
+        }
+
+        // Avoid Leaflet grey box layout bugs on initial sizing
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 300);
+
+        window.addEventListener('resize', function() {
+            map.invalidateSize();
+        });
+
+
+        // --- 2. Chart.js Setup ---
+        const severityData = {{ severity_breakdown_json|safe }};
+        const ctx = document.getElementById('severityChart').getContext('2d');
+        
+        // Read theme settings to establish starting labels and grid colors
+        const getChartColors = () => {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            return {
+                text: isDark ? "#ffffff" : "#111111",
+                grid: isDark ? "#2d2d2d" : "#e5e5e5"
+            };
+        };
+
+        let currentColors = getChartColors();
+
+        const severityChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Severity 1', 'Severity 2', 'Severity 3'],
+                datasets: [{
+                    label: 'Total Incidents',
+                    data: [severityData.scale_1, severityData.scale_2, severityData.scale_3],
+                    backgroundColor: [
+                        'rgba(46, 125, 50, 0.75)',  // Scale 1 - Green
+                        'rgba(226, 82, 37, 0.75)',  // Scale 2 - Orange
+                        'rgba(195, 0, 16, 0.75)'    // Scale 3 - Red
+                    ],
+                    borderColor: [
+                        '#2e7d32',
+                        '#e25225',
+                        '#c30010'
+                    ],
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: currentColors.text,
+                            stepSize: 1
+                        },
+                        grid: {
+                            color: currentColors.grid
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: currentColors.text
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Sync chart text color dynamically when user toggles dark mode
+        const themeObserver = new MutationObserver(function() {
+            const updatedColors = getChartColors();
+            severityChart.options.scales.y.ticks.color = updatedColors.text;
+            severityChart.options.scales.y.grid.color = updatedColors.grid;
+            severityChart.options.scales.x.ticks.color = updatedColors.text;
+            severityChart.update();
+        });
+        themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,380 @@
+{% extends 'base.html' %}
+
+{% block title %}Incidents List - Fire Route System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── View Toggle Buttons ── */
+    .view-toggle-group {
+        display: flex;
+        gap: 0.4rem;
+    }
+    .view-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: 2px solid var(--gray-medium);
+        border-radius: 8px;
+        background: var(--bg-white);
+        color: var(--gray-dark);
+        cursor: pointer;
+        transition: all 0.18s ease;
+        font-family: var(--font-family);
+    }
+    .view-toggle-btn:hover {
+        border-color: var(--btn-orange);
+        color: var(--btn-orange);
+    }
+    .view-toggle-btn.active {
+        background: var(--btn-orange);
+        border-color: var(--btn-orange);
+        color: #fff;
+    }
+
+    /* ── List View cards ── */
+    .incident-list-view {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+        gap: 1rem;
+    }
+    .incident-card {
+        border: 1px solid var(--gray-medium);
+        border-radius: 10px;
+        padding: 1.1rem 1.25rem;
+        background: var(--bg-white);
+        transition: box-shadow 0.18s ease, transform 0.18s ease;
+    }
+    .incident-card:hover {
+        box-shadow: 0 6px 20px rgba(226,82,37,0.1);
+        transform: translateY(-2px);
+    }
+    .incident-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.6rem;
+    }
+    .incident-card-id {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--color-black);
+    }
+    .incident-card-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--gray-dark);
+        margin-bottom: 0.3rem;
+    }
+    .incident-card-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    /* ── Map View ── */
+    #incident-map {
+        width: 100%;
+        height: 520px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    /* ── Scale badge helpers ── */
+    .scale-badge {
+        display: inline-block;
+        padding: 0.15rem 0.55rem;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        border: 1px solid currentColor;
+    }
+    .scale-1 { background:#e8f5e9; color:#2e7d32; }
+    .scale-2 { background:#fff3e0; color:var(--btn-orange); }
+    .scale-3 { background:#ffebee; color:var(--btn-red); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ── Page Header ── -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="margin: 0; font-size: 2rem;">🔥 Confirmed Fire Incidents</h1>
+        <p style="margin: 0.25rem 0 0 0; font-size: 0.95rem; color: var(--gray-dark);">Manage and monitor confirmed active and historical fire incidents.</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <!-- View toggle buttons -->
+        <div class="view-toggle-group" id="viewToggleGroup">
+            <button class="view-toggle-btn active" id="btn-table" onclick="switchView('table')" title="Table View">
+                ☰ Table
+            </button>
+            <button class="view-toggle-btn" id="btn-list" onclick="switchView('list')" title="List View">
+                ▦ List
+            </button>
+            <button class="view-toggle-btn" id="btn-map" onclick="switchView('map')" title="Map View">
+                🗺 Map
+            </button>
+        </div>
+        <a href="{% url 'fire_report_create' %}" class="btn btn-orange">🚨 Log New Incident</a>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="card" style="padding: 1rem; border-left: 5px solid {% if message.tags == 'success' %}#2e7d32{% else %}var(--btn-red){% endif %}; margin-bottom: 1.5rem; background-color: #f9f9f9;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- ── Search & Filter Bar ── -->
+<div class="card" style="padding: 1.25rem; margin-bottom: 1.5rem; background-color: var(--gray-light); width: 100%;">
+    <form method="GET" action="" style="display: flex !important; flex-direction: row !important; gap: 1rem; align-items: flex-end; flex-wrap: wrap; width: 100%;">
+        <!-- Text search -->
+        <div style="display: flex; flex-direction: column; gap: 0.25rem; flex: 1.5; min-width: 200px;">
+            <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);">Search Text</label>
+            <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                <span style="position: absolute; left: 0.75rem; color: var(--gray-dark); pointer-events: none; font-size: 1rem; line-height: 1;">🔍</span>
+                <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Search by phone, status..."
+                       style="width: 100%; padding: 0.4rem 1rem 0.4rem 2.25rem; font-family: var(--font-family); font-size: 0.9rem; line-height: 1.4; border: 1px solid var(--gray-medium); border-radius: 6px; background-color: var(--bg-white); color: var(--color-black);">
+            </div>
+        </div>
+        <!-- Date -->
+        <div style="display: flex; flex-direction: column; gap: 0.25rem; flex: 1; min-width: 150px;">
+            <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);">Filter by Date</label>
+            <input type="date" name="date" value="{{ selected_date }}"
+                   style="width: 100%; padding: 0.4rem 0.75rem; font-family: var(--font-family); font-size: 0.9rem; line-height: 1.4; border: 1px solid var(--gray-medium); border-radius: 6px; background-color: var(--bg-white); color: var(--color-black); box-sizing: border-box;">
+        </div>
+        <!-- Status -->
+        <div style="display: flex; flex-direction: column; gap: 0.25rem; flex: 1; min-width: 150px;">
+            <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);">Filter by Status</label>
+            <select name="status" style="width: 100%; padding: 0.4rem 0.75rem; font-family: var(--font-family); font-size: 0.9rem; line-height: 1.4; border: 1px solid var(--gray-medium); border-radius: 6px; background-color: var(--bg-white); color: var(--color-black);">
+                <option value="">All Statuses</option>
+                <option value="Confirmed" {% if selected_status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                <option value="Dispatched" {% if selected_status == 'Dispatched' %}selected{% endif %}>Dispatched</option>
+                <option value="Under Control" {% if selected_status == 'Under Control' %}selected{% endif %}>Under Control</option>
+                <option value="Resolved" {% if selected_status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                <option value="False Alarm" {% if selected_status == 'False Alarm' %}selected{% endif %}>False Alarm</option>
+            </select>
+        </div>
+        <!-- Scale -->
+        <div style="display: flex; flex-direction: column; gap: 0.25rem; flex: 1; min-width: 150px;">
+            <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);">Filter by Scale</label>
+            <select name="scale" style="width: 100%; padding: 0.4rem 0.75rem; font-family: var(--font-family); font-size: 0.9rem; line-height: 1.4; border: 1px solid var(--gray-medium); border-radius: 6px; background-color: var(--bg-white); color: var(--color-black);">
+                <option value="">All Scales</option>
+                <option value="1" {% if selected_scale == '1' %}selected{% endif %}>Scale 1 (Low)</option>
+                <option value="2" {% if selected_scale == '2' %}selected{% endif %}>Scale 2 (Medium)</option>
+                <option value="3" {% if selected_scale == '3' %}selected{% endif %}>Scale 3 (High)</option>
+            </select>
+        </div>
+        <!-- Buttons -->
+        <div style="display: flex; gap: 0.5rem; height: 38px;">
+            <button type="submit" class="btn btn-orange" style="height: 100%; font-size: 0.9rem; font-weight: 600; padding: 0 1.25rem;">Apply</button>
+            {% if query or selected_date or selected_status or selected_scale %}
+                <a href="{% url 'fire_report_list' %}" class="btn btn-outline" style="height: 100%; font-size: 0.9rem; font-weight: 600; padding: 0 1.25rem; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; box-sizing: border-box;">Reset</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  TABLE VIEW                                -->
+<!-- ══════════════════════════════════════════ -->
+<div id="view-table">
+<div class="card" style="padding: 1.5rem;">
+    {% if reports %}
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Reporter Phone</th>
+                        <th>Severity Scale</th>
+                        <th>Location (Lat, Lng)</th>
+                        <th>Status</th>
+                        <th>Reported At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                        <tr>
+                            <td><strong>{{ forloop.counter }}</strong></td>
+                            <td>{{ report.reporter_phone|default:"Anonymous" }}</td>
+                            <td>
+                                <span class="scale-badge scale-{{ report.fire_scale }}">Scale {{ report.fire_scale }}</span>
+                            </td>
+                            <td>
+                                {% if report.latitude and report.longitude %}
+                                <a href="https://www.google.com/maps?q={{ report.latitude }},{{ report.longitude }}" target="_blank" style="color: var(--color-black); text-decoration: underline;">
+                                    {{ report.latitude|floatformat:4 }}, {{ report.longitude|floatformat:4 }} ↗
+                                </a>
+                                {% else %}
+                                <span style="color: var(--gray-dark); font-size: 0.85rem;">No GPS</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-{% if report.status|lower == 'confirmed' %}active{% elif report.status|lower == 'pending' %}pending{% elif report.status|lower == 'dispatched' %}dispatched{% elif report.status|lower == 'false alarm' %}false-alarm{% else %}active{% endif %}">
+                                    {{ report.status }}
+                                </span>
+                            </td>
+                            <td>{{ report.reported_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem; align-items: center; white-space: nowrap;">
+                                    <a href="{% url 'fire_report_update' report.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
+                                    <a href="{% url 'fire_report_delete' report.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3.5rem 0; color: var(--gray-dark);">
+            {% if query or selected_date or selected_status or selected_scale %}
+                <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">🔍</span>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem; color: var(--color-black);">No matching reports found</h3>
+                <p style="margin: 0; font-size: 0.95rem;">No results for the current search / filter options.</p>
+                <a href="{% url 'fire_report_list' %}" class="btn btn-orange" style="margin-top: 1.25rem; display: inline-block;">Reset Filters</a>
+            {% else %}
+                <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">🔥</span>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem; color: var(--color-black);">No incidents logged within time window</h3>
+                <p style="margin: 0; font-size: 0.95rem;">No confirmed incidents recorded in the last 7 days.</p>
+                <a href="{% url 'report_fire' %}" class="btn btn-orange" style="margin-top: 1.25rem; display: inline-block;">Go to Emergency Reporting Form</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  LIST VIEW (cards grid)                    -->
+<!-- ══════════════════════════════════════════ -->
+<div id="view-list" style="display: none;">
+    {% if reports %}
+        <div class="incident-list-view">
+            {% for report in reports %}
+            <div class="incident-card">
+                <div class="incident-card-header">
+                    <span class="incident-card-id">No {{ forloop.counter }}</span>
+                    <span class="scale-badge scale-{{ report.fire_scale }}">Scale {{ report.fire_scale }}</span>
+                </div>
+                <div class="incident-card-row">
+                    📞 {{ report.reporter_phone|default:"Anonymous" }}
+                </div>
+                <div class="incident-card-row">
+                    🕐 {{ report.reported_at|date:"Y-m-d H:i" }}
+                </div>
+                {% if report.latitude and report.longitude %}
+                <div class="incident-card-row">
+                    📍 <a href="https://www.google.com/maps?q={{ report.latitude }},{{ report.longitude }}" target="_blank" style="color: var(--btn-orange); text-decoration: none;">
+                        {{ report.latitude|floatformat:4 }}, {{ report.longitude|floatformat:4 }} ↗
+                    </a>
+                </div>
+                {% endif %}
+                <div class="incident-card-row" style="margin-top: 0.4rem;">
+                    <span class="badge badge-{% if report.status|lower == 'confirmed' %}active{% elif report.status|lower == 'pending' %}pending{% elif report.status|lower == 'dispatched' %}dispatched{% elif report.status|lower == 'false alarm' %}false-alarm{% else %}active{% endif %}">{{ report.status }}</span>
+                </div>
+                <div class="incident-card-actions">
+                    <a href="{% url 'fire_report_update' report.id %}" class="btn btn-outline" style="padding: 0.3rem 0.75rem; font-size: 0.82rem;">Edit</a>
+                    <a href="{% url 'fire_report_delete' report.id %}" class="btn btn-red" style="padding: 0.3rem 0.75rem; font-size: 0.82rem;">Delete</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card" style="padding: 3rem; text-align: center; color: var(--gray-dark);">
+            <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">🔥</span>
+            <p>No incidents to display.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  MAP VIEW                                  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="view-map" style="display: none;">
+    <div class="card" style="padding: 1.25rem;">
+        <div style="margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--gray-dark);">
+            🗺 Showing <strong>{{ reports|length }}</strong> incident(s) on the map. Click a pin for details.
+        </div>
+        <div id="incident-map"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ── View switcher ──────────────────────────────
+    let mapInitialised = false;
+
+    function switchView(mode) {
+        ['table', 'list', 'map'].forEach(v => {
+            document.getElementById('view-' + v).style.display = (v === mode) ? '' : 'none';
+            document.getElementById('btn-' + v).classList.toggle('active', v === mode);
+        });
+        // Initialise Leaflet map lazily on first switch to map view
+        if (mode === 'map' && !mapInitialised) {
+            initIncidentMap();
+            mapInitialised = true;
+        }
+    }
+
+    // ── Leaflet incident map ───────────────────────
+    function initIncidentMap() {
+        const map = L.map('incident-map', {
+            scrollWheelZoom: true,
+            minZoom: 5
+        }).setView([21.9750, 96.0830], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const incidents = {{ reports_json|safe }};
+        const markerGroup = L.featureGroup();
+
+        function scaleColor(s) {
+            return s === 3 ? '#c30010' : s === 2 ? '#e25225' : '#2e7d32';
+        }
+
+        incidents.forEach(function(r) {
+            const color = scaleColor(r.fire_scale);
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="background:${color};width:15px;height:15px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 8px ${color}99;"></div>`,
+                iconSize: [21, 21],
+                iconAnchor: [10, 10]
+            });
+
+            const scaleLabels = {1: 'Low', 2: 'Medium', 3: 'High'};
+            const popup = `
+                <div style="min-width:180px;font-family:inherit;">
+                    <p style="margin:0 0 4px;font-weight:700;font-size:0.95rem;color:${color};">🔥 Incident #${r.id}</p>
+                    <p style="margin:0 0 3px;font-size:0.82rem;">📞 ${r.reporter_phone}</p>
+                    <p style="margin:0 0 3px;font-size:0.82rem;">🕐 ${r.reported_at}</p>
+                    <p style="margin:0 0 6px;font-size:0.82rem;">Scale ${r.fire_scale} (${scaleLabels[r.fire_scale] || ''})</p>
+                    <span style="display:inline-block;padding:2px 8px;border-radius:50px;font-size:0.7rem;font-weight:700;background:${color}20;color:${color};border:1px solid ${color};">
+                        ${r.status}
+                    </span>
+                </div>`;
+
+            L.marker([r.latitude, r.longitude], {icon}).bindPopup(popup).addTo(markerGroup);
+        });
+
+        markerGroup.addTo(map);
+        if (markerGroup.getLayers().length > 0) {
+            map.fitBounds(markerGroup.getBounds(), {padding: [50, 50]});
+        }
+
+        setTimeout(() => map.invalidateSize(), 200);
+    }
+</script>
+{% endblock %}
