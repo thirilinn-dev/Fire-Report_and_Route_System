@@ -4,8 +4,8 @@
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-    <h1>📋 Emergency Dispatches</h1>
-    <a href="{% url 'dispatch_create' %}" class="btn btn-orange">🚒 New Dispatch Deployment</a>
+    <h1 id="dispatch-title">📋 Emergency Dispatches</h1>
+    <a href="{% url 'dispatch_create' %}" class="btn btn-orange" id="dispatch-new-btn">🚒 New Dispatch Deployment</a>
 </div>
 
 <div class="card" style="padding: 1.5rem;">
@@ -14,14 +14,14 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Dispatch ID</th>
-                        <th>Incident</th>
-                        <th>Responding Station</th>
-                        <th>Operator</th>
-                        <th>Dispatched At</th>
-                        <th>Resolved At</th>
-                        <th>Resources Deployed</th>
-                        <th>Actions</th>
+                        <th id="th-disp-id">Dispatch ID</th>
+                        <th id="th-disp-incident">Incident</th>
+                        <th id="th-disp-station">Responding Station</th>
+                        <th id="th-disp-operator">Operator</th>
+                        <th id="th-disp-dispatched">Dispatched At</th>
+                        <th id="th-disp-resolved">Resolved At</th>
+                        <th id="th-disp-resources">Resources Deployed</th>
+                        <th id="th-disp-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,14 +40,14 @@
                                 {% if dispatch.resolved_at %}
                                     <span class="badge badge-active">{{ dispatch.resolved_at|date:"Y-m-d H:i" }}</span>
                                 {% else %}
-                                    <span class="badge badge-pending">Active</span>
+                                    <span class="badge badge-pending disp-active-badge">Active</span>
                                 {% endif %}
                             </td>
                             <td>{{ dispatch.resources_deployed|default:"-" }}</td>
                             <td>
                                 <div style="display: flex; gap: 0.5rem; align-items: center; white-space: nowrap;">
-                                    <a href="{% url 'dispatch_update' dispatch.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
-                                    <a href="{% url 'dispatch_delete' dispatch.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                                    <a href="{% url 'dispatch_update' dispatch.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" data-en="Edit" data-my="တည်းဖြတ်မည်">Edit</a>
+                                    <a href="{% url 'dispatch_delete' dispatch.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" data-en="Delete" data-my="ဖျက်မည်">Delete</a>
                                 </div>
                             </td>
                         </tr>
@@ -57,9 +57,65 @@
         </div>
     {% else %}
         <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
-            <p style="font-size: 1.2rem; margin-bottom: 1rem;">No dispatch operations logged yet.</p>
-            <a href="{% url 'dispatch_create' %}" class="btn btn-orange">Log the First Dispatch</a>
+            <p style="font-size: 1.2rem; margin-bottom: 1rem;" id="dispatch-empty">No dispatch operations logged yet.</p>
+            <a href="{% url 'dispatch_create' %}" class="btn btn-orange" id="dispatch-first-btn">Log the First Dispatch</a>
         </div>
     {% endif %}
 </div>
+
+<script>
+(function() {
+    const dispatchTranslations = {
+        en: {
+            title: "📋 Emergency Dispatches",
+            newBtn: "🚒 New Dispatch Deployment",
+            thId: "Dispatch ID", thIncident: "Incident", thStation: "Responding Station",
+            thOperator: "Operator", thDispatched: "Dispatched At", thResolved: "Resolved At",
+            thResources: "Resources Deployed", thActions: "Actions",
+            activeBadge: "Active",
+            emptyText: "No dispatch operations logged yet.",
+            firstBtn: "Log the First Dispatch"
+        },
+        my: {
+            title: "📋 အရေးပေါ် စေလွှတ်မှုများ",
+            newBtn: "🚒 စေလွှတ်မှုအသစ် ထည့်သွင်းမည်",
+            thId: "စေလွှတ်မှု ID", thIncident: "ဖြစ်စဉ်", thStation: "တုံ့ပြန်သောစခန်း",
+            thOperator: "တာဝန်ခံ", thDispatched: "စေလွှတ်ချိန်", thResolved: "ဖြေရှင်းချိန်",
+            thResources: "ဖြန့်ချထားသော အရင်းအမြစ်", thActions: "လုပ်ဆောင်ချက်",
+            activeBadge: "ဆောင်ရွက်နေဆဲ",
+            emptyText: "စေလွှတ်မှု မှတ်တမ်းမရှိသေးပါ။",
+            firstBtn: "ပထမ စေလွှတ်မှု မှတ်တမ်းတင်မည်"
+        }
+    };
+
+    function updateDispatchListUI(lang) {
+        const d = dispatchTranslations[lang];
+        if (!d) return;
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        set("dispatch-title", d.title);
+        set("dispatch-new-btn", d.newBtn);
+        set("th-disp-id", d.thId);
+        set("th-disp-incident", d.thIncident);
+        set("th-disp-station", d.thStation);
+        set("th-disp-operator", d.thOperator);
+        set("th-disp-dispatched", d.thDispatched);
+        set("th-disp-resolved", d.thResolved);
+        set("th-disp-resources", d.thResources);
+        set("th-disp-actions", d.thActions);
+        set("dispatch-empty", d.emptyText);
+        set("dispatch-first-btn", d.firstBtn);
+        document.querySelectorAll(".disp-active-badge").forEach(el => { el.innerText = d.activeBadge; });
+        document.querySelectorAll("[data-en][data-my]").forEach(el => {
+            el.innerText = lang === "my" ? el.getAttribute("data-my") : el.getAttribute("data-en");
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        updateDispatchListUI(localStorage.getItem("lang") || "my");
+    });
+    window.addEventListener("languageChanged", function(e) {
+        updateDispatchListUI(e.detail.lang);
+    });
+})();
+</script>
 {% endblock %}

@@ -5,8 +5,8 @@
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
     <div>
-        <h1 style="margin: 0; font-size: 2rem;">📥 Incident Triage Queue</h1>
-        <p style="margin: 0.25rem 0 0 0; font-size: 0.95rem; color: var(--gray-dark);">Review and confirm incoming citizen reports before they enter active dispatch streams.</p>
+        <h1 style="margin: 0; font-size: 2rem;" id="triage-title">📥 Incident Triage Queue</h1>
+        <p style="margin: 0.25rem 0 0 0; font-size: 0.95rem; color: var(--gray-dark);" id="triage-subtitle">Review and confirm incoming citizen reports before they enter active dispatch streams.</p>
     </div>
 </div>
 
@@ -16,12 +16,12 @@
             <table>
                 <thead>
                     <tr>
-                        <th>No</th>
-                        <th>Reporter Phone</th>
-                        <th>Severity Scale</th>
-                        <th>Location</th>
-                        <th>Logged At</th>
-                        <th>Action</th>
+                        <th id="th-triage-no">No</th>
+                        <th id="th-triage-phone">Reporter Phone</th>
+                        <th id="th-triage-severity">Severity Scale</th>
+                        <th id="th-triage-location">Location</th>
+                        <th id="th-triage-logged">Logged At</th>
+                        <th id="th-triage-action">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,7 +47,7 @@
                             <td>
                                 <form method="POST" action="{% url 'confirm_incident' notif.id %}" style="margin: 0; display: inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-orange" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; height: auto;">
+                                    <button type="submit" class="btn btn-orange triage-confirm-btn" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; height: auto;">
                                         Confirm Incident
                                     </button>
                                 </form>
@@ -60,9 +60,58 @@
     {% else %}
         <div style="text-align: center; padding: 4rem 0; color: var(--gray-dark);">
             <span style="font-size: 3rem; display: block; margin-bottom: 0.5rem;">📥</span>
-            <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem; color: var(--color-black);">Triage queue is empty</h3>
-            <p style="margin: 0; font-size: 0.95rem;">All incoming citizen fire reports have been triaged and confirmed.</p>
+            <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem; color: var(--color-black);" id="triage-empty-title">Triage queue is empty</h3>
+            <p style="margin: 0; font-size: 0.95rem;" id="triage-empty-desc">All incoming citizen fire reports have been triaged and confirmed.</p>
         </div>
     {% endif %}
 </div>
+
+<script>
+(function() {
+    const triageTranslations = {
+        en: {
+            title: "📥 Incident Triage Queue",
+            subtitle: "Review and confirm incoming citizen reports before they enter active dispatch streams.",
+            thNo: "No", thPhone: "Reporter Phone", thSeverity: "Severity Scale",
+            thLocation: "Location", thLogged: "Logged At", thAction: "Action",
+            confirmBtn: "Confirm Incident",
+            emptyTitle: "Triage queue is empty",
+            emptyDesc: "All incoming citizen fire reports have been triaged and confirmed."
+        },
+        my: {
+            title: "📥 ဖြစ်စဉ် Triage စီတန်း",
+            subtitle: "လက်ကြွဲနိုင်ငံသားများ၏ သတင်းပို့ချက်များကို တက်ကြွ စေလွှတ်မှုစနစ်သို့ ဝင်ရောက်ခြင်းမပြုမီ စစ်ဆေးနှင့် အတည်ပြုပါ။",
+            thNo: "နံပါတ်", thPhone: "သတင်းပို့သူ ဖုန်းနံပါတ်", thSeverity: "မီးပြင်းထန်မှုအဆင့်",
+            thLocation: "တည်နေရာ", thLogged: "မှတ်တမ်းတင်ချိန်", thAction: "လုပ်ဆောင်ချက်",
+            confirmBtn: "ဖြစ်စဉ်အတည်ပြုမည်",
+            emptyTitle: "Triage စီတန်းလွတ်နေပါသည်",
+            emptyDesc: "ဝင်ရောက်လာသော နိုင်ငံသားများ၏ မီးသတင်းပို့ချက်အားလုံး စစ်ဆေးအတည်ပြုပြီးပါပြီ။"
+        }
+    };
+
+    function updateTriageUI(lang) {
+        const d = triageTranslations[lang];
+        if (!d) return;
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        set("triage-title", d.title);
+        set("triage-subtitle", d.subtitle);
+        set("th-triage-no", d.thNo);
+        set("th-triage-phone", d.thPhone);
+        set("th-triage-severity", d.thSeverity);
+        set("th-triage-location", d.thLocation);
+        set("th-triage-logged", d.thLogged);
+        set("th-triage-action", d.thAction);
+        set("triage-empty-title", d.emptyTitle);
+        set("triage-empty-desc", d.emptyDesc);
+        document.querySelectorAll(".triage-confirm-btn").forEach(btn => { btn.innerText = d.confirmBtn; });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        updateTriageUI(localStorage.getItem("lang") || "my");
+    });
+    window.addEventListener("languageChanged", function(e) {
+        updateTriageUI(e.detail.lang);
+    });
+})();
+</script>
 {% endblock %}

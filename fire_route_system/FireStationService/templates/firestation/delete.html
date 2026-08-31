@@ -4,21 +4,60 @@
 
 {% block content %}
 <div style="max-width: 600px; margin: 0 auto;">
-    <h1>Delete Fire Station</h1>
+    <h1 id="station-del-title">Delete Fire Station</h1>
 
     <div class="card" style="border-color: var(--btn-red);">
-        <h3 style="color: var(--btn-red); margin-bottom: 1rem;">⚠️ Warning: This action cannot be undone!</h3>
-        <p style="margin-bottom: 1.5rem; font-size: 1.05rem;">
+        <h3 style="color: var(--btn-red); margin-bottom: 1rem;" id="station-del-warning">⚠️ Warning: This action cannot be undone!</h3>
+        <p style="margin-bottom: 1.5rem; font-size: 1.05rem;" id="station-del-desc">
             Are you sure you want to delete the fire station <strong>"{{ station.name }}"</strong>?
         </p>
 
         <form method="POST">
             {% csrf_token %}
             <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: flex-end;">
-                <button type="submit" class="btn btn-red">Delete Permanently</button>
-                <a href="{% url 'firestation_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-red" id="station-del-confirm">Delete Permanently</button>
+                <a href="{% url 'firestation_list' %}" class="btn btn-outline" id="station-del-cancel">Cancel</a>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+(function() {
+    const translations = {
+        en: {
+            title: "Delete Fire Station",
+            warning: "⚠️ Warning: This action cannot be undone!",
+            desc: 'Are you sure you want to delete the fire station "{{ station.name }}"?',
+            confirm: "Delete Permanently",
+            cancel: "Cancel"
+        },
+        my: {
+            title: "မီးသတ်စခန်း ဖျက်မည်",
+            warning: "⚠️ သတိပေးချက်: ဤလုပ်ဆောင်ချက်ကို မပြန်နိုင်ပါ!",
+            desc: '"{{ station.name }}" မီးသတ်စခန်းကို ဖျက်မှာ သေချာပါသလား?',
+            confirm: "အပြီးအပိုင် ဖျက်မည်",
+            cancel: "မလုပ်တော့ပါ"
+        }
+    };
+
+    function updateStationDeleteUI(lang) {
+        const d = translations[lang];
+        if (!d) return;
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        set("station-del-title", d.title);
+        set("station-del-warning", d.warning);
+        set("station-del-desc", d.desc);
+        set("station-del-confirm", d.confirm);
+        set("station-del-cancel", d.cancel);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        updateStationDeleteUI(localStorage.getItem("lang") || "my");
+    });
+    window.addEventListener("languageChanged", function(e) {
+        updateStationDeleteUI(e.detail.lang);
+    });
+})();
+</script>
 {% endblock %}

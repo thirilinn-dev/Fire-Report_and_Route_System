@@ -4,7 +4,7 @@
 
 {% block content %}
 <div style="max-width: 600px; margin: 0 auto;">
-    <h1>{{ title }}</h1>
+    <h1 id="report-form-title">{{ title }}</h1>
 
     <div class="card">
         <form method="post" enctype="multipart/form-data">
@@ -26,10 +26,34 @@
             {% endfor %}
 
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; justify-content: flex-end;">
-                <button type="submit" class="btn btn-orange">Save Report</button>
-                <a href="{% url 'fire_report_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-orange" id="report-form-save">Save Report</button>
+                <a href="{% url 'fire_report_list' %}" class="btn btn-outline" id="report-form-cancel">Cancel</a>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+(function() {
+    const translations = {
+        en: { save: "Save Report", cancel: "Cancel" },
+        my: { save: "မှတ်တမ်း သိမ်းဆည်းမည်", cancel: "မလုပ်တော့ပါ" }
+    };
+
+    function updateReportFormUI(lang) {
+        const d = translations[lang];
+        if (!d) return;
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        set("report-form-save", d.save);
+        set("report-form-cancel", d.cancel);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        updateReportFormUI(localStorage.getItem("lang") || "my");
+    });
+    window.addEventListener("languageChanged", function(e) {
+        updateReportFormUI(e.detail.lang);
+    });
+})();
+</script>
 {% endblock %}

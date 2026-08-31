@@ -4,7 +4,7 @@
 
 {% block content %}
 <div style="max-width: 600px; margin: 0 auto;">
-    <h1>{% if form.instance.pk %}Edit User Role{% else %}Create User Role{% endif %}</h1>
+    <h1 id="role-form-title">{% if form.instance.pk %}Edit User Role{% else %}Create User Role{% endif %}</h1>
 
     <div class="card">
         <form method="post">
@@ -26,10 +26,46 @@
             {% endfor %}
 
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; justify-content: flex-end;">
-                <button type="submit" class="btn btn-orange">Save Role</button>
-                <a href="{% url 'role_list' %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-orange" id="role-form-save">Save Role</button>
+                <a href="{% url 'role_list' %}" class="btn btn-outline" id="role-form-cancel">Cancel</a>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+(function() {
+    const isEdit = {{ form.instance.pk|yesno:"true,false" }};
+    const translations = {
+        en: {
+            titleCreate: "Create User Role",
+            titleEdit: "Edit User Role",
+            save: "Save Role",
+            cancel: "Cancel"
+        },
+        my: {
+            titleCreate: "အသုံးပြုသူ အခန်းကဏ္ဍ ဖန်တီးမည်",
+            titleEdit: "အသုံးပြုသူ အခန်းကဏ္ဍ တည်းဖြတ်မည်",
+            save: "အခန်းကဏ္ဍ သိမ်းဆည်းမည်",
+            cancel: "မလုပ်တော့ပါ"
+        }
+    };
+
+    function updateRoleFormUI(lang) {
+        const d = translations[lang];
+        if (!d) return;
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        set("role-form-title", isEdit ? d.titleEdit : d.titleCreate);
+        set("role-form-save", d.save);
+        set("role-form-cancel", d.cancel);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        updateRoleFormUI(localStorage.getItem("lang") || "my");
+    });
+    window.addEventListener("languageChanged", function(e) {
+        updateRoleFormUI(e.detail.lang);
+    });
+})();
+</script>
 {% endblock %}

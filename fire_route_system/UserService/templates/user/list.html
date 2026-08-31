@@ -4,8 +4,8 @@
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-    <h1>👥 User Accounts</h1>
-    <a href="{% url 'user_create' %}" class="btn btn-orange">➕ Create User</a>
+    <h1 id="users-title">👥 User Accounts</h1>
+    <a href="{% url 'user_create' %}" class="btn btn-orange" id="users-create-btn">➕ Create User</a>
 </div>
 
 <!-- Search bar -->
@@ -13,14 +13,14 @@
     <form method="GET" action="" style="display: flex; gap: 0.5rem; width: 100%;">
         <div class="search-input-wrapper" style="position: relative; flex: 1; display: flex; align-items: center;">
             <span style="position: absolute; left: 0.75rem; color: var(--gray-dark, #666666); pointer-events: none; font-size: 1rem; line-height: 1;">🔍</span>
-            <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Search by username, email, phone..." 
+            <input type="text" name="q" value="{{ query|default:'' }}" id="users-search-input" placeholder="Search by username, email, phone..." 
                    style="width: 100%; padding: 0.5rem 1rem 0.5rem 2.25rem; font-family: var(--font-family, inherit); font-size: 0.9rem; line-height: 1.4; border: 1px solid var(--gray-medium, #e0e0e0); border-radius: 8px; background-color: var(--bg-white, #ffffff); color: var(--color-black, #000000); box-sizing: border-box;">
         </div>
-        <button type="submit" class="btn btn-orange" style="padding: 0.5rem 1.25rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; white-space: nowrap; height: 38px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;">
+        <button type="submit" class="btn btn-orange" id="users-search-btn" style="padding: 0.5rem 1.25rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; white-space: nowrap; height: 38px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;">
             Search
         </button>
         {% if query %}
-            <a href="{{ request.path }}" class="btn btn-outline" style="padding: 0.5rem 1.25rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; height: 38px; box-sizing: border-box;">
+            <a href="{{ request.path }}" class="btn btn-outline" id="users-clear-btn" style="padding: 0.5rem 1.25rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; height: 38px; box-sizing: border-box;">
                 Clear
             </a>
         {% endif %}
@@ -33,13 +33,13 @@
             <table>
                 <thead>
                     <tr>
-                        <th>User ID</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Phone Number</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th id="th-user-id">User ID</th>
+                        <th id="th-user-name">Username</th>
+                        <th id="th-user-email">Email</th>
+                        <th id="th-user-phone">Phone Number</th>
+                        <th id="th-user-role">Role</th>
+                        <th id="th-user-status">Status</th>
+                        <th id="th-user-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -61,8 +61,8 @@
                             </td>
                             <td>
                                 <div style="display: flex; gap: 0.5rem; align-items: center; white-space: nowrap;">
-                                    <a href="{% url 'user_update' user.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
-                                    <a href="{% url 'user_delete' user.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                                    <a href="{% url 'user_update' user.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" data-en="Edit" data-my="တည်းဖြတ်မည်">Edit</a>
+                                    <a href="{% url 'user_delete' user.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" data-en="Delete" data-my="ဖျက်မည်">Delete</a>
                                 </div>
                             </td>
                         </tr>
@@ -73,13 +73,79 @@
     {% else %}
         <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
             {% if query %}
-                <p style="font-size: 1.2rem; margin-bottom: 1rem;">No matching users found for "{{ query }}".</p>
-                <a href="{{ request.path }}" class="btn btn-orange" style="text-decoration: none;">Clear Search Filter</a>
+                <p style="font-size: 1.2rem; margin-bottom: 1rem;" id="users-no-match">No matching users found for "{{ query }}".</p>
+                <a href="{{ request.path }}" class="btn btn-orange" style="text-decoration: none;" id="users-clear-search">Clear Search Filter</a>
             {% else %}
-                <p style="font-size: 1.2rem; margin-bottom: 1rem;">No users created yet.</p>
-                <a href="{% url 'user_create' %}" class="btn btn-orange">Create the First User Account</a>
+                <p style="font-size: 1.2rem; margin-bottom: 1rem;" id="users-empty">No users created yet.</p>
+                <a href="{% url 'user_create' %}" class="btn btn-orange" id="users-create-first">Create the First User Account</a>
             {% endif %}
         </div>
     {% endif %}
 </div>
+
+<script>
+(function() {
+    const userTranslations = {
+        en: {
+            title: "👥 User Accounts",
+            createBtn: "➕ Create User",
+            searchPlaceholder: "Search by username, email, phone...",
+            searchBtn: "Search",
+            clearBtn: "Clear",
+            thId: "User ID", thName: "Username", thEmail: "Email",
+            thPhone: "Phone Number", thRole: "Role", thStatus: "Status", thActions: "Actions",
+            noMatch: "No matching users found.",
+            clearSearch: "Clear Search Filter",
+            empty: "No users created yet.",
+            createFirst: "Create the First User Account"
+        },
+        my: {
+            title: "👥 အသုံးပြုသူ အကောင့်များ",
+            createBtn: "➕ အသုံးပြုသူ ဖန်တီးမည်",
+            searchPlaceholder: "အသုံးပြုသူနာမည်၊ အီးမေးလ်၊ ဖုန်းဖြင့် ရှာပါ...",
+            searchBtn: "ရှာဖွေမည်",
+            clearBtn: "ရှင်းလင်းမည်",
+            thId: "အသုံးပြုသူ ID", thName: "အသုံးပြုသူနာမည်", thEmail: "အီးမေးလ်",
+            thPhone: "ဖုန်းနံပါတ်", thRole: "အခန်းကဏ္ဍ", thStatus: "အခြေအနေ", thActions: "လုပ်ဆောင်ချက်",
+            noMatch: "ကိုက်ညီသော အသုံးပြုသူမတွေ့ပါ။",
+            clearSearch: "ရှာဖွေမှုစစ်ထုတ်ချက် ရှင်းလင်းမည်",
+            empty: "အသုံးပြုသူ မရှိသေးပါ။",
+            createFirst: "ပထမ အသုံးပြုသူ အကောင့် ဖန်တီးမည်"
+        }
+    };
+
+    function updateUsersListUI(lang) {
+        const d = userTranslations[lang];
+        if (!d) return;
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        const setAttr = (id, attr, val) => { const el = document.getElementById(id); if (el) el.setAttribute(attr, val); };
+        set("users-title", d.title);
+        set("users-create-btn", d.createBtn);
+        setAttr("users-search-input", "placeholder", d.searchPlaceholder);
+        set("users-search-btn", d.searchBtn);
+        set("users-clear-btn", d.clearBtn);
+        set("th-user-id", d.thId);
+        set("th-user-name", d.thName);
+        set("th-user-email", d.thEmail);
+        set("th-user-phone", d.thPhone);
+        set("th-user-role", d.thRole);
+        set("th-user-status", d.thStatus);
+        set("th-user-actions", d.thActions);
+        set("users-no-match", d.noMatch);
+        set("users-clear-search", d.clearSearch);
+        set("users-empty", d.empty);
+        set("users-create-first", d.createFirst);
+        document.querySelectorAll("[data-en][data-my]").forEach(el => {
+            el.innerText = lang === "my" ? el.getAttribute("data-my") : el.getAttribute("data-en");
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        updateUsersListUI(localStorage.getItem("lang") || "my");
+    });
+    window.addEventListener("languageChanged", function(e) {
+        updateUsersListUI(e.detail.lang);
+    });
+})();
+</script>
 {% endblock %}

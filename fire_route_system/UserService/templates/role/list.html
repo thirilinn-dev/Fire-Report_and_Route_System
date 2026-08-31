@@ -4,8 +4,8 @@
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-    <h1>🛡️ User Roles</h1>
-    <a href="{% url 'role_create' %}" class="btn btn-orange">➕ Create Role</a>
+    <h1 id="roles-title">🛡️ User Roles</h1>
+    <a href="{% url 'role_create' %}" class="btn btn-orange" id="roles-create-btn">➕ Create Role</a>
 </div>
 
 <div class="card" style="padding: 1.5rem;">
@@ -14,11 +14,11 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Role ID</th>
-                        <th>Role Name</th>
-                        <th>Description</th>
-                        <th>Created At</th>
-                        <th>Actions</th>
+                        <th id="th-role-id">Role ID</th>
+                        <th id="th-role-name">Role Name</th>
+                        <th id="th-role-desc">Description</th>
+                        <th id="th-role-created">Created At</th>
+                        <th id="th-role-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -30,8 +30,8 @@
                             <td>{{ role.created_at|date:"Y-m-d H:i" }}</td>
                             <td>
                                 <div style="display: flex; gap: 0.5rem; align-items: center; white-space: nowrap;">
-                                    <a href="{% url 'role_update' role.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
-                                    <a href="{% url 'role_delete' role.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                                    <a href="{% url 'role_update' role.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" data-en="Edit" data-my="တည်းဖြတ်မည်">Edit</a>
+                                    <a href="{% url 'role_delete' role.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" data-en="Delete" data-my="ဖျက်မည်">Delete</a>
                                 </div>
                             </td>
                         </tr>
@@ -41,9 +41,57 @@
         </div>
     {% else %}
         <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
-            <p style="font-size: 1.2rem; margin-bottom: 1rem;">No user roles defined yet.</p>
-            <a href="{% url 'role_create' %}" class="btn btn-orange">Create the First Role</a>
+            <p style="font-size: 1.2rem; margin-bottom: 1rem;" id="roles-empty">No user roles defined yet.</p>
+            <a href="{% url 'role_create' %}" class="btn btn-orange" id="roles-create-first">Create the First Role</a>
         </div>
     {% endif %}
 </div>
+
+<script>
+(function() {
+    const roleTranslations = {
+        en: {
+            title: "🛡️ User Roles",
+            createBtn: "➕ Create Role",
+            thId: "Role ID", thName: "Role Name", thDesc: "Description",
+            thCreated: "Created At", thActions: "Actions",
+            empty: "No user roles defined yet.",
+            createFirst: "Create the First Role"
+        },
+        my: {
+            title: "🛡️ အသုံးပြုသူ အခန်းကဏ္ဍများ",
+            createBtn: "➕ အခန်းကဏ္ဍ ဖန်တီးမည်",
+            thId: "အခန်းကဏ္ဍ ID", thName: "အခန်းကဏ္ဍ အမည်", thDesc: "ဖော်ပြချက်",
+            thCreated: "ဖန်တီးချိန်", thActions: "လုပ်ဆောင်ချက်",
+            empty: "အသုံးပြုသူ အခန်းကဏ္ဍ မသတ်မှတ်ရသေးပါ။",
+            createFirst: "ပထမ အခန်းကဏ္ဍ ဖန်တီးမည်"
+        }
+    };
+
+    function updateRolesListUI(lang) {
+        const d = roleTranslations[lang];
+        if (!d) return;
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        set("roles-title", d.title);
+        set("roles-create-btn", d.createBtn);
+        set("th-role-id", d.thId);
+        set("th-role-name", d.thName);
+        set("th-role-desc", d.thDesc);
+        set("th-role-created", d.thCreated);
+        set("th-role-actions", d.thActions);
+        set("roles-empty", d.empty);
+        set("roles-create-first", d.createFirst);
+        document.querySelectorAll("[data-en][data-my]").forEach(el => {
+            el.innerText = lang === "my" ? el.getAttribute("data-my") : el.getAttribute("data-en");
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        updateRolesListUI(localStorage.getItem("lang") || "my");
+    });
+    window.addEventListener("languageChanged", function(e) {
+        updateRolesListUI(e.detail.lang);
+    });
+})();
+</script>
 {% endblock %}

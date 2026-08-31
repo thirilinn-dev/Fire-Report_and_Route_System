@@ -10,12 +10,12 @@
 {% block content %}
 <div class="dashboard-header">
     <div>
-        <h1 class="dashboard-title">🚒 CAD Control Dashboard</h1>
-        <p class="dashboard-subtitle">Emergency Response and Computer-Aided Dispatch System | Mandalay Region Command</p>
+        <h1 class="dashboard-title" id="dash-title">🚒 CAD Control Dashboard</h1>
+        <p class="dashboard-subtitle" id="dash-subtitle">Emergency Response and Computer-Aided Dispatch System | Mandalay Region Command</p>
     </div>
     <div class="live-indicator">
         <span class="blink-dot"></span>
-        <span class="live-text">SYSTEM LIVE</span>
+        <span class="live-text" id="dash-live">SYSTEM LIVE</span>
     </div>
 </div>
 
@@ -25,36 +25,36 @@
     <div class="kpi-card danger-card">
         <div class="kpi-icon">🔥</div>
         <div class="kpi-data">
-            <span class="kpi-label">Active Incidents</span>
+            <span class="kpi-label" id="kpi-active-label">Active Incidents</span>
             <h2 class="kpi-value">{{ total_active_fires }}</h2>
-            <span class="kpi-trend">Pending or Dispatched</span>
+            <span class="kpi-trend" id="kpi-active-trend">Pending or Dispatched</span>
         </div>
     </div>
     <!-- Card 2: High Severity -->
     <div class="kpi-card warning-card">
         <div class="kpi-icon">⚠️</div>
         <div class="kpi-data">
-            <span class="kpi-label">High Severity</span>
+            <span class="kpi-label" id="kpi-severity-label">High Severity</span>
             <h2 class="kpi-value">{{ high_severity_fires }}</h2>
-            <span class="kpi-trend">Scale 3 Active Reports</span>
+            <span class="kpi-trend" id="kpi-severity-trend">Scale 3 Active Reports</span>
         </div>
     </div>
     <!-- Card 3: Available Stations -->
     <div class="kpi-card success-card">
         <div class="kpi-icon">🛡️</div>
         <div class="kpi-data">
-            <span class="kpi-label">Active Stations</span>
+            <span class="kpi-label" id="kpi-stations-label">Active Stations</span>
             <h2 class="kpi-value">{{ available_stations }}</h2>
-            <span class="kpi-trend">Online and Operational</span>
+            <span class="kpi-trend" id="kpi-stations-trend">Online and Operational</span>
         </div>
     </div>
     <!-- Card 4: Total Dispatches Today -->
     <div class="kpi-card info-card">
         <div class="kpi-icon">📋</div>
         <div class="kpi-data">
-            <span class="kpi-label">Today's Dispatches</span>
+            <span class="kpi-label" id="kpi-dispatches-label">Today's Dispatches</span>
             <h2 class="kpi-value">{{ total_dispatches_today }}</h2>
-            <span class="kpi-trend">Created calendar day</span>
+            <span class="kpi-trend" id="kpi-dispatches-trend">Created calendar day</span>
         </div>
     </div>
 </div>
@@ -64,8 +64,8 @@
     <!-- Map Container -->
     <div class="dashboard-card map-card">
         <div class="card-header">
-            <h3>📍 Live Incident & Station Map</h3>
-            <span class="card-action-hint">Double click to zoom, hover pin for summary</span>
+            <h3 id="dash-map-title">📍 Live Incident & Station Map</h3>
+            <span class="card-action-hint" id="dash-map-hint">Double click to zoom, hover pin for summary</span>
         </div>
         <div class="map-wrapper-inner">
             <div id="dashboard-map"></div>
@@ -74,8 +74,8 @@
     <!-- Analytics Chart -->
     <div class="dashboard-card chart-card">
         <div class="card-header">
-            <h3>📊 Severity Scale Analysis</h3>
-            <span class="card-action-hint">Historical breakdown of incident scales</span>
+            <h3 id="dash-chart-title">📊 Severity Scale Analysis</h3>
+            <span class="card-action-hint" id="dash-chart-hint">Historical breakdown of incident scales</span>
         </div>
         <div class="chart-wrapper-inner">
             <canvas id="severityChart"></canvas>
@@ -88,19 +88,19 @@
     <!-- Pending Reports Table -->
     <div class="dashboard-card table-card">
         <div class="card-header">
-            <h3>🚨 Immediate Dispatch Actions Required</h3>
-            <span class="badge badge-pending">{{ pending_reports.count }} PENDING</span>
+            <h3 id="dash-pending-title">🚨 Immediate Dispatch Actions Required</h3>
+            <span class="badge badge-pending">{{ pending_reports.count }} <span id="dash-pending-badge">PENDING</span></span>
         </div>
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Reporter Phone</th>
-                        <th>Severity</th>
-                        <th>Location</th>
-                        <th>Reported Time</th>
-                        <th>Action</th>
+                        <th id="th-p-phone">Reporter Phone</th>
+                        <th id="th-p-severity">Severity</th>
+                        <th id="th-p-location">Location</th>
+                        <th id="th-p-time">Reported Time</th>
+                        <th id="th-p-action">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -111,23 +111,23 @@
                             <td>{{ report.reporter_phone|default:"Anonymous" }}</td>
                             <td>
                                 {% if report.fire_scale == 3 %}
-                                    <span class="severity-badge scale-3">CRITICAL</span>
+                                    <span class="severity-badge scale-3" data-en="CRITICAL" data-my="အကြီးစား">CRITICAL</span>
                                 {% elif report.fire_scale == 2 %}
-                                    <span class="severity-badge scale-2">MEDIUM</span>
+                                    <span class="severity-badge scale-2" data-en="MEDIUM" data-my="အလတ်စား">MEDIUM</span>
                                 {% else %}
-                                    <span class="severity-badge scale-1">LOW</span>
+                                    <span class="severity-badge scale-1" data-en="LOW" data-my="အသေးစား">LOW</span>
                                 {% endif %}
                             </td>
                             <td>{{ report.latitude|floatformat:4 }}, {{ report.longitude|floatformat:4 }}</td>
                             <td>{{ report.reported_at|date:"g:i A" }}</td>
                             <td>
-                                <a href="{% url 'dispatch_create' %}?report_id={{ report.id }}" class="btn-dispatch-action">Dispatch Crew</a>
+                                <a href="{% url 'dispatch_create' %}?report_id={{ report.id }}" class="btn-dispatch-action" data-en="Dispatch Crew" data-my="မီးသတ်ဖွဲ့ စေလွှတ်မည်">Dispatch Crew</a>
                             </td>
                         </tr>
                         {% endfor %}
                     {% else %}
                         <tr>
-                            <td colspan="6" class="no-records">No pending reports requiring attention.</td>
+                            <td colspan="6" class="no-records" id="dash-pending-empty">No pending reports requiring attention.</td>
                         </tr>
                     {% endif %}
                 </tbody>
@@ -138,19 +138,19 @@
     <!-- Active Dispatches Table -->
     <div class="dashboard-card table-card">
         <div class="card-header">
-            <h3>🚒 Active Dispatches</h3>
-            <span class="badge badge-active">{{ active_dispatches.count }} IN FIELD</span>
+            <h3 id="dash-active-title">🚒 Active Dispatches</h3>
+            <span class="badge badge-active">{{ active_dispatches.count }} <span id="dash-active-badge">IN FIELD</span></span>
         </div>
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Dispatch ID</th>
-                        <th>Incident</th>
-                        <th>Responding Station</th>
-                        <th>Operator</th>
-                        <th>Dispatched Time</th>
-                        <th>Action</th>
+                        <th id="th-d-id">Dispatch ID</th>
+                        <th id="th-d-incident">Incident</th>
+                        <th id="th-d-station">Responding Station</th>
+                        <th id="th-d-operator">Operator</th>
+                        <th id="th-d-time">Dispatched Time</th>
+                        <th id="th-d-action">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -163,13 +163,13 @@
                             <td>{{ disp.operator.username }}</td>
                             <td>{{ disp.dispatched_at|date:"g:i A" }}</td>
                             <td>
-                                <a href="{% url 'dispatch_update' disp.id %}" class="btn-manage-action">Resolve</a>
+                                <a href="{% url 'dispatch_update' disp.id %}" class="btn-manage-action" data-en="Resolve" data-my="ဖြေရှင်းပြီးဆုံးမည်">Resolve</a>
                             </td>
                         </tr>
                         {% endfor %}
                     {% else %}
                         <tr>
-                            <td colspan="6" class="no-records">No active dispatches in command.</td>
+                            <td colspan="6" class="no-records" id="dash-active-empty">No active dispatches in command.</td>
                         </tr>
                     {% endif %}
                 </tbody>
@@ -349,5 +349,130 @@
         });
         themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     });
+
+    // --- Dashboard Page Language Translations ---
+    (function() {
+        const dashTranslations = {
+            en: {
+                title: "🚒 CAD Control Dashboard",
+                subtitle: "Emergency Response and Computer-Aided Dispatch System | Mandalay Region Command",
+                live: "SYSTEM LIVE",
+                kpiActiveLabel: "Active Incidents",
+                kpiActiveTrend: "Pending or Dispatched",
+                kpiSeverityLabel: "High Severity",
+                kpiSeverityTrend: "Scale 3 Active Reports",
+                kpiStationsLabel: "Active Stations",
+                kpiStationsTrend: "Online and Operational",
+                kpiDispatchesLabel: "Today's Dispatches",
+                kpiDispatchesTrend: "Created calendar day",
+                mapTitle: "📍 Live Incident & Station Map",
+                mapHint: "Double click to zoom, hover pin for summary",
+                chartTitle: "📊 Severity Scale Analysis",
+                chartHint: "Historical breakdown of incident scales",
+                pendingTitle: "🚨 Immediate Dispatch Actions Required",
+                pendingBadge: "PENDING",
+                thPhoneP: "Reporter Phone",
+                thSeverity: "Severity",
+                thLocationP: "Location",
+                thTimeP: "Reported Time",
+                thActionP: "Action",
+                pendingEmpty: "No pending reports requiring attention.",
+                activeTitle: "🚒 Active Dispatches",
+                activeBadge: "IN FIELD",
+                thDispatchId: "Dispatch ID",
+                thIncident: "Incident",
+                thStation: "Responding Station",
+                thOperator: "Operator",
+                thTimeD: "Dispatched Time",
+                thActionD: "Action",
+                activeEmpty: "No active dispatches in command."
+            },
+            my: {
+                title: "🚒 CAD ထိန်းချုပ်မှတ်တမ်းစင်တာ",
+                subtitle: "အရေးပေါ်တုံ့ပြန်မှုနှင့် ကွန်ပျူတာအကူ ညှိနှိုင်းမှုစနစ် | မန္တလေးတိုင်းဌာနချုပ်",
+                live: "စနစ်ဆောင်ရွက်နေဆဲ",
+                kpiActiveLabel: "တက်ကြွဆောင်ရွက်နေသော ဖြစ်စဉ်များ",
+                kpiActiveTrend: "ဆိုင်းငံ့ဆဲ သို့မဟုတ် စေလွှတ်ပြီး",
+                kpiSeverityLabel: "အန္တရာယ်ကြီးမှုများ",
+                kpiSeverityTrend: "Scale 3 တက်ကြွဆောင်ရွက်နေသော",
+                kpiStationsLabel: "တက်ကြွသောစခန်းများ",
+                kpiStationsTrend: "အွန်လိုင်းနှင့် ဆောင်ရွက်နိုင်သော",
+                kpiDispatchesLabel: "ယနေ့ စေလွှတ်မှုများ",
+                kpiDispatchesTrend: "ဖန်တီးသည့်ကြောင်တန်းနေ့",
+                mapTitle: "📍 တိုက်ရိုက်ဖြစ်စဉ်နှင့်စခန်းမြေပုံ",
+                mapHint: "ဒဲ့နှိပ်ချဲ့ရန်၊ pin ပေါ်တင်ထားနှင့် အကျဉ်းချုပ်ကြည့်ရန်",
+                chartTitle: "📊 မီးပြင်းထန်မှုအဆင့် ခွဲခြမ်းစိတ်ဖြာမှု",
+                chartHint: "ဖြစ်စဉ်အဆင့်များ သမိုင်းဆိုင်ရာ ခွဲခြမ်းစိတ်ဖြာမှု",
+                pendingTitle: "🚨 ချက်ချင်း စေလွှတ်ရန် လိုအပ်သော မှတ်တမ်းများ",
+                pendingBadge: "ဆိုင်းငံ့ဆဲ",
+                thPhoneP: "သတင်းပို့သူ ဖုန်းနံပါတ်",
+                thSeverity: "ပြင်းထန်မှု",
+                thLocationP: "တည်နေရာ",
+                thTimeP: "သတင်းပို့ချိန်",
+                thActionP: "လုပ်ဆောင်ချက်",
+                pendingEmpty: "အာရုံစိုက်ရန် မြှောင်ဆိုင်းငံ့ဆဲ မှတ်တမ်းမရှိပါ။",
+                activeTitle: "🚒 တက်ကြွ စေလွှတ်မှုများ",
+                activeBadge: "လက်ရှိဆောင်ရွက်နေ",
+                thDispatchId: "စေလွှတ်မှု ID",
+                thIncident: "ဖြစ်စဉ်",
+                thStation: "တုံ့ပြန်သောစခန်း",
+                thOperator: "တာဝန်ခံ",
+                thTimeD: "စေလွှတ်ချိန်",
+                thActionD: "လုပ်ဆောင်ချက်",
+                activeEmpty: "ကွပ်ကဲမှုတွင် တက်ကြွ စေလွှတ်မှုမရှိပါ။"
+            }
+        };
+
+        function updateDashboardUI(lang) {
+            const d = dashTranslations[lang];
+            if (!d) return;
+
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+            set("dash-title", d.title);
+            set("dash-subtitle", d.subtitle);
+            set("dash-live", d.live);
+            set("kpi-active-label", d.kpiActiveLabel);
+            set("kpi-active-trend", d.kpiActiveTrend);
+            set("kpi-severity-label", d.kpiSeverityLabel);
+            set("kpi-severity-trend", d.kpiSeverityTrend);
+            set("kpi-stations-label", d.kpiStationsLabel);
+            set("kpi-stations-trend", d.kpiStationsTrend);
+            set("kpi-dispatches-label", d.kpiDispatchesLabel);
+            set("kpi-dispatches-trend", d.kpiDispatchesTrend);
+            set("dash-map-title", d.mapTitle);
+            set("dash-map-hint", d.mapHint);
+            set("dash-chart-title", d.chartTitle);
+            set("dash-chart-hint", d.chartHint);
+            set("dash-pending-title", d.pendingTitle);
+            set("dash-pending-badge", d.pendingBadge);
+            set("th-p-phone", d.thPhoneP);
+            set("th-p-severity", d.thSeverity);
+            set("th-p-location", d.thLocationP);
+            set("th-p-time", d.thTimeP);
+            set("th-p-action", d.thActionP);
+            set("dash-pending-empty", d.pendingEmpty);
+            set("dash-active-title", d.activeTitle);
+            set("dash-active-badge", d.activeBadge);
+            set("th-d-id", d.thDispatchId);
+            set("th-d-incident", d.thIncident);
+            set("th-d-station", d.thStation);
+            set("th-d-operator", d.thOperator);
+            set("th-d-time", d.thTimeD);
+            set("th-d-action", d.thActionD);
+            set("dash-active-empty", d.activeEmpty);
+
+            // Translate severity badges and action buttons (data-en / data-my)
+            document.querySelectorAll("[data-en][data-my]").forEach(el => {
+                el.innerText = lang === "my" ? el.getAttribute("data-my") : el.getAttribute("data-en");
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            updateDashboardUI(localStorage.getItem("lang") || "my");
+        });
+        window.addEventListener("languageChanged", function(e) {
+            updateDashboardUI(e.detail.lang);
+        });
+    })();
 </script>
 {% endblock %}

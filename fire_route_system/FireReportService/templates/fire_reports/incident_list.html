@@ -103,8 +103,8 @@
 <!-- ── Page Header ── -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
     <div>
-        <h1 style="margin: 0; font-size: 2rem;">🔥 Confirmed Fire Incidents</h1>
-        <p style="margin: 0.25rem 0 0 0; font-size: 0.95rem; color: var(--gray-dark);">Manage and monitor confirmed active and historical fire incidents.</p>
+        <h1 style="margin: 0; font-size: 2rem;" id="inc-title">🔥 Confirmed Fire Incidents</h1>
+        <p style="margin: 0.25rem 0 0 0; font-size: 0.95rem; color: var(--gray-dark);" id="inc-subtitle">Manage and monitor confirmed active and historical fire incidents.</p>
     </div>
     <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
         <!-- View toggle buttons -->
@@ -119,7 +119,7 @@
                 🗺 Map
             </button>
         </div>
-        <a href="{% url 'fire_report_create' %}" class="btn btn-orange">🚨 Log New Incident</a>
+        <a href="{% url 'fire_report_create' %}" class="btn btn-orange" id="inc-log-btn">🚨 Log New Incident</a>
     </div>
 </div>
 
@@ -136,46 +136,46 @@
     <form method="GET" action="" style="display: flex !important; flex-direction: row !important; gap: 1rem; align-items: flex-end; flex-wrap: wrap; width: 100%;">
         <!-- Text search -->
         <div style="display: flex; flex-direction: column; gap: 0.25rem; flex: 1.5; min-width: 200px;">
-            <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);">Search Text</label>
+            <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);" id="lbl-search-text">Search Text</label>
             <div style="position: relative; display: flex; align-items: center; width: 100%;">
                 <span style="position: absolute; left: 0.75rem; color: var(--gray-dark); pointer-events: none; font-size: 1rem; line-height: 1;">🔍</span>
-                <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Search by phone, status..."
+                <input type="text" name="q" value="{{ query|default:'' }}" id="inc-search-input" placeholder="Search by phone, status..."
                        style="width: 100%; padding: 0.4rem 1rem 0.4rem 2.25rem; font-family: var(--font-family); font-size: 0.9rem; line-height: 1.4; border: 1px solid var(--gray-medium); border-radius: 6px; background-color: var(--bg-white); color: var(--color-black);">
             </div>
         </div>
         <!-- Date -->
         <div style="display: flex; flex-direction: column; gap: 0.25rem; flex: 1; min-width: 150px;">
-            <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);">Filter by Date</label>
+            <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);" id="lbl-filter-date">Filter by Date</label>
             <input type="date" name="date" value="{{ selected_date }}"
                    style="width: 100%; padding: 0.4rem 0.75rem; font-family: var(--font-family); font-size: 0.9rem; line-height: 1.4; border: 1px solid var(--gray-medium); border-radius: 6px; background-color: var(--bg-white); color: var(--color-black); box-sizing: border-box;">
         </div>
         <!-- Status -->
         <div style="display: flex; flex-direction: column; gap: 0.25rem; flex: 1; min-width: 150px;">
-            <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);">Filter by Status</label>
+            <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);" id="lbl-filter-status">Filter by Status</label>
             <select name="status" style="width: 100%; padding: 0.4rem 0.75rem; font-family: var(--font-family); font-size: 0.9rem; line-height: 1.4; border: 1px solid var(--gray-medium); border-radius: 6px; background-color: var(--bg-white); color: var(--color-black);">
-                <option value="">All Statuses</option>
-                <option value="Confirmed" {% if selected_status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
-                <option value="Dispatched" {% if selected_status == 'Dispatched' %}selected{% endif %}>Dispatched</option>
-                <option value="Under Control" {% if selected_status == 'Under Control' %}selected{% endif %}>Under Control</option>
-                <option value="Resolved" {% if selected_status == 'Resolved' %}selected{% endif %}>Resolved</option>
-                <option value="False Alarm" {% if selected_status == 'False Alarm' %}selected{% endif %}>False Alarm</option>
+                <option value="" id="opt-status-all">All Statuses</option>
+                <option value="Confirmed" {% if selected_status == 'Confirmed' %}selected{% endif %} id="opt-status-confirmed">Confirmed</option>
+                <option value="Dispatched" {% if selected_status == 'Dispatched' %}selected{% endif %} id="opt-status-dispatched">Dispatched</option>
+                <option value="Under Control" {% if selected_status == 'Under Control' %}selected{% endif %} id="opt-status-control">Under Control</option>
+                <option value="Resolved" {% if selected_status == 'Resolved' %}selected{% endif %} id="opt-status-resolved">Resolved</option>
+                <option value="False Alarm" {% if selected_status == 'False Alarm' %}selected{% endif %} id="opt-status-alarm">False Alarm</option>
             </select>
         </div>
         <!-- Scale -->
         <div style="display: flex; flex-direction: column; gap: 0.25rem; flex: 1; min-width: 150px;">
-            <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);">Filter by Scale</label>
+            <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);" id="lbl-filter-scale">Filter by Scale</label>
             <select name="scale" style="width: 100%; padding: 0.4rem 0.75rem; font-family: var(--font-family); font-size: 0.9rem; line-height: 1.4; border: 1px solid var(--gray-medium); border-radius: 6px; background-color: var(--bg-white); color: var(--color-black);">
-                <option value="">All Scales</option>
-                <option value="1" {% if selected_scale == '1' %}selected{% endif %}>Scale 1 (Low)</option>
-                <option value="2" {% if selected_scale == '2' %}selected{% endif %}>Scale 2 (Medium)</option>
-                <option value="3" {% if selected_scale == '3' %}selected{% endif %}>Scale 3 (High)</option>
+                <option value="" id="opt-scale-all">All Scales</option>
+                <option value="1" {% if selected_scale == '1' %}selected{% endif %} id="opt-scale-1">Scale 1 (Low)</option>
+                <option value="2" {% if selected_scale == '2' %}selected{% endif %} id="opt-scale-2">Scale 2 (Medium)</option>
+                <option value="3" {% if selected_scale == '3' %}selected{% endif %} id="opt-scale-3">Scale 3 (High)</option>
             </select>
         </div>
         <!-- Buttons -->
         <div style="display: flex; gap: 0.5rem; height: 38px;">
-            <button type="submit" class="btn btn-orange" style="height: 100%; font-size: 0.9rem; font-weight: 600; padding: 0 1.25rem;">Apply</button>
+            <button type="submit" class="btn btn-orange" id="inc-apply-btn" style="height: 100%; font-size: 0.9rem; font-weight: 600; padding: 0 1.25rem;">Apply</button>
             {% if query or selected_date or selected_status or selected_scale %}
-                <a href="{% url 'fire_report_list' %}" class="btn btn-outline" style="height: 100%; font-size: 0.9rem; font-weight: 600; padding: 0 1.25rem; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; box-sizing: border-box;">Reset</a>
+                <a href="{% url 'fire_report_list' %}" class="btn btn-outline" id="inc-reset-btn" style="height: 100%; font-size: 0.9rem; font-weight: 600; padding: 0 1.25rem; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; box-sizing: border-box;">Reset</a>
             {% endif %}
         </div>
     </form>
@@ -191,13 +191,13 @@
             <table>
                 <thead>
                     <tr>
-                        <th>No</th>
-                        <th>Reporter Phone</th>
-                        <th>Severity Scale</th>
-                        <th>Location (Lat, Lng)</th>
-                        <th>Status</th>
-                        <th>Reported At</th>
-                        <th>Actions</th>
+                        <th id="th-inc-no">No</th>
+                        <th id="th-inc-phone">Reporter Phone</th>
+                        <th id="th-inc-severity">Severity Scale</th>
+                        <th id="th-inc-location">Location (Lat, Lng)</th>
+                        <th id="th-inc-status">Status</th>
+                        <th id="th-inc-time">Reported At</th>
+                        <th id="th-inc-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -225,8 +225,8 @@
                             <td>{{ report.reported_at|date:"Y-m-d H:i" }}</td>
                             <td>
                                 <div style="display: flex; gap: 0.5rem; align-items: center; white-space: nowrap;">
-                                    <a href="{% url 'fire_report_update' report.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Edit</a>
-                                    <a href="{% url 'fire_report_delete' report.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Delete</a>
+                                    <a href="{% url 'fire_report_update' report.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" data-en="Edit" data-my="တည်းဖြတ်မည်">Edit</a>
+                                    <a href="{% url 'fire_report_delete' report.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" data-en="Delete" data-my="ဖျက်မည်">Delete</a>
                                 </div>
                             </td>
                         </tr>
@@ -238,14 +238,14 @@
         <div style="text-align: center; padding: 3.5rem 0; color: var(--gray-dark);">
             {% if query or selected_date or selected_status or selected_scale %}
                 <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">🔍</span>
-                <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem; color: var(--color-black);">No matching reports found</h3>
-                <p style="margin: 0; font-size: 0.95rem;">No results for the current search / filter options.</p>
-                <a href="{% url 'fire_report_list' %}" class="btn btn-orange" style="margin-top: 1.25rem; display: inline-block;">Reset Filters</a>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem; color: var(--color-black);" id="inc-no-match-title">No matching reports found</h3>
+                <p style="margin: 0; font-size: 0.95rem;" id="inc-no-match-desc">No results for the current search / filter options.</p>
+                <a href="{% url 'fire_report_list' %}" class="btn btn-orange" style="margin-top: 1.25rem; display: inline-block;" id="inc-reset-filter-btn">Reset Filters</a>
             {% else %}
                 <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">🔥</span>
-                <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem; color: var(--color-black);">No incidents logged within time window</h3>
-                <p style="margin: 0; font-size: 0.95rem;">No confirmed incidents recorded in the last 7 days.</p>
-                <a href="{% url 'report_fire' %}" class="btn btn-orange" style="margin-top: 1.25rem; display: inline-block;">Go to Emergency Reporting Form</a>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.25rem; color: var(--color-black);" id="inc-no-data-title">No incidents logged within time window</h3>
+                <p style="margin: 0; font-size: 0.95rem;" id="inc-no-data-desc">No confirmed incidents recorded in the last 7 days.</p>
+                <a href="{% url 'report_fire' %}" class="btn btn-orange" style="margin-top: 1.25rem; display: inline-block;" id="inc-goto-report-btn">Go to Emergency Reporting Form</a>
             {% endif %}
         </div>
     {% endif %}
@@ -281,8 +281,8 @@
                     <span class="badge badge-{% if report.status|lower == 'confirmed' %}active{% elif report.status|lower == 'pending' %}pending{% elif report.status|lower == 'dispatched' %}dispatched{% elif report.status|lower == 'false alarm' %}false-alarm{% else %}active{% endif %}">{{ report.status }}</span>
                 </div>
                 <div class="incident-card-actions">
-                    <a href="{% url 'fire_report_update' report.id %}" class="btn btn-outline" style="padding: 0.3rem 0.75rem; font-size: 0.82rem;">Edit</a>
-                    <a href="{% url 'fire_report_delete' report.id %}" class="btn btn-red" style="padding: 0.3rem 0.75rem; font-size: 0.82rem;">Delete</a>
+                    <a href="{% url 'fire_report_update' report.id %}" class="btn btn-outline" style="padding: 0.3rem 0.75rem; font-size: 0.82rem;" data-en="Edit" data-my="တည်းဖြတ်မည်">Edit</a>
+                    <a href="{% url 'fire_report_delete' report.id %}" class="btn btn-red" style="padding: 0.3rem 0.75rem; font-size: 0.82rem;" data-en="Delete" data-my="ဖျက်မည်">Delete</a>
                 </div>
             </div>
             {% endfor %}
@@ -376,5 +376,134 @@
 
         setTimeout(() => map.invalidateSize(), 200);
     }
+
+    // ── Incident List Page Language Translations ───────────────────────
+    (function() {
+        const incTranslations = {
+            en: {
+                title: "🔥 Confirmed Fire Incidents",
+                subtitle: "Manage and monitor confirmed active and historical fire incidents.",
+                logBtn: "🚨 Log New Incident",
+                searchLabel: "Search Text",
+                searchPlaceholder: "Search by phone, status...",
+                dateLabel: "Filter by Date",
+                statusLabel: "Filter by Status",
+                scaleLabel: "Filter by Scale",
+                applyBtn: "Apply",
+                resetBtn: "Reset",
+                optStatusAll: "All Statuses",
+                optStatusConfirmed: "Confirmed",
+                optStatusDispatched: "Dispatched",
+                optStatusControl: "Under Control",
+                optStatusResolved: "Resolved",
+                optStatusAlarm: "False Alarm",
+                optScaleAll: "All Scales",
+                optScale1: "Scale 1 (Low)",
+                optScale2: "Scale 2 (Medium)",
+                optScale3: "Scale 3 (High)",
+                thNo: "No",
+                thPhone: "Reporter Phone",
+                thSeverity: "Severity Scale",
+                thLocation: "Location (Lat, Lng)",
+                thStatus: "Status",
+                thTime: "Reported At",
+                thActions: "Actions",
+                noMatchTitle: "No matching reports found",
+                noMatchDesc: "No results for the current search / filter options.",
+                resetFilterBtn: "Reset Filters",
+                noDataTitle: "No incidents logged within time window",
+                noDataDesc: "No confirmed incidents recorded in the last 7 days.",
+                gotoReportBtn: "Go to Emergency Reporting Form"
+            },
+            my: {
+                title: "🔥 အတည်ပြုပြီးသော မီးလောင်မှု ဖြစ်စဉ်များ",
+                subtitle: "အတည်ပြုပြီးသော တက်ကြွနှင့် သမိုင်းဆိုင်ရာ မီးလောင်မှု ဖြစ်စဉ်များကို စီမံခန့်ခွဲနှင့် ကြီးကြပ်ပါ။",
+                logBtn: "🚨 ဖြစ်စဉ်အသစ် မှတ်တမ်းတင်မည်",
+                searchLabel: "ရှာဖွေစာသား",
+                searchPlaceholder: "ဖုန်းနံပါတ်၊ အခြေအနေဖြင့် ရှာဖွေပါ...",
+                dateLabel: "ရက်စွဲဖြင့် စစ်ထုတ်မည်",
+                statusLabel: "အခြေအနေဖြင့် စစ်ထုတ်မည်",
+                scaleLabel: "အဆင့်ဖြင့် စစ်ထုတ်မည်",
+                applyBtn: "စစ်ထုတ်မည်",
+                resetBtn: "မူလပြန်ရန်",
+                optStatusAll: "အခြေအနေအားလုံး",
+                optStatusConfirmed: "အတည်ပြုပြီး",
+                optStatusDispatched: "စေလွှတ်ပြီး",
+                optStatusControl: "ထိန်းချုပ်နေဆဲ",
+                optStatusResolved: "ဖြေရှင်းပြီး",
+                optStatusAlarm: "မှားယွင်းသောသတင်း",
+                optScaleAll: "အဆင့်အားလုံး",
+                optScale1: "အဆင့် ၁ (နိမ့်)",
+                optScale2: "အဆင့် ၂ (အလတ်)",
+                optScale3: "အဆင့် ၃ (မြင့်)",
+                thNo: "နံပါတ်",
+                thPhone: "သတင်းပို့သူ ဖုန်းနံပါတ်",
+                thSeverity: "မီးပြင်းထန်မှုအဆင့်",
+                thLocation: "တည်နေရာ (Lat, Lng)",
+                thStatus: "အခြေအနေ",
+                thTime: "သတင်းပို့ချိန်",
+                thActions: "လုပ်ဆောင်ချက်များ",
+                noMatchTitle: "ကိုက်ညီသော မှတ်တမ်းမတွေ့ပါ",
+                noMatchDesc: "လက်ရှိ ရှာဖွေ/စစ်ထုတ်ချက်နှင့် ကိုက်ညီသောဒေတာ မရှိပါ။",
+                resetFilterBtn: "စစ်ထုတ်ချက်မူလပြန်ရန်",
+                noDataTitle: "သတ်မှတ်ချိန်ကာလတွင် ဖြစ်စဉ်မှတ်တမ်းမရှိ",
+                noDataDesc: "နောက်ဆုံး ၇ ရက်တွင် အတည်ပြုပြီးသော ဖြစ်စဉ်မှတ်တမ်းမရှိပါ။",
+                gotoReportBtn: "အရေးပေါ်သတင်းပို့ ဖောင်သို့ သွားရန်"
+            }
+        };
+
+        function updateIncidentListUI(lang) {
+            const d = incTranslations[lang];
+            if (!d) return;
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+            const setAttr = (id, attr, val) => { const el = document.getElementById(id); if (el) el.setAttribute(attr, val); };
+
+            set("inc-title", d.title);
+            set("inc-subtitle", d.subtitle);
+            set("inc-log-btn", d.logBtn);
+            set("lbl-search-text", d.searchLabel);
+            setAttr("inc-search-input", "placeholder", d.searchPlaceholder);
+            set("lbl-filter-date", d.dateLabel);
+            set("lbl-filter-status", d.statusLabel);
+            set("lbl-filter-scale", d.scaleLabel);
+            set("inc-apply-btn", d.applyBtn);
+            set("inc-reset-btn", d.resetBtn);
+            set("opt-status-all", d.optStatusAll);
+            set("opt-status-confirmed", d.optStatusConfirmed);
+            set("opt-status-dispatched", d.optStatusDispatched);
+            set("opt-status-control", d.optStatusControl);
+            set("opt-status-resolved", d.optStatusResolved);
+            set("opt-status-alarm", d.optStatusAlarm);
+            set("opt-scale-all", d.optScaleAll);
+            set("opt-scale-1", d.optScale1);
+            set("opt-scale-2", d.optScale2);
+            set("opt-scale-3", d.optScale3);
+            set("th-inc-no", d.thNo);
+            set("th-inc-phone", d.thPhone);
+            set("th-inc-severity", d.thSeverity);
+            set("th-inc-location", d.thLocation);
+            set("th-inc-status", d.thStatus);
+            set("th-inc-time", d.thTime);
+            set("th-inc-actions", d.thActions);
+            set("inc-no-match-title", d.noMatchTitle);
+            set("inc-no-match-desc", d.noMatchDesc);
+            set("inc-reset-filter-btn", d.resetFilterBtn);
+            set("inc-no-data-title", d.noDataTitle);
+            set("inc-no-data-desc", d.noDataDesc);
+            set("inc-goto-report-btn", d.gotoReportBtn);
+
+            // data-en / data-my action buttons
+            document.querySelectorAll("[data-en][data-my]").forEach(el => {
+                el.innerText = lang === "my" ? el.getAttribute("data-my") : el.getAttribute("data-en");
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            updateIncidentListUI(localStorage.getItem("lang") || "my");
+        });
+        window.addEventListener("languageChanged", function(e) {
+            updateIncidentListUI(e.detail.lang);
+        });
+    })();
 </script>
 {% endblock %}

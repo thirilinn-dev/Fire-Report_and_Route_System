@@ -714,8 +714,8 @@
         <!-- Theme Toggle -->
         <div class="theme-toggle-container">
             <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Theme">
-                <span class="theme-icon">☀️</span>
-                <span class="theme-text">Light Mode</span>
+                <span class="theme-icon" id="themeToggleIcon">☀️</span>
+                <span class="theme-text" id="themeToggleText">Light Mode</span>
             </button>
         </div>
 
@@ -744,7 +744,7 @@
             <div class="modal-body">
                 <div class="modal-loading">
                     <div class="spinner"></div>
-                    <p>Loading form...</p>
+                    <p id="modalLoadingText">ပုံစံ ဖွင့်နေပါသည်...</p>
                 </div>
             </div>
         </div>
@@ -774,7 +774,7 @@
                 modalBody.innerHTML = `
                     <div class="modal-loading">
                         <div class="spinner"></div>
-                        <p>Loading form...</p>
+                        <p>${(localStorage.getItem('lang') || 'my') === 'my' ? 'ပုံစံ ဖွင့်နေပါသည်...' : 'Loading form...'}</p>
                     </div>
                 `;
             }
@@ -930,12 +930,13 @@
                 if (themeToggleBtn) {
                     const icon = themeToggleBtn.querySelector(".theme-icon");
                     const text = themeToggleBtn.querySelector(".theme-text");
+                    const currentLang = localStorage.getItem("lang") || "my";
                     if (theme === "dark") {
                         if (icon) icon.innerText = "🌙";
-                        if (text) text.innerText = "Dark Mode";
+                        if (text) text.innerText = currentLang === "my" ? "အမိုက်ကမ်း" : "Dark Mode";
                     } else {
                         if (icon) icon.innerText = "☀️";
-                        if (text) text.innerText = "Light Mode";
+                        if (text) text.innerText = currentLang === "my" ? "အလင်းရောင်" : "Light Mode";
                     }
                 }
             }
@@ -973,7 +974,10 @@
                 navRoles: "Roles",
                 navPortal: "📋 Report Portal",
                 langBtnText: "မြန်မာ",
-                langBtnIcon: "🇲🇲"
+                langBtnIcon: "🇲🇲",
+                themeLight: "Light Mode",
+                themeDark: "Dark Mode",
+                modalLoading: "Loading form..."
             },
             my: {
                 navEmergency: "🚨 အရေးပေါ် သတင်းပို့ရန်",
@@ -987,7 +991,10 @@
                 navRoles: "အခန်းကဏ္ဍများ",
                 navPortal: "📋 သတင်းထုတ်ပြန်ချက်",
                 langBtnText: "English",
-                langBtnIcon: "🇺🇸"
+                langBtnIcon: "🇺🇸",
+                themeLight: "အလင်းရောင်",
+                themeDark: "အမိုက်ကမ်း",
+                modalLoading: "ပုံစံ ဖွင့်နေပါသည်..."
             }
         };
 
@@ -1033,6 +1040,17 @@
 
             const langBtnIcon = document.getElementById("globalLangToggleIcon");
             if (langBtnIcon) langBtnIcon.innerText = data.langBtnIcon;
+
+            // Update theme toggle label text
+            const themeText = document.getElementById("themeToggleText");
+            if (themeText) {
+                const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+                themeText.innerText = currentTheme === "dark" ? data.themeDark : data.themeLight;
+            }
+
+            // Update modal loading text if visible
+            const modalLoadingText = document.getElementById("modalLoadingText");
+            if (modalLoadingText) modalLoadingText.innerText = data.modalLoading;
 
             window.dispatchEvent(new CustomEvent("languageChanged", { detail: { lang: lang } }));
         };

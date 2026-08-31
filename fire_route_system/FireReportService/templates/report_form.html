@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="card emergency-card">
-    <button class="lang-btn" id="langToggle" onclick="toggleLanguage()">English</button>
+    <button class="lang-btn" id="langToggle" onclick="window.toggleLanguage && window.toggleLanguage()">English</button>
 
     <div id="form-content">
         {% if success %}
@@ -192,6 +192,16 @@
                 document.addEventListener("DOMContentLoaded", function() {
                     if (typeof window.updateUI === "function") window.updateUI();
                     if (typeof window.fetchGPS === "function") window.fetchGPS();
+
+                    // Sync the local lang button text with global lang state
+                    const currentLang = localStorage.getItem("lang") || "my";
+                    const langBtn = document.getElementById("langToggle");
+                    if (langBtn) langBtn.innerText = currentLang === "my" ? "English" : "မြန်မာ";
+                });
+
+                window.addEventListener("languageChanged", function(e) {
+                    const langBtn = document.getElementById("langToggle");
+                    if (langBtn) langBtn.innerText = e.detail.lang === "my" ? "English" : "မြန်မာ";
                 });
             </script>
         </form>
