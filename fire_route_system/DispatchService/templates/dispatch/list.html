@@ -14,7 +14,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th id="th-disp-id">Dispatch ID</th>
+                        <th id="th-disp-id">No.</th>
                         <th id="th-disp-incident">Incident</th>
                         <th id="th-disp-station">Responding Station</th>
                         <th id="th-disp-operator">Operator</th>
@@ -27,7 +27,7 @@
                 <tbody>
                     {% for dispatch in dispatches %}
                         <tr>
-                            <td><strong>#{{ dispatch.id }}</strong></td>
+                            <td><strong>{{ forloop.counter }}</strong></td>
                             <td>
                                 <a href="{% url 'fire_report_update' dispatch.report.id %}" style="color: var(--color-black); font-weight: 600;">
                                     Report #{{ dispatch.report.id }} ({% if dispatch.report.fire_scale == 0 %}နယ်မြေခံ{% else %}Level {{ dispatch.report.fire_scale }}{% endif %})
@@ -69,7 +69,7 @@
         en: {
             title: "📋 Emergency Dispatches",
             newBtn: "🚒 New Dispatch Deployment",
-            thId: "Dispatch ID", thIncident: "Incident", thStation: "Responding Station",
+            thId: "No.", thIncident: "Incident", thStation: "Responding Station",
             thOperator: "Operator", thDispatched: "Dispatched At", thResolved: "Resolved At",
             thResources: "Resources Deployed", thActions: "Actions",
             activeBadge: "Active",
@@ -79,7 +79,7 @@
         my: {
             title: "📋 အရေးပေါ် စေလွှတ်မှုများ",
             newBtn: "🚒 စေလွှတ်မှုအသစ် ထည့်သွင်းမည်",
-            thId: "စေလွှတ်မှု ID", thIncident: "ဖြစ်စဉ်", thStation: "တုံ့ပြန်သောစခန်း",
+            thId: "No.", thIncident: "ဖြစ်စဉ်", thStation: "တုံ့ပြန်သောစခန်း",
             thOperator: "တာဝန်ခံ", thDispatched: "စေလွှတ်ချိန်", thResolved: "ဖြေရှင်းချိန်",
             thResources: "ဖြန့်ချထားသော အရင်းအမြစ်", thActions: "လုပ်ဆောင်ချက်",
             activeBadge: "ဆောင်ရွက်နေဆဲ",

@@ -33,7 +33,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th id="th-user-id">User ID</th>
+                        <th id="th-user-id">No.</th>
                         <th id="th-user-name">Username</th>
                         <th id="th-user-email">Email</th>
                         <th id="th-user-phone">Phone Number</th>
@@ -45,7 +45,7 @@
                 <tbody>
                     {% for user in users %}
                         <tr>
-                            <td><strong>#{{ user.id }}</strong></td>
+                            <td><strong>{{ forloop.counter }}</strong></td>
                             <td>{{ user.username }}</td>
                             <td>{{ user.email }}</td>
                             <td>{{ user.phone_number|default:"-" }}</td>
@@ -92,7 +92,7 @@
             searchPlaceholder: "Search by username, email, phone...",
             searchBtn: "Search",
             clearBtn: "Clear",
-            thId: "User ID", thName: "Username", thEmail: "Email",
+            thId: "No.", thName: "Username", thEmail: "Email",
             thPhone: "Phone Number", thRole: "Role", thStatus: "Status", thActions: "Actions",
             noMatch: "No matching users found.",
             clearSearch: "Clear Search Filter",
@@ -105,7 +105,7 @@
             searchPlaceholder: "အသုံးပြုသူနာမည်၊ အီးမေးလ်၊ ဖုန်းဖြင့် ရှာပါ...",
             searchBtn: "ရှာဖွေမည်",
             clearBtn: "ရှင်းလင်းမည်",
-            thId: "အသုံးပြုသူ ID", thName: "အသုံးပြုသူနာမည်", thEmail: "အီးမေးလ်",
+            thId: "No.", thName: "အသုံးပြုသူနာမည်", thEmail: "အီးမေးလ်",
             thPhone: "ဖုန်းနံပါတ်", thRole: "အခန်းကဏ္ဍ", thStatus: "အခြေအနေ", thActions: "လုပ်ဆောင်ချက်",
             noMatch: "ကိုက်ညီသော အသုံးပြုသူမတွေ့ပါ။",
             clearSearch: "ရှာဖွေမှုစစ်ထုတ်ချက် ရှင်းလင်းမည်",

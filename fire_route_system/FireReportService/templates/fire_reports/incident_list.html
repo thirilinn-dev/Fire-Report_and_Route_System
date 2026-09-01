@@ -224,7 +224,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <span class="badge badge-{% if report.status|lower == 'confirmed' %}active{% elif report.status|lower == 'pending' %}pending{% elif report.status|lower == 'dispatched' %}dispatched{% elif report.status|lower == 'false alarm' %}false-alarm{% else %}active{% endif %}">
+                                <span class="badge badge-{% if report.status|lower == 'confirmed' %}confirmed{% elif report.status|lower == 'pending' %}pending{% elif report.status|lower == 'dispatched' %}dispatched{% elif report.status|lower == 'false alarm' %}false-alarm{% else %}active{% endif %}">
                                     {{ report.status }}
                                 </span>
                             </td>
@@ -286,7 +286,7 @@
                 </div>
                 {% endif %}
                 <div class="incident-card-row" style="margin-top: 0.4rem;">
-                    <span class="badge badge-{% if report.status|lower == 'confirmed' %}active{% elif report.status|lower == 'pending' %}pending{% elif report.status|lower == 'dispatched' %}dispatched{% elif report.status|lower == 'false alarm' %}false-alarm{% else %}active{% endif %}">{{ report.status }}</span>
+                    <span class="badge badge-{% if report.status|lower == 'confirmed' %}confirmed{% elif report.status|lower == 'pending' %}pending{% elif report.status|lower == 'dispatched' %}dispatched{% elif report.status|lower == 'false alarm' %}false-alarm{% else %}active{% endif %}">{{ report.status }}</span>
                 </div>
                 <div class="incident-card-actions">
                     <a href="{% url 'fire_report_update' report.id %}" class="btn btn-outline" style="padding: 0.3rem 0.75rem; font-size: 0.82rem;" data-en="Edit" data-my="တည်းဖြတ်မည်">Edit</a>

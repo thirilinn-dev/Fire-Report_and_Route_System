@@ -14,7 +14,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th id="th-role-id">Role ID</th>
+                        <th id="th-role-id">No.</th>
                         <th id="th-role-name">Role Name</th>
                         <th id="th-role-desc">Description</th>
                         <th id="th-role-created">Created At</th>
@@ -24,7 +24,7 @@
                 <tbody>
                     {% for role in roles %}
                         <tr>
-                            <td><strong>#{{ role.id }}</strong></td>
+                            <td><strong>{{ forloop.counter }}</strong></td>
                             <td>{{ role.role_name }}</td>
                             <td>{{ role.description|default:"-" }}</td>
                             <td>{{ role.created_at|date:"Y-m-d H:i" }}</td>
@@ -53,7 +53,7 @@
         en: {
             title: "🛡️ User Roles",
             createBtn: "➕ Create Role",
-            thId: "Role ID", thName: "Role Name", thDesc: "Description",
+            thId: "No.", thName: "Role Name", thDesc: "Description",
             thCreated: "Created At", thActions: "Actions",
             empty: "No user roles defined yet.",
             createFirst: "Create the First Role"
@@ -61,7 +61,7 @@
         my: {
             title: "🛡️ အသုံးပြုသူ အခန်းကဏ္ဍများ",
             createBtn: "➕ အခန်းကဏ္ဍ ဖန်တီးမည်",
-            thId: "အခန်းကဏ္ဍ ID", thName: "အခန်းကဏ္ဍ အမည်", thDesc: "ဖော်ပြချက်",
+            thId: "No.", thName: "အခန်းကဏ္ဍ အမည်", thDesc: "ဖော်ပြချက်",
             thCreated: "ဖန်တီးချိန်", thActions: "လုပ်ဆောင်ချက်",
             empty: "အသုံးပြုသူ အခန်းကဏ္ဍ မသတ်မှတ်ရသေးပါ။",
             createFirst: "ပထမ အခန်းကဏ္ဍ ဖန်တီးမည်"

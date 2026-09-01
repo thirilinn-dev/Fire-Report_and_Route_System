@@ -237,7 +237,7 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th id="th-st-id">Station ID</th>
+                                    <th id="th-st-id">No.</th>
                                     <th id="th-st-name">Name</th>
                                     <th id="th-st-address">Address</th>
                                     <th id="th-st-contact">Contact Number</th>
@@ -249,7 +249,7 @@
                             <tbody>
                                 {% for station in stations %}
                                     <tr>
-                                        <td><strong>#{{ station.station_id }}</strong></td>
+                                        <td><strong>{{ forloop.counter }}</strong></td>
                                         <td>{{ station.name }}</td>
                                         <td>{{ station.address }}</td>
                                         <td>{{ station.contact_number }}</td>
@@ -568,7 +568,7 @@
                 tabTable: "Table View",
                 tabCard: "Card View",
                 tabMap: "Map View",
-                thId: "Station ID", thName: "Name", thAddress: "Address",
+                thId: "No.", thName: "Name", thAddress: "Address",
                 thContact: "Contact Number", thCoords: "Coordinates (Lat, Lng)",
                 thStatus: "Status", thActions: "Actions",
                 noMatch: "No matching fire stations found.",
@@ -589,7 +589,7 @@
                 tabTable: "ဇယားမြင်ကွင်း",
                 tabCard: "ကတ်မြင်ကွင်း",
                 tabMap: "မြေပုံမြင်ကွင်း",
-                thId: "စခန်း ID", thName: "အမည်", thAddress: "လိပ်စာ",
+                thId: "No.", thName: "အမည်", thAddress: "လိပ်စာ",
                 thContact: "ဆက်သွယ်ရေးနံပါတ်", thCoords: "တည်နေရာ (Lat, Lng)",
                 thStatus: "အခြေအနေ", thActions: "လုပ်ဆောင်ချက်",
                 noMatch: "ကိုက်ညီသော မီးသတ်စခန်းမတွေ့ပါ။",
