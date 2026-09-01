@@ -249,7 +249,7 @@
                             <tbody>
                                 {% for station in stations %}
                                     <tr>
-                                        <td><strong>{{ forloop.counter }}</strong></td>
+                                        <td><strong>{% if page_obj %}{{ page_obj.start_index|add:forloop.counter0 }}{% else %}{{ forloop.counter }}{% endif %}</strong></td>
                                         <td>{{ station.name }}</td>
                                         <td>{{ station.address }}</td>
                                         <td>{{ station.contact_number }}</td>
@@ -275,6 +275,7 @@
                             </tbody>
                         </table>
                     </div>
+                    {% include 'pagination.html' %}
                 {% else %}
                     <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
                         {% if query %}

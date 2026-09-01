@@ -491,8 +491,9 @@
             color: var(--btn-red); 
         }
         .badge-confirmed { 
-            background-color: #3B82F6 !important; 
-            color: #ffffff !important; 
+            background-color: #e3f2fd !important; 
+            color: #1565c0 !important; 
+            border: 1px solid currentColor !important;
         }
         .badge-active, .badge-resolved, .badge-under-control { 
             background-color: rgba(46, 125, 50, 0.1); 
@@ -725,7 +726,6 @@
             <a href="{% url 'map_view' %}" id="nav-maps">Interactive Map</a>
             <a href="{% url 'dispatch_list' %}" id="nav-dispatch">Dispatches</a>
             <a href="{% url 'user_list' %}" id="nav-users">Users</a>
-            <a href="{% url 'role_list' %}" id="nav-roles">Roles</a>
             <a href="{% url 'report_portal' %}" id="nav-portal">📋 Report Portal</a>
         </nav>
         

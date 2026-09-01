@@ -93,8 +93,25 @@ def fire_report_list(request):
         if r.latitude is not None and r.longitude is not None
     ])
 
+    from django.core.paginator import Paginator
+
+    per_page_param = request.GET.get('per_page', '10').strip()
+    try:
+        per_page = int(per_page_param)
+        if per_page not in [5, 10, 20, 50, 100]:
+            per_page = 10
+    except (ValueError, TypeError):
+        per_page = 10
+
+    paginator = Paginator(reports, per_page)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'fire_reports/incident_list.html', {
-        'reports': reports,
+        'page_obj': page_obj,
+        'reports': page_obj.object_list,
+        'paginator': paginator,
+        'per_page': per_page,
         'reports_json': reports_json,
         'query': query,
         'selected_date': date_str,

@@ -17,8 +17,26 @@ def firestation_list(request):
     else:
         stations = FireStation.objects.all()
 
+    from django.core.paginator import Paginator
+    stations = stations.order_by('station_id')
+
+    per_page_param = request.GET.get('per_page', '10').strip()
+    try:
+        per_page = int(per_page_param)
+        if per_page not in [5, 10, 20, 50, 100]:
+            per_page = 10
+    except (ValueError, TypeError):
+        per_page = 10
+
+    paginator = Paginator(stations, per_page)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        "stations": stations,
+        "page_obj": page_obj,
+        "stations": page_obj.object_list,
+        "paginator": paginator,
+        "per_page": per_page,
         "query": query
     }
 

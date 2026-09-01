@@ -27,7 +27,7 @@
                 <tbody>
                     {% for dispatch in dispatches %}
                         <tr>
-                            <td><strong>{{ forloop.counter }}</strong></td>
+                            <td><strong>{% if page_obj %}{{ page_obj.start_index|add:forloop.counter0 }}{% else %}{{ forloop.counter }}{% endif %}</strong></td>
                             <td>
                                 <a href="{% url 'fire_report_update' dispatch.report.id %}" style="color: var(--color-black); font-weight: 600;">
                                     Report #{{ dispatch.report.id }} ({% if dispatch.report.fire_scale == 0 %}နယ်မြေခံ{% else %}Level {{ dispatch.report.fire_scale }}{% endif %})
@@ -55,6 +55,7 @@
                 </tbody>
             </table>
         </div>
+        {% include 'pagination.html' %}
     {% else %}
         <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
             <p style="font-size: 1.2rem; margin-bottom: 1rem;" id="dispatch-empty">No dispatch operations logged yet.</p>

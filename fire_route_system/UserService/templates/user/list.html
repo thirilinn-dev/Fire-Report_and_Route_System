@@ -45,7 +45,7 @@
                 <tbody>
                     {% for user in users %}
                         <tr>
-                            <td><strong>{{ forloop.counter }}</strong></td>
+                            <td><strong>{% if page_obj %}{{ page_obj.start_index|add:forloop.counter0 }}{% else %}{{ forloop.counter }}{% endif %}</strong></td>
                             <td>{{ user.username }}</td>
                             <td>{{ user.email }}</td>
                             <td>{{ user.phone_number|default:"-" }}</td>
@@ -70,6 +70,7 @@
                 </tbody>
             </table>
         </div>
+        {% include 'pagination.html' %}
     {% else %}
         <div style="text-align: center; padding: 3rem 0; color: var(--gray-dark);">
             {% if query %}

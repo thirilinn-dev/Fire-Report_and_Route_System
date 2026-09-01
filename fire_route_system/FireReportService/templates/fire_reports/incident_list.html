@@ -209,7 +209,7 @@
                 <tbody>
                     {% for report in reports %}
                         <tr>
-                            <td><strong>{{ forloop.counter }}</strong></td>
+                            <td><strong>{% if page_obj %}{{ page_obj.start_index|add:forloop.counter0 }}{% else %}{{ forloop.counter }}{% endif %}</strong></td>
                             <td>{{ report.reporter_phone|default:"Anonymous" }}</td>
                             <td>
                                 <span class="scale-badge scale-{{ report.fire_scale }}">{% if report.fire_scale == 0 %}နယ်မြေခံ{% else %}Level {{ report.fire_scale }}{% endif %}</span>
@@ -242,6 +242,7 @@
                 </tbody>
             </table>
         </div>
+        {% include 'pagination.html' %}
     {% else %}
         <div style="text-align: center; padding: 3.5rem 0; color: var(--gray-dark);">
             {% if query or selected_date or selected_status or selected_scale %}
@@ -269,7 +270,7 @@
             {% for report in reports %}
             <div class="incident-card">
                 <div class="incident-card-header">
-                    <span class="incident-card-id">No {{ forloop.counter }}</span>
+                    <span class="incident-card-id">No {% if page_obj %}{{ page_obj.start_index|add:forloop.counter0 }}{% else %}{{ forloop.counter }}{% endif %}</span>
                 <span class="scale-badge scale-{{ report.fire_scale }}">{% if report.fire_scale == 0 %}နယ်မြေခံ{% else %}Level {{ report.fire_scale }}{% endif %}</span>
                 </div>
                 <div class="incident-card-row">
