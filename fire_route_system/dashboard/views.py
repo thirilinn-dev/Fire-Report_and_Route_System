@@ -1,15 +1,15 @@
 import json
 from django.shortcuts import render
 from django.utils import timezone
-from DataAccess.models import FireReport, FireStation, Dispatch
+from DataAccess.models import FireReport, FireStation, Dispatch, Tbl_Notification
 
 def dashboard_view(request):
     # Active statuses list
     active_statuses = ['Pending', 'Dispatched']
     
     # 1. Top Row (KPI Cards)
-    # Total Active Fires
-    total_active_fires = FireReport.objects.filter(status__in=active_statuses).count()
+    # Total Active Fires (Number of data from triage queue)
+    total_active_fires = Tbl_Notification.objects.filter(is_read=False).count()
     # High Severity Fires (Active fires of severity scale 5 — the highest level)
     high_severity_fires = FireReport.objects.filter(status__in=active_statuses, fire_scale=5).count()
     # Available Stations (Count of active stations)

@@ -47,7 +47,7 @@
                             <td>
                                 <form method="POST" action="{% url 'confirm_incident' notif.id %}" style="margin: 0; display: inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-confirm triage-confirm-btn" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; height: auto;">
+                                    <button type="submit" class="btn btn-orange triage-confirm-btn" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; height: auto;">
                                         Confirm Incident
                                     </button>
                                 </form>

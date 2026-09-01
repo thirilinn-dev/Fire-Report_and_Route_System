@@ -85,8 +85,8 @@ class DashboardViewTests(TestCase):
         """
         response = self.client.get(reverse('dashboard'))
         
-        # Active fires count should be 2 (Pending + Dispatched)
-        self.assertEqual(response.context['total_active_fires'], 2)
+        # Active fires count should match data count in triage queue (1 unread notification)
+        self.assertEqual(response.context['total_active_fires'], 1)
         
         # High severity fires count should be 1 (Pending report has scale 3)
         self.assertEqual(response.context['high_severity_fires'], 1)
