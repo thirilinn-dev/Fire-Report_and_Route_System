@@ -105,20 +105,28 @@ def get_filtered_reports(request):
 
     if start_date_str or end_date_str:
         if start_date_str:
-            try:
-                start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d')
+            start_date = None
+            for fmt in ('%d-%m-%Y', '%Y-%m-%d', '%d/%m/%Y', '%Y/%m/%d'):
+                try:
+                    start_date = datetime.datetime.strptime(start_date_str, fmt)
+                    break
+                except ValueError:
+                    pass
+            if start_date:
                 start_date = timezone.make_aware(start_date)
                 reports = reports.filter(reported_at__gte=start_date)
-            except ValueError:
-                pass
         if end_date_str:
-            try:
-                end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d')
+            end_date = None
+            for fmt in ('%d-%m-%Y', '%Y-%m-%d', '%d/%m/%Y', '%Y/%m/%d'):
+                try:
+                    end_date = datetime.datetime.strptime(end_date_str, fmt)
+                    break
+                except ValueError:
+                    pass
+            if end_date:
                 end_date = end_date.replace(hour=23, minute=59, second=59)
                 end_date = timezone.make_aware(end_date)
                 reports = reports.filter(reported_at__lte=end_date)
-            except ValueError:
-                pass
     elif period:
         if period == 'Daily':
             today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)

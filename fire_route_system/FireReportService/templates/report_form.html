@@ -144,11 +144,6 @@
             </style>
             
             <div class="form-group">
-                <label id="phone-label">သတင်းပို့သူ ဖုန်းနံပါတ် (မဖြစ်မနေ မဟုတ်ပါ):</label>
-                <input type="tel" name="reporter_phone" placeholder="09xxxxxxxxx" pattern="[0-9+]{7,15}" value="{{ reporter_phone|default:'' }}">
-            </div>
-
-            <div class="form-group">
                 <label id="location-choice-label" style="font-weight:700;">သတင်းပို့မည့်နည်းလမ်း ရွေးချယ်ပါ:</label>
                 <div class="location-tabs">
                     <button type="button" id="btn-tab-gps" class="loc-tab-btn active" onclick="switchLocationMode('gps')">📡 GPS တည်နေရာ</button>

@@ -54,11 +54,15 @@ def fire_report_list(request):
 
     # Apply date search or default 7-day window
     if date_str:
-        try:
-            parsed_date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+        parsed_date = None
+        for fmt in ('%d-%m-%Y', '%Y-%m-%d', '%d/%m/%Y', '%Y/%m/%d'):
+            try:
+                parsed_date = datetime.datetime.strptime(date_str, fmt).date()
+                break
+            except ValueError:
+                pass
+        if parsed_date:
             reports = reports.filter(reported_at__date=parsed_date)
-        except ValueError:
-            pass
     else:
         seven_days_ago = timezone.now() - datetime.timedelta(days=7)
         reports = reports.filter(reported_at__gte=seven_days_ago)

@@ -3,6 +3,7 @@
 {% block title %}Incidents List - Fire Route System{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
     /* ── View Toggle Buttons ── */
     .view-toggle-group {
@@ -149,7 +150,7 @@
         <!-- Date -->
         <div style="display: flex; flex-direction: column; gap: 0.25rem; flex: 1; min-width: 150px;">
             <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);" id="lbl-filter-date">Filter by Date</label>
-            <input type="date" name="date" value="{{ selected_date }}"
+            <input type="text" name="date" id="inc-date-input" value="{{ selected_date }}" placeholder="dd-mm-yyyy" autocomplete="off"
                    style="width: 100%; padding: 0.4rem 0.75rem; font-family: var(--font-family); font-size: 0.9rem; line-height: 1.4; border: 1px solid var(--gray-medium); border-radius: 6px; background-color: var(--bg-white); color: var(--color-black); box-sizing: border-box;">
         </div>
         <!-- Status -->
@@ -321,6 +322,15 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        flatpickr("#inc-date-input", {
+            dateFormat: "d-m-Y",
+            allowInput: true
+        });
+    });
+</script>
 <script>
     // ── View switcher ──────────────────────────────
     let mapInitialised = false;
