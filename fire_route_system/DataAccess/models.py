@@ -62,6 +62,15 @@ class FireReport(models.Model):
         ('False Alarm', 'False Alarm'),
     ]
 
+    FIRE_SCALE_CHOICES = [
+        (0, 'နယ်မြေခံ'),
+        (1, 'Level 1'),
+        (2, 'Level 2'),
+        (3, 'Level 3'),
+        (4, 'Level 4'),
+        (5, 'Level 5'),
+    ]
+
     user_id = models.IntegerField(
         null=True, 
         blank=True, 
@@ -89,7 +98,8 @@ class FireReport(models.Model):
         help_text="Manual address input if GPS is disabled"
     )
     fire_scale = models.IntegerField(
-        help_text="Severity Scale: 1, 2, or 3"
+        choices=FIRE_SCALE_CHOICES,
+        help_text="Severity Scale: 0=နယ်မြေခံ, 1=Level 1, 2=Level 2, 3=Level 3, 4=Level 4, 5=Level 5"
     )
     photo_url = models.URLField(
         max_length=255, 
@@ -112,6 +122,12 @@ class FireReport(models.Model):
         super().clean()
         if not self.address and (self.latitude is None or self.longitude is None):
             raise ValidationError("Either GPS location coordinates or a manual address must be provided.")
+
+    def delete(self, *args, **kwargs):
+        if self.status != 'Resolved':
+            from django.core.exceptions import ValidationError
+            raise ValidationError("Incident reports cannot be deleted unless they are resolved.")
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"Report {self.id} - Scale {self.fire_scale} ({self.status})"

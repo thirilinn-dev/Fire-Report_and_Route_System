@@ -266,9 +266,12 @@ tr:hover td {
     border-radius: 4px;
 }
 
+.severity-badge.scale-0 { background-color: rgba(21, 101, 192, 0.1); color: #1565c0; }
 .severity-badge.scale-1 { background-color: rgba(46, 125, 50, 0.1); color: #2e7d32; }
-.severity-badge.scale-2 { background-color: rgba(226, 82, 37, 0.1); color: var(--btn-orange, #e25225); }
-.severity-badge.scale-3 { background-color: rgba(195, 0, 16, 0.1); color: var(--btn-red, #c30010); }
+.severity-badge.scale-2 { background-color: rgba(249, 168, 37, 0.1); color: #f9a825; }
+.severity-badge.scale-3 { background-color: rgba(226, 82, 37, 0.1); color: var(--btn-orange, #e25225); }
+.severity-badge.scale-4 { background-color: rgba(191, 54, 12, 0.1); color: #bf360c; }
+.severity-badge.scale-5 { background-color: rgba(195, 0, 16, 0.1); color: var(--btn-red, #c30010); }
 
 .btn-dispatch-action {
     display: inline-block;

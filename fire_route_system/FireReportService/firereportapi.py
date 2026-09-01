@@ -35,8 +35,8 @@ def firereport_list_create(request):
 
         try:
             scale = int(data['fire_scale'])
-            if scale not in (1, 2, 3):
-                return JsonResponse({'error': 'fire_scale must be 1, 2, or 3'}, status=400)
+            if scale not in (0, 1, 2, 3, 4, 5):
+                return JsonResponse({'error': 'fire_scale must be 0, 1, 2, 3, 4, or 5'}, status=400)
             
             report = FireReport.objects.create(
                 user_id=data.get('user_id'),
@@ -79,8 +79,8 @@ def firereport_detail(request, pk):
 
             try:
                 scale = int(data['fire_scale'])
-                if scale not in (1, 2, 3):
-                    return JsonResponse({'error': 'fire_scale must be 1, 2, or 3'}, status=400)
+                if scale not in (0, 1, 2, 3, 4, 5):
+                    return JsonResponse({'error': 'fire_scale must be 0, 1, 2, 3, 4, or 5'}, status=400)
 
                 report.user_id = data.get('user_id')
                 report.reporter_phone = data.get('reporter_phone')
@@ -109,8 +109,8 @@ def firereport_detail(request, pk):
             if 'fire_scale' in data:
                 try:
                     scale = int(data['fire_scale'])
-                    if scale not in (1, 2, 3):
-                        return JsonResponse({'error': 'fire_scale must be 1, 2, or 3'}, status=400)
+                    if scale not in (0, 1, 2, 3, 4, 5):
+                        return JsonResponse({'error': 'fire_scale must be 0, 1, 2, 3, 4, or 5'}, status=400)
                     report.fire_scale = scale
                 except ValueError:
                     return JsonResponse({'error': 'fire_scale must be a valid integer'}, status=400)
@@ -126,6 +126,8 @@ def firereport_detail(request, pk):
             return JsonResponse({'error': str(e)}, status=500)
 
     elif request.method == 'DELETE':
+        if report.status != 'Resolved':
+            return JsonResponse({'error': 'Incident report cannot be deleted unless it is resolved'}, status=400)
         try:
             report.delete()
             return JsonResponse({'success': True}, status=200)

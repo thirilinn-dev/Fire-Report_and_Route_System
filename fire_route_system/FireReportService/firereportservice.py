@@ -29,7 +29,7 @@ def report_fire(request):
             latitude=lat_val,
             longitude=lng_val,
             address=addr if addr else None,
-            fire_scale=1,
+            fire_scale=0,
             reporter_phone=phone_val,
             status='Pending'
         )
@@ -87,7 +87,7 @@ def fire_report_list(request):
             'fire_scale': r.fire_scale,
             'status': r.status,
             'reporter_phone': r.reporter_phone or 'Anonymous',
-            'reported_at': r.reported_at.strftime('%Y-%m-%d %H:%M'),
+            'reported_at': r.reported_at.strftime('%d-%m-%Y %I:%M %p'),
         }
         for r in reports
         if r.latitude is not None and r.longitude is not None
@@ -124,9 +124,15 @@ def fire_report_update(request, pk):
 
 def fire_report_delete(request, pk):
     report = get_object_or_404(FireReport, pk=pk)
+    if report.status != 'Resolved':
+        messages.error(request, "Incident reports cannot be deleted unless they are resolved.")
+        return redirect('fire_report_list')
     if request.method == "POST":
-        report.delete()
-        messages.success(request, "Fire report deleted successfully.")
+        try:
+            report.delete()
+            messages.success(request, "Fire report deleted successfully.")
+        except Exception as e:
+            messages.error(request, str(e))
         return redirect('fire_report_list')
     return render(request, 'fire_reports/delete.html', {'report': report})
 

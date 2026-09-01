@@ -81,9 +81,12 @@
             <label id="lbl-level">Fire Scale Level:</label>
             <select name="level" id="filter-level">
                 <option value="All" {% if level == 'All' %}selected{% endif %} id="opt-level-all">All Levels</option>
-                <option value="1" {% if level == '1' %}selected{% endif %} id="opt-level-1">Level 1 (Minor)</option>
-                <option value="2" {% if level == '2' %}selected{% endif %} id="opt-level-2">Level 2 (Medium)</option>
-                <option value="3" {% if level == '3' %}selected{% endif %} id="opt-level-3">Level 3 (Major)</option>
+                <option value="0" {% if level == '0' %}selected{% endif %} id="opt-level-0">နယ်မြေခံ</option>
+                <option value="1" {% if level == '1' %}selected{% endif %} id="opt-level-1">Level 1</option>
+                <option value="2" {% if level == '2' %}selected{% endif %} id="opt-level-2">Level 2</option>
+                <option value="3" {% if level == '3' %}selected{% endif %} id="opt-level-3">Level 3</option>
+                <option value="4" {% if level == '4' %}selected{% endif %} id="opt-level-4">Level 4</option>
+                <option value="5" {% if level == '5' %}selected{% endif %} id="opt-level-5">Level 5</option>
             </select>
         </div>
 
@@ -123,8 +126,8 @@
                     <td><strong>{{ forloop.counter }}</strong></td>
                     <td>{{ report.reporter_phone|default:"Anonymous" }}</td>
                     <td>
-                        <span class="badge" style="background-color: {% if report.fire_scale == 3 %}#ffebee{% elif report.fire_scale == 2 %}#fff3e0{% else %}#e8f5e9{% endif %}; color: {% if report.fire_scale == 3 %}var(--btn-red){% elif report.fire_scale == 2 %}var(--btn-orange){% else %}#2e7d32{% endif %}; border: 1px solid currentColor;">
-                            Level {{ report.fire_scale }}
+                        <span class="badge" style="background-color: {% if report.fire_scale == 5 %}#ffebee{% elif report.fire_scale == 4 %}#fbe9e7{% elif report.fire_scale == 3 %}#fff3e0{% elif report.fire_scale == 2 %}#fff8e1{% elif report.fire_scale == 1 %}#e8f5e9{% else %}#e3f2fd{% endif %}; color: {% if report.fire_scale == 5 %}var(--btn-red){% elif report.fire_scale == 4 %}#bf360c{% elif report.fire_scale == 3 %}var(--btn-orange){% elif report.fire_scale == 2 %}#f9a825{% elif report.fire_scale == 1 %}#2e7d32{% else %}#1565c0{% endif %}; border: 1px solid currentColor;">
+                            {% if report.fire_scale == 0 %}နယ်မြေခံ{% else %}Level {{ report.fire_scale }}{% endif %}
                         </span>
                     </td>
                     <td>{{ report.status }}</td>
@@ -137,7 +140,7 @@
                         {{ report.address|default:"N/A" }}
                         {% endif %}
                     </td>
-                    <td>{{ report.reported_at|date:"Y-m-d H:i" }}</td>
+                    <td>{{ report.reported_at|date:"d-m-Y h:i A" }}</td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -174,9 +177,12 @@
                 periodMonthly: "Monthly (Current Month)",
                 periodYearly: "Yearly (Current Year)",
                 levelAll: "All Levels",
-                level1: "Level 1 (Minor)",
-                level2: "Level 2 (Medium)",
-                level3: "Level 3 (Major)"
+                level0: "နယ်မြေခံ",
+                level1: "Level 1",
+                level2: "Level 2",
+                level3: "Level 3",
+                level4: "Level 4",
+                level5: "Level 5"
             },
             my: {
                 title: "📋 သတင်းထုတ်ပြန်ချက် ပေါ်တယ်",
@@ -184,12 +190,12 @@
                 period: "ကာလအပိုင်းအခြား:",
                 startDate: "စတင်သည့်ရက်စွဲ:",
                 endDate: "ပြီးဆုံးသည့်ရက်စွဲ:",
-                level: "မီးseverityအဆင့်:",
+                level: "မီးကြီးမားမှု အဆင့်:",
                 filterBtn: "🔍 ရှာဖွေစစ်ထုတ်မည်",
                 exportCSV: "📄 CSV ထုတ်ယူရန်",
                 exportPDF: "📕 PDF ထုတ်ယူရန်",
                 thPhone: "သတင်းပို့သူ ဖုန်းနံပါတ်",
-                thScale: "မီးseverityအဆင့်",
+                thScale: "မီးကြီးမားမှု အဆင့်",
                 thStatus: "အခြေအနေ",
                 thLocation: "တည်နေရာ",
                 thLogged: "မှတ်တမ်းတင်ချိန်",
@@ -199,9 +205,12 @@
                 periodMonthly: "လစဉ် (ယခုလ)",
                 periodYearly: "နှစ်စဉ် (ယခုနှစ်)",
                 levelAll: "အဆင့်အားလုံး",
-                level1: "အဆင့် ၁ (အသေးစား)",
-                level2: "အဆင့် ၂ (အလတ်စား)",
-                level3: "အဆင့် ၃ (အကြီးစား)"
+                level0: "နယ်မြေခံ",
+                level1: "Level 1",
+                level2: "Level 2",
+                level3: "Level 3",
+                level4: "Level 4",
+                level5: "Level 5"
             }
         };
 
@@ -266,12 +275,18 @@
 
             const optLevelAll = document.getElementById("opt-level-all");
             if (optLevelAll) optLevelAll.innerText = data.levelAll;
+            const optLevel0 = document.getElementById("opt-level-0");
+            if (optLevel0) optLevel0.innerText = data.level0;
             const optLevel1 = document.getElementById("opt-level-1");
             if (optLevel1) optLevel1.innerText = data.level1;
             const optLevel2 = document.getElementById("opt-level-2");
             if (optLevel2) optLevel2.innerText = data.level2;
             const optLevel3 = document.getElementById("opt-level-3");
             if (optLevel3) optLevel3.innerText = data.level3;
+            const optLevel4 = document.getElementById("opt-level-4");
+            if (optLevel4) optLevel4.innerText = data.level4;
+            const optLevel5 = document.getElementById("opt-level-5");
+            if (optLevel5) optLevel5.innerText = data.level5;
         }
 
         document.addEventListener("DOMContentLoaded", function() {

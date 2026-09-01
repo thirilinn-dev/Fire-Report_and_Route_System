@@ -39,7 +39,7 @@ class DashboardViewTests(TestCase):
             reporter_phone="091111111",
             latitude=21.9600,
             longitude=96.0900,
-            fire_scale=3,
+            fire_scale=5,
             status="Pending"
         )
         self.report_dispatched = FireReport.objects.create(

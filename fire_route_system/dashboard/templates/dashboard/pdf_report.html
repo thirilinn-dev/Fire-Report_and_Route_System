@@ -56,15 +56,18 @@
             font-size: 8pt;
             font-weight: bold;
         }
+        .badge-0 { background-color: #e3f2fd; color: #1565c0; }
         .badge-1 { background-color: #e8f5e9; color: #2e7d32; }
-        .badge-2 { background-color: #fff3e0; color: #f57c00; }
-        .badge-3 { background-color: #ffebee; color: #c30010; }
+        .badge-2 { background-color: #fff8e1; color: #f9a825; }
+        .badge-3 { background-color: #fff3e0; color: #f57c00; }
+        .badge-4 { background-color: #fbe9e7; color: #bf360c; }
+        .badge-5 { background-color: #ffebee; color: #c30010; }
     </style>
 </head>
 <body>
     <h1>Mandalay Fire Response System Report</h1>
     <div class="meta">
-        <strong>Generated At:</strong> {{ generated_at|date:"Y-m-d H:i" }}<br>
+        <strong>Generated At:</strong> {{ generated_at|date:"d-m-Y h:i A" }}<br>
         <strong>Filters:</strong> Level: {{ filter_level }} | Period: {{ filter_period }} | Start Date: {{ filter_start }} | End Date: {{ filter_end }}
     </div>
 
@@ -75,16 +78,28 @@
             <td><strong>{{ total_count }}</strong></td>
         </tr>
         <tr>
-            <th>Level 1 (Minor)</th>
+            <th>နယ်မြေခံ</th>
+            <td>{{ level_0 }}</td>
+        </tr>
+        <tr>
+            <th>Level 1</th>
             <td>{{ level_1 }}</td>
         </tr>
         <tr>
-            <th>Level 2 (Medium)</th>
+            <th>Level 2</th>
             <td>{{ level_2 }}</td>
         </tr>
         <tr>
-            <th>Level 3 (Major)</th>
+            <th>Level 3</th>
             <td>{{ level_3 }}</td>
+        </tr>
+        <tr>
+            <th>Level 4</th>
+            <td>{{ level_4 }}</td>
+        </tr>
+        <tr>
+            <th>Level 5</th>
+            <td>{{ level_5 }}</td>
         </tr>
     </table>
 
@@ -106,7 +121,7 @@
                 <td>{{ forloop.counter }}</td>
                 <td>{{ report.reporter_phone|default:"Anonymous" }}</td>
                 <td>
-                    <span class="badge badge-{{ report.fire_scale }}">Level {{ report.fire_scale }}</span>
+                    <span class="badge badge-{{ report.fire_scale }}">{% if report.fire_scale == 0 %}နယ်မြေခံ{% else %}Level {{ report.fire_scale }}{% endif %}</span>
                 </td>
                 <td>{{ report.status }}</td>
                 <td>
@@ -116,7 +131,7 @@
                         {{ report.address|default:"N/A" }}
                     {% endif %}
                 </td>
-                <td>{{ report.reported_at|date:"Y-m-d H:i" }}</td>
+                <td>{{ report.reported_at|date:"d-m-Y h:i A" }}</td>
             </tr>
             {% empty %}
             <tr>

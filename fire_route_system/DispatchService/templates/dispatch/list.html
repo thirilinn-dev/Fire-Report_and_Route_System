@@ -30,15 +30,15 @@
                             <td><strong>#{{ dispatch.id }}</strong></td>
                             <td>
                                 <a href="{% url 'fire_report_update' dispatch.report.id %}" style="color: var(--color-black); font-weight: 600;">
-                                    Report #{{ dispatch.report.id }} (Scale {{ dispatch.report.fire_scale }})
+                                    Report #{{ dispatch.report.id }} ({% if dispatch.report.fire_scale == 0 %}နယ်မြေခံ{% else %}Level {{ dispatch.report.fire_scale }}{% endif %})
                                 </a>
                             </td>
                             <td>{{ dispatch.station.name }}</td>
                             <td>{{ dispatch.operator.username }}</td>
-                            <td>{{ dispatch.dispatched_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ dispatch.dispatched_at|date:"d-m-Y h:i A" }}</td>
                             <td>
                                 {% if dispatch.resolved_at %}
-                                    <span class="badge badge-active">{{ dispatch.resolved_at|date:"Y-m-d H:i" }}</span>
+                                    <span class="badge badge-active">{{ dispatch.resolved_at|date:"d-m-Y h:i A" }}</span>
                                 {% else %}
                                     <span class="badge badge-pending disp-active-badge">Active</span>
                                 {% endif %}

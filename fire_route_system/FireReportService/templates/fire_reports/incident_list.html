@@ -93,9 +93,12 @@
         font-weight: 700;
         border: 1px solid currentColor;
     }
+    .scale-0 { background:#e3f2fd; color:#1565c0; }
     .scale-1 { background:#e8f5e9; color:#2e7d32; }
-    .scale-2 { background:#fff3e0; color:var(--btn-orange); }
-    .scale-3 { background:#ffebee; color:var(--btn-red); }
+    .scale-2 { background:#fff8e1; color:#f9a825; }
+    .scale-3 { background:#fff3e0; color:var(--btn-orange); }
+    .scale-4 { background:#fbe9e7; color:#bf360c; }
+    .scale-5 { background:#ffebee; color:var(--btn-red); }
 </style>
 {% endblock %}
 
@@ -166,9 +169,12 @@
             <label style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-dark);" id="lbl-filter-scale">Filter by Scale</label>
             <select name="scale" style="width: 100%; padding: 0.4rem 0.75rem; font-family: var(--font-family); font-size: 0.9rem; line-height: 1.4; border: 1px solid var(--gray-medium); border-radius: 6px; background-color: var(--bg-white); color: var(--color-black);">
                 <option value="" id="opt-scale-all">All Scales</option>
-                <option value="1" {% if selected_scale == '1' %}selected{% endif %} id="opt-scale-1">Scale 1 (Low)</option>
-                <option value="2" {% if selected_scale == '2' %}selected{% endif %} id="opt-scale-2">Scale 2 (Medium)</option>
-                <option value="3" {% if selected_scale == '3' %}selected{% endif %} id="opt-scale-3">Scale 3 (High)</option>
+                <option value="0" {% if selected_scale == '0' %}selected{% endif %} id="opt-scale-0">နယ်မြေခံ</option>
+                <option value="1" {% if selected_scale == '1' %}selected{% endif %} id="opt-scale-1">Level 1</option>
+                <option value="2" {% if selected_scale == '2' %}selected{% endif %} id="opt-scale-2">Level 2</option>
+                <option value="3" {% if selected_scale == '3' %}selected{% endif %} id="opt-scale-3">Level 3</option>
+                <option value="4" {% if selected_scale == '4' %}selected{% endif %} id="opt-scale-4">Level 4</option>
+                <option value="5" {% if selected_scale == '5' %}selected{% endif %} id="opt-scale-5">Level 5</option>
             </select>
         </div>
         <!-- Buttons -->
@@ -206,7 +212,7 @@
                             <td><strong>{{ forloop.counter }}</strong></td>
                             <td>{{ report.reporter_phone|default:"Anonymous" }}</td>
                             <td>
-                                <span class="scale-badge scale-{{ report.fire_scale }}">Scale {{ report.fire_scale }}</span>
+                                <span class="scale-badge scale-{{ report.fire_scale }}">{% if report.fire_scale == 0 %}နယ်မြေခံ{% else %}Level {{ report.fire_scale }}{% endif %}</span>
                             </td>
                             <td>
                                 {% if report.latitude and report.longitude %}
@@ -222,11 +228,13 @@
                                     {{ report.status }}
                                 </span>
                             </td>
-                            <td>{{ report.reported_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ report.reported_at|date:"d-m-Y h:i A" }}</td>
                             <td>
                                 <div style="display: flex; gap: 0.5rem; align-items: center; white-space: nowrap;">
                                     <a href="{% url 'fire_report_update' report.id %}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" data-en="Edit" data-my="တည်းဖြတ်မည်">Edit</a>
-                                    <a href="{% url 'fire_report_delete' report.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" data-en="Delete" data-my="ဖျက်မည်">Delete</a>
+                                    {% if report.status|lower == 'resolved' %}
+                                        <a href="{% url 'fire_report_delete' report.id %}" class="btn btn-red" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" data-en="Delete" data-my="ဖျက်မည်">Delete</a>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>
@@ -262,13 +270,13 @@
             <div class="incident-card">
                 <div class="incident-card-header">
                     <span class="incident-card-id">No {{ forloop.counter }}</span>
-                    <span class="scale-badge scale-{{ report.fire_scale }}">Scale {{ report.fire_scale }}</span>
+                <span class="scale-badge scale-{{ report.fire_scale }}">{% if report.fire_scale == 0 %}နယ်မြေခံ{% else %}Level {{ report.fire_scale }}{% endif %}</span>
                 </div>
                 <div class="incident-card-row">
                     📞 {{ report.reporter_phone|default:"Anonymous" }}
                 </div>
                 <div class="incident-card-row">
-                    🕐 {{ report.reported_at|date:"Y-m-d H:i" }}
+                    🕐 {{ report.reported_at|date:"d-m-Y h:i A" }}
                 </div>
                 {% if report.latitude and report.longitude %}
                 <div class="incident-card-row">
@@ -282,7 +290,9 @@
                 </div>
                 <div class="incident-card-actions">
                     <a href="{% url 'fire_report_update' report.id %}" class="btn btn-outline" style="padding: 0.3rem 0.75rem; font-size: 0.82rem;" data-en="Edit" data-my="တည်းဖြတ်မည်">Edit</a>
-                    <a href="{% url 'fire_report_delete' report.id %}" class="btn btn-red" style="padding: 0.3rem 0.75rem; font-size: 0.82rem;" data-en="Delete" data-my="ဖျက်မည်">Delete</a>
+                    {% if report.status|lower == 'resolved' %}
+                        <a href="{% url 'fire_report_delete' report.id %}" class="btn btn-red" style="padding: 0.3rem 0.75rem; font-size: 0.82rem;" data-en="Delete" data-my="ဖျက်မည်">Delete</a>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -342,7 +352,12 @@
         const markerGroup = L.featureGroup();
 
         function scaleColor(s) {
-            return s === 3 ? '#c30010' : s === 2 ? '#e25225' : '#2e7d32';
+            if (s === 5) return '#c30010';
+            if (s === 4) return '#bf360c';
+            if (s === 3) return '#e25225';
+            if (s === 2) return '#f9a825';
+            if (s === 1) return '#2e7d32';
+            return '#1565c0'; // scale 0 = နယ်မြေခံ
         }
 
         incidents.forEach(function(r) {
@@ -354,7 +369,7 @@
                 iconAnchor: [10, 10]
             });
 
-            const scaleLabels = {1: 'Low', 2: 'Medium', 3: 'High'};
+            const scaleLabels = {0: 'နယ်မြေခံ', 1: 'Level 1', 2: 'Level 2', 3: 'Level 3', 4: 'Level 4', 5: 'Level 5'};
             const popup = `
                 <div style="min-width:180px;font-family:inherit;">
                     <p style="margin:0 0 4px;font-weight:700;font-size:0.95rem;color:${color};">🔥 Incident #${r.id}</p>
@@ -398,9 +413,12 @@
                 optStatusResolved: "Resolved",
                 optStatusAlarm: "False Alarm",
                 optScaleAll: "All Scales",
-                optScale1: "Scale 1 (Low)",
-                optScale2: "Scale 2 (Medium)",
-                optScale3: "Scale 3 (High)",
+                optScale0: "နယ်မြေခံ",
+                optScale1: "Level 1",
+                optScale2: "Level 2",
+                optScale3: "Level 3",
+                optScale4: "Level 4",
+                optScale5: "Level 5",
                 thNo: "No",
                 thPhone: "Reporter Phone",
                 thSeverity: "Severity Scale",
@@ -433,9 +451,12 @@
                 optStatusResolved: "ဖြေရှင်းပြီး",
                 optStatusAlarm: "မှားယွင်းသောသတင်း",
                 optScaleAll: "အဆင့်အားလုံး",
-                optScale1: "အဆင့် ၁ (နိမ့်)",
-                optScale2: "အဆင့် ၂ (အလတ်)",
-                optScale3: "အဆင့် ၃ (မြင့်)",
+                optScale0: "နယ်မြေခံ",
+                optScale1: "Level 1",
+                optScale2: "Level 2",
+                optScale3: "Level 3",
+                optScale4: "Level 4",
+                optScale5: "Level 5",
                 thNo: "နံပါတ်",
                 thPhone: "သတင်းပို့သူ ဖုန်းနံပါတ်",
                 thSeverity: "မီးပြင်းထန်မှုအဆင့်",
@@ -475,9 +496,12 @@
             set("opt-status-resolved", d.optStatusResolved);
             set("opt-status-alarm", d.optStatusAlarm);
             set("opt-scale-all", d.optScaleAll);
+            set("opt-scale-0", d.optScale0);
             set("opt-scale-1", d.optScale1);
             set("opt-scale-2", d.optScale2);
             set("opt-scale-3", d.optScale3);
+            set("opt-scale-4", d.optScale4);
+            set("opt-scale-5", d.optScale5);
             set("th-inc-no", d.thNo);
             set("th-inc-phone", d.thPhone);
             set("th-inc-severity", d.thSeverity);

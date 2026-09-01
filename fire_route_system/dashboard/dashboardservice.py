@@ -10,8 +10,8 @@ def dashboard_view(request):
     # 1. Top Row (KPI Cards)
     # Total Active Fires
     total_active_fires = FireReport.objects.filter(status__in=active_statuses).count()
-    # High Severity Fires (Active fires of severity scale 3)
-    high_severity_fires = FireReport.objects.filter(status__in=active_statuses, fire_scale=3).count()
+    # High Severity Fires (Active fires of severity scale 5 — the highest level)
+    high_severity_fires = FireReport.objects.filter(status__in=active_statuses, fire_scale=5).count()
     # Available Stations (Count of active stations)
     available_stations = FireStation.objects.filter(status='Active').count()
     # Total Dispatches today
@@ -52,11 +52,14 @@ def dashboard_view(request):
         })
 
     # 4. Severity Breakdown Charts (Chart.js counts)
-    # Get count of all active fires grouped by severity scale (1, 2, 3)
+    # Get count of all active fires grouped by severity scale (0–5)
     severity_breakdown = {
+        'scale_0': FireReport.objects.filter(fire_scale=0).count(),
         'scale_1': FireReport.objects.filter(fire_scale=1).count(),
         'scale_2': FireReport.objects.filter(fire_scale=2).count(),
         'scale_3': FireReport.objects.filter(fire_scale=3).count(),
+        'scale_4': FireReport.objects.filter(fire_scale=4).count(),
+        'scale_5': FireReport.objects.filter(fire_scale=5).count(),
     }
     
     context = {
@@ -157,10 +160,10 @@ def export_csv(request):
         writer.writerow([
             idx,
             report.reporter_phone or 'Anonymous',
-            f"Level {report.fire_scale}",
+            '\u1014\u101a\u103a\u1019\u103c\u1031\u1001\u1036' if report.fire_scale == 0 else f"Level {report.fire_scale}",
             report.status,
             loc,
-            report.reported_at.strftime('%Y-%m-%d %H:%M')
+            report.reported_at.strftime('%d-%m-%Y %I:%M %p')
         ])
         
     return response
@@ -172,16 +175,22 @@ def export_pdf(request):
     template = get_template('dashboard/pdf_report.html')
     
     total_count = reports.count()
+    level_0 = reports.filter(fire_scale=0).count()
     level_1 = reports.filter(fire_scale=1).count()
     level_2 = reports.filter(fire_scale=2).count()
     level_3 = reports.filter(fire_scale=3).count()
+    level_4 = reports.filter(fire_scale=4).count()
+    level_5 = reports.filter(fire_scale=5).count()
     
     context = {
         'reports': reports,
         'total_count': total_count,
+        'level_0': level_0,
         'level_1': level_1,
         'level_2': level_2,
         'level_3': level_3,
+        'level_4': level_4,
+        'level_5': level_5,
         'filter_level': request.GET.get('level', 'All'),
         'filter_period': request.GET.get('period', 'All'),
         'filter_start': request.GET.get('start_date', 'N/A'),

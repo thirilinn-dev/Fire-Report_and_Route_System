@@ -36,7 +36,7 @@
         <div class="kpi-data">
             <span class="kpi-label" id="kpi-severity-label">High Severity</span>
             <h2 class="kpi-value">{{ high_severity_fires }}</h2>
-            <span class="kpi-trend" id="kpi-severity-trend">Scale 3 Active Reports</span>
+            <span class="kpi-trend" id="kpi-severity-trend">Level 5 Active Reports</span>
         </div>
     </div>
     <!-- Card 3: Available Stations -->
@@ -95,7 +95,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th id="th-p-no">No</th>
                         <th id="th-p-phone">Reporter Phone</th>
                         <th id="th-p-severity">Severity</th>
                         <th id="th-p-location">Location</th>
@@ -107,15 +107,21 @@
                     {% if pending_reports %}
                         {% for report in pending_reports %}
                         <tr>
-                            <td>#{{ report.id }}</td>
+                            <td><strong>{{ forloop.counter }}</strong></td>
                             <td>{{ report.reporter_phone|default:"Anonymous" }}</td>
                             <td>
-                                {% if report.fire_scale == 3 %}
-                                    <span class="severity-badge scale-3" data-en="CRITICAL" data-my="အကြီးစား">CRITICAL</span>
+                            {% if report.fire_scale == 5 %}
+                                    <span class="severity-badge scale-5" data-en="LEVEL 5" data-my="အဆင့် ၅">LEVEL 5</span>
+                                {% elif report.fire_scale == 4 %}
+                                    <span class="severity-badge scale-4" data-en="LEVEL 4" data-my="အဆင့် ၄">LEVEL 4</span>
+                                {% elif report.fire_scale == 3 %}
+                                    <span class="severity-badge scale-3" data-en="LEVEL 3" data-my="အဆင့် ၃">LEVEL 3</span>
                                 {% elif report.fire_scale == 2 %}
-                                    <span class="severity-badge scale-2" data-en="MEDIUM" data-my="အလတ်စား">MEDIUM</span>
+                                    <span class="severity-badge scale-2" data-en="LEVEL 2" data-my="အဆင့် ၂">LEVEL 2</span>
+                                {% elif report.fire_scale == 1 %}
+                                    <span class="severity-badge scale-1" data-en="LEVEL 1" data-my="အဆင့် ၁">LEVEL 1</span>
                                 {% else %}
-                                    <span class="severity-badge scale-1" data-en="LOW" data-my="အသေးစား">LOW</span>
+                                    <span class="severity-badge scale-0" data-en="နယ်မြေခံ" data-my="နယ်မြေခံ">နယ်မြေခံ</span>
                                 {% endif %}
                             </td>
                             <td>{{ report.latitude|floatformat:4 }}, {{ report.longitude|floatformat:4 }}</td>
@@ -158,7 +164,7 @@
                         {% for disp in active_dispatches %}
                         <tr>
                             <td>#{{ disp.id }}</td>
-                            <td>Report #{{ disp.report.id }} (Scale {{ disp.report.fire_scale }})</td>
+                            <td>Report #{{ disp.report.id }} ({% if disp.report.fire_scale == 0 %}နယ်မြေခံ{% else %}Level {{ disp.report.fire_scale }}{% endif %})</td>
                             <td>{{ disp.station.name }}</td>
                             <td>{{ disp.operator.username }}</td>
                             <td>{{ disp.dispatched_at|date:"g:i A" }}</td>
@@ -290,18 +296,31 @@
         const severityChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['Severity 1', 'Severity 2', 'Severity 3'],
+                labels: ['နယ်မြေခံ', 'Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5'],
                 datasets: [{
                     label: 'Total Incidents',
-                    data: [severityData.scale_1, severityData.scale_2, severityData.scale_3],
+                    data: [
+                        severityData.scale_0,
+                        severityData.scale_1,
+                        severityData.scale_2,
+                        severityData.scale_3,
+                        severityData.scale_4,
+                        severityData.scale_5
+                    ],
                     backgroundColor: [
-                        'rgba(46, 125, 50, 0.75)',  // Scale 1 - Green
-                        'rgba(226, 82, 37, 0.75)',  // Scale 2 - Orange
-                        'rgba(195, 0, 16, 0.75)'    // Scale 3 - Red
+                        'rgba(21, 101, 192, 0.75)',  // Scale 0 - Blue (နယ်မြေခံ)
+                        'rgba(46, 125, 50, 0.75)',   // Scale 1 - Green
+                        'rgba(249, 168, 37, 0.75)',  // Scale 2 - Yellow-orange
+                        'rgba(226, 82, 37, 0.75)',   // Scale 3 - Orange
+                        'rgba(191, 54, 12, 0.75)',   // Scale 4 - Deep orange
+                        'rgba(195, 0, 16, 0.75)'     // Scale 5 - Red
                     ],
                     borderColor: [
+                        '#1565c0',
                         '#2e7d32',
+                        '#f9a825',
                         '#e25225',
+                        '#bf360c',
                         '#c30010'
                     ],
                     borderWidth: 1.5,
@@ -360,7 +379,7 @@
                 kpiActiveLabel: "Active Incidents",
                 kpiActiveTrend: "Pending or Dispatched",
                 kpiSeverityLabel: "High Severity",
-                kpiSeverityTrend: "Scale 3 Active Reports",
+                kpiSeverityTrend: "Level 5 Active Reports",
                 kpiStationsLabel: "Active Stations",
                 kpiStationsTrend: "Online and Operational",
                 kpiDispatchesLabel: "Today's Dispatches",
@@ -371,6 +390,7 @@
                 chartHint: "Historical breakdown of incident scales",
                 pendingTitle: "🚨 Immediate Dispatch Actions Required",
                 pendingBadge: "PENDING",
+                thNoP: "No",
                 thPhoneP: "Reporter Phone",
                 thSeverity: "Severity",
                 thLocationP: "Location",
@@ -394,7 +414,7 @@
                 kpiActiveLabel: "တက်ကြွဆောင်ရွက်နေသော ဖြစ်စဉ်များ",
                 kpiActiveTrend: "ဆိုင်းငံ့ဆဲ သို့မဟုတ် စေလွှတ်ပြီး",
                 kpiSeverityLabel: "အန္တရာယ်ကြီးမှုများ",
-                kpiSeverityTrend: "Scale 3 တက်ကြွဆောင်ရွက်နေသော",
+                kpiSeverityTrend: "Level 5 တက်ကြွဆောင်ရွက်နေသော",
                 kpiStationsLabel: "တက်ကြွသောစခန်းများ",
                 kpiStationsTrend: "အွန်လိုင်းနှင့် ဆောင်ရွက်နိုင်သော",
                 kpiDispatchesLabel: "ယနေ့ စေလွှတ်မှုများ",
@@ -405,6 +425,7 @@
                 chartHint: "ဖြစ်စဉ်အဆင့်များ သမိုင်းဆိုင်ရာ ခွဲခြမ်းစိတ်ဖြာမှု",
                 pendingTitle: "🚨 ချက်ချင်း စေလွှတ်ရန် လိုအပ်သော မှတ်တမ်းများ",
                 pendingBadge: "ဆိုင်းငံ့ဆဲ",
+                thNoP: "နံပါတ်",
                 thPhoneP: "သတင်းပို့သူ ဖုန်းနံပါတ်",
                 thSeverity: "ပြင်းထန်မှု",
                 thLocationP: "တည်နေရာ",
@@ -445,6 +466,7 @@
             set("dash-chart-hint", d.chartHint);
             set("dash-pending-title", d.pendingTitle);
             set("dash-pending-badge", d.pendingBadge);
+            set("th-p-no", d.thNoP);
             set("th-p-phone", d.thPhoneP);
             set("th-p-severity", d.thSeverity);
             set("th-p-location", d.thLocationP);

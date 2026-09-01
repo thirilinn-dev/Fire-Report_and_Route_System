@@ -30,8 +30,8 @@
                             <td><strong>{{ forloop.counter }}</strong></td>
                             <td>{{ notif.report.reporter_phone|default:"Anonymous" }}</td>
                             <td>
-                                <span class="badge" style="background-color: {% if notif.report.fire_scale == 3 %}#ffebee{% elif notif.report.fire_scale == 2 %}#fff3e0{% else %}#e8f5e9{% endif %}; color: {% if notif.report.fire_scale == 3 %}var(--btn-red){% elif notif.report.fire_scale == 2 %}var(--btn-orange){% else %}#2e7d32{% endif %}; border: 1px solid currentColor;">
-                                    Scale {{ notif.report.fire_scale }}
+                                <span class="badge" style="background-color: {% if notif.report.fire_scale == 5 %}#ffebee{% elif notif.report.fire_scale == 4 %}#fbe9e7{% elif notif.report.fire_scale == 3 %}#fff3e0{% elif notif.report.fire_scale == 2 %}#fff8e1{% elif notif.report.fire_scale == 1 %}#e8f5e9{% else %}#e3f2fd{% endif %}; color: {% if notif.report.fire_scale == 5 %}var(--btn-red){% elif notif.report.fire_scale == 4 %}#bf360c{% elif notif.report.fire_scale == 3 %}var(--btn-orange){% elif notif.report.fire_scale == 2 %}#f9a825{% elif notif.report.fire_scale == 1 %}#2e7d32{% else %}#1565c0{% endif %}; border: 1px solid currentColor;">
+                                    {% if notif.report.fire_scale == 0 %}နယ်မြေခံ{% else %}Level {{ notif.report.fire_scale }}{% endif %}
                                 </span>
                             </td>
                             <td>
@@ -43,11 +43,11 @@
                                 {{ notif.report.address|default:"N/A" }}
                                 {% endif %}
                             </td>
-                            <td>{{ notif.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ notif.created_at|date:"d-m-Y h:i A" }}</td>
                             <td>
                                 <form method="POST" action="{% url 'confirm_incident' notif.id %}" style="margin: 0; display: inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-orange triage-confirm-btn" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; height: auto;">
+                                    <button type="submit" class="btn btn-confirm triage-confirm-btn" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; height: auto;">
                                         Confirm Incident
                                     </button>
                                 </form>

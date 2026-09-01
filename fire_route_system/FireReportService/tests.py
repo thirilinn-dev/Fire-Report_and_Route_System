@@ -56,7 +56,7 @@ class FireReportServiceAPITests(TestCase):
         payload = {
             'latitude': 16.84,
             'longitude': 96.22,
-            'fire_scale': 5 # Invalid scale
+            'fire_scale': 6 # Invalid scale (0-5 are valid)
         }
         response = self.client.post(url, data=json.dumps(payload), content_type='application/json')
         self.assertEqual(response.status_code, 400)
@@ -86,7 +86,15 @@ class FireReportServiceAPITests(TestCase):
         self.assertEqual(data['status'], "Under Control")
 
     def test_firereport_delete(self):
+        # Non-resolved report deletion should fail
         url = reverse('api_firereport_detail', kwargs={'pk': self.report2.pk})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(FireReport.objects.filter(pk=self.report2.pk).exists())
+
+        # Resolved report deletion should succeed
+        self.report2.status = 'Resolved'
+        self.report2.save()
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(FireReport.objects.filter(pk=self.report2.pk).exists())
@@ -254,7 +262,7 @@ class FireReportFlexibleReportingTests(TestCase):
         # Verify saved properties in database
         report = FireReport.objects.filter(latitude=21.9928, longitude=96.0964).first()
         self.assertIsNotNone(report)
-        self.assertEqual(report.fire_scale, 1)
+        self.assertEqual(report.fire_scale, 0)
         self.assertIsNone(report.reporter_phone)
         self.assertIsNone(report.address)
 
