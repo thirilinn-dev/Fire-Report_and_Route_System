@@ -20,7 +20,7 @@
                 <span id="report-del-warning">Warning: This action cannot be undone!</span>
             </h4>
             <p style="margin-bottom: 1.5rem; font-size: 0.95rem; color: var(--cad-text-secondary);" id="report-del-desc">
-                Are you sure you want to permanently delete <strong>Fire Report #{{ report.id }}</strong> (Severity: Scale {{ report.fire_scale }}, Status: {{ report.status }})?
+                Are you sure you want to permanently delete <strong>Fire Report {{ report.id }}</strong> (Severity: Scale {{ report.fire_scale }}, Status: {{ report.status }})?
             </p>
 
             <form method="post">
@@ -44,7 +44,7 @@
             title: "Delete Fire Report",
             badge: "DESTRUCTIVE ACTION",
             warning: "Warning: This action cannot be undone!",
-            desc: "Are you sure you want to permanently delete <strong>Fire Report #{{ report.id }}</strong> (Severity: Scale {{ report.fire_scale }}, Status: {{ report.status }})?",
+            desc: "Are you sure you want to permanently delete <strong>Fire Report {{ report.id }}</strong> (Severity: Scale {{ report.fire_scale }}, Status: {{ report.status }})?",
             confirm: "Delete Permanently",
             cancel: "Cancel"
         },
@@ -52,7 +52,7 @@
             title: "မီးလောင်မှုဖြစ်စဉ် မှတ်တမ်း ဖျက်ပယ်ရန်",
             badge: "အပြီးတိုင် ဖျက်ပစ်မည့် လုပ်ဆောင်ချက်",
             warning: "သတိပြုရန်: ဤလုပ်ဆောင်ချက်ကို ပြန်လည်ပြင်ဆင်၍ မရနိုင်ပါ!",
-            desc: "<strong>မီးလောင်မှုဖြစ်စဉ် မှတ်တမ်း အမှတ် #{{ report.id }}</strong> (မီးအဆင့်: Scale {{ report.fire_scale }}, အခြေအနေ: {{ report.status }}) ကို အပြီးတိုင် ဖျက်ပစ်ရန် သေချာပါသလား?",
+            desc: "<strong>မီးလောင်မှုဖြစ်စဉ် မှတ်တမ်း အမှတ် {{ report.id }}</strong> (မီးအဆင့်: Scale {{ report.fire_scale }}, အခြေအနေ: {{ report.status }}) ကို အပြီးတိုင် ဖျက်ပစ်ရန် သေချာပါသလား?",
             confirm: "အပြီးတိုင် ဖျက်ပစ်မည်",
             cancel: "မလုပ်တော့ပါ"
         }

@@ -49,7 +49,7 @@
                     <td>
                         <a href="{% url 'fire_report_update' dispatch.report.id %}" style="color: var(--cad-text-main); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
                             <svg class="cad-icon cad-icon-sm cad-icon-emergency"><use href="#cad-icon-flame"/></svg>
-                            <span>Incident #{{ dispatch.report.id }}</span>
+                            <span>Incident {{ dispatch.report.id }}</span>
                             <span class="cad-badge cad-badge-scale-{{ dispatch.report.fire_scale }}">
                                 {{ dispatch.report.scale_display }}
                             </span>

@@ -13,7 +13,7 @@ class LegacyAccessMiddleware:
             return redirect('emergency:list',kind='stations')
         if path in ['/', '/dashboard/'] and request.user.is_authenticated:
             return redirect('emergency:dashboard')
-        protected = ('/api/', '/roles/', '/users/', '/dispatch', '/firestations', '/fire-stations', '/report/fire-reports/', '/report/triage-queue/', '/dashboard/report-portal/', '/admin/')
+        protected = ('/api/', '/roles/', '/users/', '/dispatch', '/firestations', '/fire-stations', '/report/fire-reports/', '/dashboard/report-portal/', '/admin/')
         if path.startswith(protected):
             if not request.user.is_authenticated: return redirect('login')
             if not getattr(request.user, 'is_admin', False): return HttpResponseForbidden('စီမံခန့်ခွဲသူသာ အသုံးပြုနိုင်ပါသည်။')

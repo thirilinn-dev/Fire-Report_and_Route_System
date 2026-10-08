@@ -44,8 +44,8 @@ def admin_required(view_func):
 
 
 def dispatcher_required(view_func):
-    """Decorator restricting view to Dispatchers and Administrators."""
-    return role_required('Dispatcher', 'Operator', 'Admin', 'Administrator')(view_func)
+    """Decorator restricting view to Dispatchers, Operators, Station Admins, and Administrators."""
+    return role_required('Dispatcher', 'Operator', 'Station Admin', 'Admin', 'Administrator')(view_func)
 
 
 def responder_required(view_func):

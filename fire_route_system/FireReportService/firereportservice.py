@@ -209,6 +209,7 @@ def triage_queue(request):
 
 
 from django.views.decorators.http import require_POST
+from django.utils import timezone
 
 @require_POST
 @dispatcher_required
@@ -220,6 +221,25 @@ def confirm_incident(request, notification_id):
 
     report = notification.report
     report.status = 'Confirmed'
+    report.coordinates_confirmed = True
     report.save()
 
+    messages.success(request, f"မီးသတင်း ID {report.id} အား အတည်ပြုပြီးပါပြီ။ Incident Management တွင် Fire Level သတ်မှတ်နိုင်ပါသည်။")
+    return redirect('emergency:incident', pk=report.pk)
+
+
+@require_POST
+@dispatcher_required
+def reject_incident(request, notification_id):
+    from DataAccess.models import Tbl_Notification
+    notification = get_object_or_404(Tbl_Notification, pk=notification_id)
+    notification.is_read = True
+    notification.save()
+
+    report = notification.report
+    report.status = 'False Alarm'
+    report.closed_at = timezone.now()
+    report.save()
+
+    messages.warning(request, f"မီးသတင်း ID {report.id} အား သတင်းမှား / ပယ်ဖျက် (Fake/Rejected) အဖြစ် သတ်မှတ်ပြီးပါပြီ။ စေလွှတ်မှု မပြုလုပ်ပါ။")
     return redirect('triage_queue')

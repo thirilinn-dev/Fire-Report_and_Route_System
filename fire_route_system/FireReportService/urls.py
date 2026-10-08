@@ -16,4 +16,5 @@ urlpatterns = [
     # Triage routing
     path('triage-queue/', firereportservice.triage_queue, name='triage_queue'),
     path('triage-queue/confirm/<int:notification_id>/', firereportservice.confirm_incident, name='confirm_incident'),
+    path('triage-queue/reject/<int:notification_id>/', firereportservice.reject_incident, name='reject_incident'),
 ]

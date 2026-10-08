@@ -1,5 +1,6 @@
 import csv
 import json
+from datetime import timedelta
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -31,12 +32,71 @@ def register(request):
     return render(request,'emergency/form.html',{'form':form,'title':'ပြည်သူ့အကောင့်ဖွင့်ရန်'})
 
 
+def _bars(items):
+    """Turn (label, value) pairs into dicts with a 0-100 bar height for CSS charts."""
+    peak=max([v for _,v in items] or [0]) or 1
+    return [{'label':l,'value':v,'height':max(4,round(v*100/peak)) if v else 2} for l,v in items]
+
+
+def _donut(part,whole):
+    """Percent for an SVG donut (r=15.9155 gives a circumference of 100)."""
+    pct=round(part*100/whole) if whole else 0
+    return {'part':part,'whole':whole,'pct':pct}
+
+
 @login_required
 def dashboard(request):
     user=request.user
     incidents=incidents_for(user)
     counts=list(incidents.values('status').annotate(total=Count('pk')))
     for row in counts:row['status_display']=dict(FireReport.STATUS_CHOICES).get(row['status'],row['status'])
+    total_incidents=incidents.count()
+    active_count=incidents.exclude(status__in=['Resolved','False Alarm']).count()
+    resolved_count=incidents.filter(status='Resolved').count()
+    total_stations=FireStation.objects.count()
+    available_stations=FireStation.objects.filter(status='Active').count()
+    dispatches_today=Deployment.objects.filter(incident__in=incidents,ordered_at__date=timezone.localdate()).count()
+    today=timezone.localdate()
+    days=[today-timedelta(days=n) for n in range(6,-1,-1)]
+    per_day={d:0 for d in days}
+    for reported in incidents.filter(reported_at__date__gte=days[0]).values_list('reported_at',flat=True):
+        key=timezone.localtime(reported).date()
+        if key in per_day:per_day[key]+=1
+    scale_counts=dict(incidents.order_by().values_list('fire_scale').annotate(total=Count('pk')))
+
+    user_station_ids = managed_station_ids(user) + ([user.station_id] if user.station_id else [])
+    assigned_deployments_qs = Deployment.objects.filter(
+        incident__closed_at__isnull=True
+    ).exclude(state__in=['Returned', 'Cancelled']).select_related('incident', 'station').prefetch_related('vehicles__vehicle__kind').order_by('-ordered_at')
+
+    if not user.is_admin:
+        assigned_deployments_qs = assigned_deployments_qs.filter(station_id__in=user_station_ids)
+
+    assigned_emergencies = []
+    for d in assigned_deployments_qs[:5]:
+        v_active = d.vehicles.filter(active=True).first()
+        route_data = d.route if isinstance(d.route, dict) else {}
+        t_m = route_data.get('total_metres') or route_data.get('metres')
+        assigned_emergencies.append({
+            'deployment_id': d.pk,
+            'incident_id': d.incident_id,
+            'station_name': d.station.name,
+            'address': d.incident.address or 'GPS တည်နေရာ',
+            'latitude': d.incident.latitude,
+            'longitude': d.incident.longitude,
+            'fire_scale': d.incident.fire_scale,
+            'scale_display': d.incident.scale_display,
+            'status_display': d.incident.status_display,
+            'reporter_phone': d.incident.reporter_phone,
+            'reported_at': d.incident.reported_at,
+            'state': d.state,
+            'engine_name': f"{v_active.vehicle.registration} ({v_active.vehicle.kind.name})" if v_active else 'ယာဉ် သတ်မှတ်ဆဲ',
+            'route_distance_km': round(t_m / 1000.0, 2) if t_m else None,
+            'route_metres': t_m,
+            'coordinates': route_data.get('coordinates', []),
+            'instructions': route_data.get('instructions', []),
+        })
+
     return render(request,'emergency/dashboard.html',{'incidents':incidents.order_by('-reported_at')[:10],
         'counts':counts,'active_count':incidents.exclude(status__in=['Resolved','False Alarm']).count(),
         'admin_charts':admin_chart_data(incidents) if user.is_admin else None,
@@ -44,8 +104,15 @@ def dashboard(request):
         'notices':Notice.objects.filter(recipient=user).order_by('-pk')[:20],
         'managed_stations':managed_station_ids(user),'titles':TITLES,
         'high_severity_fires':incidents.filter(fire_scale=5).exclude(status__in=['Resolved','False Alarm']).count(),
-        'available_stations':FireStation.objects.filter(status='Active').count(),
-        'total_dispatches_today':Deployment.objects.filter(incident__in=incidents,ordered_at__date=timezone.localdate()).count()})
+        'available_stations':available_stations,
+        'total_dispatches_today':dispatches_today,
+        'total_incidents':total_incidents,'total_stations':total_stations,
+        'resolved_donut':_donut(resolved_count,total_incidents),
+        'active_donut':_donut(active_count,total_incidents),
+        'station_donut':_donut(available_stations,total_stations),
+        'status_bars':_bars([(row['status_display'],row['total']) for row in counts]),
+        'scale_bars':_bars([('L%d'%n,scale_counts.get(n,0)) for n in range(6)]),
+        'trend_bars':_bars([(d.strftime('%d-%m'),per_day[d]) for d in days])})
 
 
 def scope(request,kind):
@@ -154,7 +221,7 @@ def report(request):
     if request.method=='POST' and form.is_valid():
         incident=form.save(commit=False);incident.user_id=request.user.pk;incident.reporter_phone=request.user.phone_number;incident.fire_scale=0;incident.status='Pending';incident.save()
         for admin in User.objects.filter(role__role_name__in=['Administrator','Admin'],status='Active'):
-            Notice.objects.create(recipient=admin,incident=incident,message=f'မီးသတင်းအသစ် #{incident.pk}')
+            Notice.objects.create(recipient=admin,incident=incident,message=f'မီးသတင်းအသစ် {incident.pk}')
         services.audit(request.user,'report_fire',incident)
         messages.success(request,'မီးသတင်းပေးပို့ပြီးပါပြီ။');return redirect('emergency:incident',pk=incident.pk)
     return render(request,'emergency/form.html',{'form':form,'title':'မီးသတင်းပေးပို့ရန်','location_picker':True})
@@ -249,21 +316,47 @@ def incident(request,pk):
 @login_required
 @require_POST
 @transaction.atomic
-def action(request,pk,action):
-    incident=get_object_or_404(incidents_for(request.user).select_for_update(),pk=pk)
-    user=request.user;data=request.POST
+def action(request, pk, action):
+    incident = get_object_or_404(incidents_for(request.user).select_for_update(), pk=pk)
+    user = request.user
+    data = request.POST
     try:
-        if incident.closed_at:raise ValidationError('ဖြစ်စဉ်ပိတ်ပြီးဖြစ်သည်။')
-        if action=='confirm':
-            if not user.is_admin:raise PermissionDenied
-            if incident.closed_at:raise ValidationError('ပိတ်ပြီးဖြစ်စဉ် ပြင်မရပါ။')
-            form=ConfirmForm(data,instance=incident)
-            if not form.is_valid():raise ValidationError(str(form.errors.as_text()))
-            incident=form.save(commit=False)
-            if incident.status=='Pending':incident.status='Confirmed'
-            incident.save();services.audit(user,'confirm_level',incident,level=incident.fire_scale)
-        elif action=='dispatch':services.dispatch(user,pk,[int(v) for v in data.getlist('vehicles')],data.get('reason',''),data.get('manual_reason',''))
-        elif action=='state':
+        if incident.closed_at: raise ValidationError('ဖြစ်စဉ်ပိတ်ပြီးဖြစ်သည်။')
+        if action == 'confirm':
+            if not user.is_admin: raise PermissionDenied
+            if incident.closed_at: raise ValidationError('ပိတ်ပြီးဖြစ်စဉ် ပြင်မရပါ။')
+            form = ConfirmForm(data, instance=incident)
+            if not form.is_valid(): raise ValidationError(str(form.errors.as_text()))
+            saved_incident = form.save(commit=False)
+            if saved_incident.status == 'Pending':
+                saved_incident.status = 'Confirmed'
+            saved_incident.save(update_fields=['fire_scale', 'status'])
+            services.audit(user, 'confirm_level', saved_incident, level=saved_incident.fire_scale)
+
+            # Trigger automatic Dijkstra route calculation & dispatch for all stations
+            calc_result = services.calculate_all_routes_and_dispatch(
+                saved_incident, actor=user, fire_scale=saved_incident.fire_scale
+            )
+            if calc_result['success']:
+                st_name = calc_result['selected_station'].name
+                eng_name = calc_result['selected_engine'].registration
+                dist = calc_result['selected_route'].get('distance_km', '')
+                messages.success(request, f"မီးလောင်မှုအဆင့် (Level {saved_incident.fire_scale}) သတ်မှတ်ပြီး {st_name} မှ ယာဉ် ({eng_name}) အား လမ်းကြောင်း ({dist} km) ဖြင့် အလိုအလျောက် စေလွှတ်ပြီးပါပြီ။")
+            else:
+                messages.warning(request, f"မီးလောင်မှုအဆင့် (Level {saved_incident.fire_scale}) သတ်မှတ်ပြီးပါပြီ။ သို့သော် အလိုအလျောက် စေလွှတ်မှု မအောင်မြင်ပါ: {calc_result['error']}")
+            return redirect('emergency:incident', pk=pk)
+        elif action == 'reject':
+            if not user.is_admin: raise PermissionDenied
+            incident.status = 'False Alarm'
+            incident.closed_at = timezone.now()
+            incident.save(update_fields=['status', 'closed_at'])
+            IncidentUpdate.objects.create(incident=incident, author=user, message='သတင်းမှားအဖြစ် ပယ်ဖျက် (Fake / Rejected)')
+            services.audit(user, 'reject_fake', incident)
+            messages.warning(request, f"ဖြစ်စဉ် {incident.pk} အား သတင်းမှား (Fake / Rejected) အဖြစ် ပယ်ဖျက်လိုက်ပါသည်။ စေလွှတ်မှု မပြုလုပ်ပါ။")
+            return redirect('emergency:queue')
+        elif action == 'dispatch':
+            services.dispatch(user, pk, [int(v) for v in data.getlist('vehicles')], data.get('reason', ''), data.get('manual_reason', ''))
+        elif action == 'state':
             if not user.is_admin:raise PermissionDenied
             if data.get('status') not in ['Confirmed','Under Control','Resolved','False Alarm']:raise ValidationError('အခြေအနေ မမှန်ပါ။')
             if incident.closed_at:raise ValidationError('ဖြစ်စဉ်ပိတ်ပြီးဖြစ်သည်။')

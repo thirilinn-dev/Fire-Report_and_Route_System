@@ -8,11 +8,11 @@
 .emergency-console a{color:var(--cad-blue-info);text-decoration:none}
 .emergency-console a:hover{text-decoration:underline}
 [data-theme="dark"] .emergency-console a:not(.button){color:#93c5fd}
-.cad-topbar #cad-logout-btn{color:var(--cad-blue-info)}
-[data-theme="dark"] .cad-topbar #cad-logout-btn{color:#93c5fd}
-.emergency-console table{width:100%;border-collapse:collapse;background:var(--cad-card-bg);font-size:.875rem}
-.emergency-console th{background:var(--cad-table-header-bg);color:var(--cad-text-secondary);font-weight:700}
-.emergency-console th,.emergency-console td{text-align:left;padding:.9rem 1rem;border-bottom:1px solid var(--cad-border);vertical-align:top;overflow-wrap:anywhere}
+
+
+.emergency-console table{width:100%;min-width:620px;border-collapse:collapse;background:transparent;font-size:.875rem}
+.emergency-console th{background:var(--cad-table-header-bg);color:var(--cad-text-secondary);font-weight:700;white-space:nowrap;padding:.85rem 1rem}
+.emergency-console th,.emergency-console td{text-align:left;padding:.9rem 1rem;border-bottom:1px solid var(--cad-border);vertical-align:middle}
 .emergency-console tr:hover td{background:var(--cad-table-hover-bg)}
 .emergency-console form p{margin:1rem 0}
 .emergency-console input:not([type=checkbox]),.emergency-console select,.emergency-console textarea{width:100%;padding:.7rem .85rem;border:1px solid var(--cad-input-border);border-radius:var(--radius-sm);background:var(--cad-input-bg);color:var(--cad-text-main);font:inherit}
@@ -34,10 +34,10 @@
 .emergency-console ol,.emergency-console ul{padding-left:1.5rem}
 .emergency-console .notice-form{display:inline}
 .emergency-console .cad-panel{margin:1rem 0}
-#notice-count{background:var(--cad-gold-subtle);color:var(--cad-text-secondary);white-space:nowrap}
+
 @media(max-width:600px){.emergency-console th,.emergency-console td{padding:.65rem}.emergency-console .map{height:360px}.emergency-console .grid{grid-template-columns:1fr}.cad-topbar-right{flex-wrap:wrap}}
 
-@media(max-width:1100px){.cad-topbar-right .cad-operator-badge>span:not(.cad-operator-avatar){display:none}.cad-topbar-right #notice-count{font-size:.75rem}}
+@media(max-width:1100px){.cad-topbar-right .cad-operator-username,.cad-topbar-right .cad-role-tag{display:none}}
 
 .cad-topbar-left{min-width:0}.cad-topbar-right{flex-shrink:0}#cad-logout-text{white-space:nowrap}
 @media(max-width:1100px){.cad-topbar .cad-breadcrumb>span:not(.cad-breadcrumb-active){display:none}}

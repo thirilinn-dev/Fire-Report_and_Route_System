@@ -20,7 +20,7 @@
                 <span id="disp-del-warning">Warning: This action cannot be undone!</span>
             </h4>
             <p style="margin-bottom: 1.5rem; font-size: 0.95rem; color: var(--cad-text-secondary);" id="disp-del-desc">
-                Are you sure you want to permanently delete <strong>Dispatch #{{ dispatch.id }}</strong> (Report #{{ dispatch.report.id }}, Responding Station: {{ dispatch.station.name }})?
+                Are you sure you want to permanently delete <strong>Dispatch {{ dispatch.id }}</strong> (Report {{ dispatch.report.id }}, Responding Station: {{ dispatch.station.name }})?
             </p>
 
             <form method="post">
@@ -44,7 +44,7 @@
             title: "Delete Dispatch Operation",
             badge: "DESTRUCTIVE ACTION",
             warning: "Warning: This action cannot be undone!",
-            desc: "Are you sure you want to permanently delete <strong>Dispatch #{{ dispatch.id }}</strong> (Report #{{ dispatch.report.id }}, Responding Station: {{ dispatch.station.name }})?",
+            desc: "Are you sure you want to permanently delete <strong>Dispatch {{ dispatch.id }}</strong> (Report {{ dispatch.report.id }}, Responding Station: {{ dispatch.station.name }})?",
             confirm: "Delete Permanently",
             cancel: "Cancel"
         },
@@ -52,7 +52,7 @@
             title: "တပ်ဖွဲ့စေလွှတ်မှု မှတ်တမ်း ဖျက်ပယ်ရန်",
             badge: "အပြီးတိုင် ဖျက်ပစ်မည့် လုပ်ဆောင်ချက်",
             warning: "သတိပြုရန်: ဤလုပ်ဆောင်ချက်ကို ပြန်လည်ပြင်ဆင်၍ မရနိုင်ပါ!",
-            desc: "<strong>တပ်ဖွဲ့စေလွှတ်မှု မှတ်တမ်း အမှတ် #{{ dispatch.id }}</strong> (ဖြစ်စဉ် အမှတ် #{{ dispatch.report.id }}၊ တာဝန်ကျစခန်း: {{ dispatch.station.name }}) ကို အပြီးတိုင် ဖျက်ပစ်ရန် သေချာပါသလား?",
+            desc: "<strong>တပ်ဖွဲ့စေလွှတ်မှု မှတ်တမ်း အမှတ် {{ dispatch.id }}</strong> (ဖြစ်စဉ် အမှတ် {{ dispatch.report.id }}၊ တာဝန်ကျစခန်း: {{ dispatch.station.name }}) ကို အပြီးတိုင် ဖျက်ပစ်ရန် သေချာပါသလား?",
             confirm: "အပြီးတိုင် ဖျက်ပစ်မည်",
             cancel: "မလုပ်တော့ပါ"
         }

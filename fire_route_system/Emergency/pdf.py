@@ -54,7 +54,7 @@ def route_diagram(coordinates):
 
 def incident_pdf_response(request,incident):
     from .permissions import managed_station_ids
-    sty=style();story=[paragraph(f'မီးလောင်ဖြစ်စဉ် #{incident.pk}',sty),paragraph(f'{incident.address or "GPS နေရာ"} / {incident.scale_display} / {incident.status_display}',sty)]
+    sty=style();story=[paragraph(f'မီးလောင်ဖြစ်စဉ် {incident.pk}',sty),paragraph(f'{incident.address or "GPS နေရာ"} / {incident.scale_display} / {incident.status_display}',sty)]
     deployments=incident.deployments.select_related('station')
     if not request.user.is_admin:deployments=deployments.filter(station_id__in=managed_station_ids(request.user)+[request.user.station_id])
     for deployment in deployments:
@@ -78,5 +78,5 @@ def incident_pdf_response(request,incident):
 def report_pdf(request,query):
     sty=style();story=[paragraph('မီးလောင်ဖြစ်စဉ် အစီရင်ခံစာ',sty)]
     for incident in query:
-        story.extend([paragraph(f'#{incident.pk} / {timezone.localtime(incident.reported_at):%d/%m/%Y %I:%M %p} / {incident.scale_display} / {incident.status_display}',sty),paragraph(incident.address or 'GPS နေရာ',sty),Spacer(1,10)])
+        story.extend([paragraph(f'{incident.pk} / {timezone.localtime(incident.reported_at):%d-%m-%Y %I:%M %p} / {incident.scale_display} / {incident.status_display}',sty),paragraph(incident.address or 'GPS နေရာ',sty),Spacer(1,10)])
     return response(story,'incidents.pdf')

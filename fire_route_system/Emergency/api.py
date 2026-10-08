@@ -35,7 +35,7 @@ def incidents(request):
         incident=form.save(commit=False);incident.user_id=request.user.pk;incident.reporter_phone=request.user.phone_number;incident.fire_scale=0;incident.status='Pending';incident.save()
         from DataAccess.models import User
         for admin in User.objects.filter(role__role_name__in=['Administrator','Admin'],status='Active'):
-            Notice.objects.create(recipient=admin,incident=incident,message=f'မီးသတင်းအသစ် #{incident.pk}')
+            Notice.objects.create(recipient=admin,incident=incident,message=f'မီးသတင်းအသစ် {incident.pk}')
         from .services import audit
         audit(request.user,'report_fire',incident)
         return JsonResponse(serialize(incident),status=201)

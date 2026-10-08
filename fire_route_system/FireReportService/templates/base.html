@@ -26,6 +26,9 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
     <!-- Core CAD Design System Stylesheet -->
     <link rel="stylesheet" href="{% static 'dashboard/css/cad_theme.css' %}">
     
@@ -78,12 +81,18 @@
                 {% block sidebar_navigation %}
                 <!-- EMERGENCY ACTION -->
                 <div class="cad-nav-section">
-                    <a href="{% url 'report_fire' %}" class="cad-nav-item cad-nav-emergency nav-emergency-btn">
+                    <a href="{% url 'report_fire' %}" class="cad-nav-item cad-nav-emergency nav-emergency-btn" aria-label="Emergency Report - Hotline 191">
                         <div class="cad-nav-item-content">
-                            <span class="cad-nav-icon"><svg class="cad-icon cad-icon-emergency"><use href="#cad-icon-siren"/></svg></span>
-                            <span>Emergency Report</span>
+                            <span class="cad-nav-icon emergency-siren-box">
+                                <span class="emergency-beacon-live"></span>
+                                <svg class="cad-icon cad-icon-emergency"><use href="#cad-icon-siren"/></svg>
+                            </span>
+                            <div class="emergency-text-group">
+                                <span class="emergency-title" id="cad-nav-emergency-text-en">Emergency Report</span>
+                                <span class="emergency-subtitle">Hotline 191 · Immediate Dispatch</span>
+                            </div>
                         </div>
-                        <span class="cad-badge" style="background: rgba(255,255,255,0.25); color: #fff; font-size: 0.65rem;">191</span>
+                        <span class="cad-badge emergency-badge-pill"><span class="emergency-live-dot"></span>191</span>
                     </a>
                 </div>
 
@@ -287,6 +296,65 @@
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <script>
+        window.initGlobalDatePickers = function(root = document) {
+            if (typeof flatpickr === "undefined") return;
+
+            // Date Pickers (dd-mm-yyyy)
+            const dateSelectors = [
+                'input.cad-datepicker',
+                'input[name="start"]',
+                'input[name="end"]',
+                'input[name="start_date"]',
+                'input[name="end_date"]',
+                'input[name="date"]',
+                '#filter-start',
+                '#filter-end',
+                '#inc-date-input',
+                'input[placeholder*="DD-MM-YYYY" i]',
+                'input[placeholder*="DD/MM/YYYY" i]',
+                'input[placeholder*="dd-mm-yyyy" i]'
+            ];
+
+            const dateElements = root.querySelectorAll ? root.querySelectorAll(dateSelectors.join(', ')) : [];
+            dateElements.forEach(el => {
+                if (el.classList.contains("cad-datetimepicker") || el.name?.toLowerCase().includes("datetime")) {
+                    return; // skip datetime elements
+                }
+                if (!el._flatpickr) {
+                    flatpickr(el, {
+                        dateFormat: "d-m-Y",
+                        allowInput: true,
+                        altInput: false
+                    });
+                }
+            });
+
+            // DateTime Pickers (dd-mm-yyyy hh:mm AM/PM)
+            const dateTimeSelectors = [
+                'input.cad-datetimepicker',
+                'input[name*="datetime" i]'
+            ];
+            const dateTimeElements = root.querySelectorAll ? root.querySelectorAll(dateTimeSelectors.join(', ')) : [];
+            dateTimeElements.forEach(el => {
+                if (!el._flatpickr) {
+                    flatpickr(el, {
+                        enableTime: true,
+                        dateFormat: "d-m-Y h:i K",
+                        allowInput: true,
+                        altInput: false
+                    });
+                }
+            });
+        };
+
+        document.addEventListener("DOMContentLoaded", function() {
+            window.initGlobalDatePickers();
+        });
+    </script>
 
     <script>
         window.fireRouteMapIcon = L.icon({
@@ -418,6 +486,7 @@
                             // Initialize form UI and GPS
                             if (typeof window.updateUI === "function") window.updateUI();
                             if (typeof window.fetchGPS === "function") window.fetchGPS();
+                            if (typeof window.initGlobalDatePickers === "function") window.initGlobalDatePickers(modalBody);
 
                             // Bind cancel link or buttons to close modal
                             const cancelBtns = form.querySelectorAll("a.btn-outline, button.btn-outline, .btn-secondary, a[href*='list'], a[href='/']");
@@ -460,6 +529,7 @@
                                             modalBody.appendChild(targetContent);
 
                                             if (typeof window.updateUI === "function") window.updateUI();
+                                            if (typeof window.initGlobalDatePickers === "function") window.initGlobalDatePickers(modalBody);
                                             
                                             const reCancelBtns = targetContent.querySelectorAll("a.btn-outline, button.btn-outline, .btn-secondary, a[href*='list'], a[href='/'], #success-btn");
                                             reCancelBtns.forEach(btn => {

@@ -25,7 +25,7 @@ privacy, local Dijkstra routing, and Myanmar/Latin PDFs.
 - OSM import: **199,503 nodes and 423,734 directed road edges**. All 22 active
   stations inside the demo's Mandalay bounds produced routes to the test location
   21.975, 96.083. Route calculations took approximately 3–4 seconds each.
-- Browser checks covered all four role dashboards and the complete incident #30
+- Browser checks covered all four role dashboards and the complete incident 30
   workflow: Citizen report → Admin confirmation/dispatch → Station Admin selects
   on-duty personnel → departure/arrival/update/return → station report → lead
   final submission → Admin approval/closure. The recorded actual resources are

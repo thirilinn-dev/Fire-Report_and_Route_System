@@ -23,7 +23,7 @@
                 <span id="role-del-warning">Warning: This action cannot be undone!</span>
             </h3>
             <p style="margin: 0; font-size: 0.95rem; color: var(--cad-text); line-height: 1.5;" id="role-del-desc">
-                Are you sure you want to delete the user role <strong>"{{ role.role_name }}"</strong> (ID: #{{ role.id }})?
+                Are you sure you want to delete the user role <strong>"{{ role.role_name }}"</strong> (ID: {{ role.id }})?
             </p>
         </div>
 
@@ -47,7 +47,7 @@
             title: "Delete User Role",
             badge: "Irreversible Action",
             warning: "Warning: This action cannot be undone!",
-            desc: 'Are you sure you want to delete the user role <strong>"{{ role.role_name }}"</strong> (ID: #{{ role.id }})?',
+            desc: 'Are you sure you want to delete the user role <strong>"{{ role.role_name }}"</strong> (ID: {{ role.id }})?',
             confirm: "Delete Permanently",
             cancel: "Cancel"
         },
@@ -55,7 +55,7 @@
             title: "ရာထူးတာဝန် ဖျက်ပယ်ရန်",
             badge: "အပြီးတိုင် ဖျက်ပစ်မည့် လုပ်ဆောင်ချက်",
             warning: "သတိပြုရန်: ဤလုပ်ဆောင်ချက်ကို ပြန်လည်ပြင်ဆင်၍ မရနိုင်ပါ!",
-            desc: '<strong>"{{ role.role_name }}"</strong> (အမှတ်: #{{ role.id }}) ရာထူးတာဝန်ကို စနစ်ထဲမှ အပြီးတိုင် ဖျက်ပစ်ရန် သေချာပါသလား?',
+            desc: '<strong>"{{ role.role_name }}"</strong> (အမှတ်: {{ role.id }}) ရာထူးတာဝန်ကို စနစ်ထဲမှ အပြီးတိုင် ဖျက်ပစ်ရန် သေချာပါသလား?',
             confirm: "အပြီးတိုင် ဖျက်ပစ်မည်",
             cancel: "မလုပ်တော့ပါ"
         }

@@ -97,7 +97,7 @@ class Deployment(models.Model):
     state = models.CharField(max_length=20, choices=[(s,s) for s in ['Ordered','Accepted','Departed','Arrived','Returned','Cancelled']], default='Ordered')
     route = models.JSONField(default=dict, blank=True)
     ordered_at = models.DateTimeField(auto_now_add=True)
-    def __str__(self): return f'#{self.incident_id} / {self.station} / {self.state}'
+    def __str__(self): return f'{self.incident_id} / {self.station} / {self.state}'
 
 
 class VehicleParticipation(models.Model):

@@ -18,7 +18,7 @@ class Command(BaseCommand):
         for address,latitude,longitude in cases:
             incident=FireReport.objects.filter(address=address).first()
             if incident is not None:
-                self.stdout.write(f'Existing incident #{incident.pk}; preserved.')
+                self.stdout.write(f'Existing incident {incident.pk}; preserved.')
                 continue
             incident=FireReport(user_id=citizen.pk,address=address,latitude=latitude,longitude=longitude,
                 coordinates_confirmed=True,home_station=station,lead_station=station,fire_scale=1,status='Confirmed')
@@ -26,5 +26,5 @@ class Command(BaseCommand):
             if route.get('error'):raise CommandError(route['error'])
             if route['metres']<3000:raise CommandError('Demo route must be at least 3 km; no distance inflation applied.')
             incident.save()
-            self.stdout.write(self.style.SUCCESS(f'Added demo incident #{incident.pk}: {route["metres"]/1000:.2f} km road distance.'))
+            self.stdout.write(self.style.SUCCESS(f'Added demo incident {incident.pk}: {route["metres"]/1000:.2f} km road distance.'))
         self.stdout.write('Demo events only; no dispatches, vehicles, or historical incidents changed.')

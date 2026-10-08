@@ -270,7 +270,7 @@
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.85rem;">
                     <div>
-                        <span style="font-size: 0.8rem; font-weight: 700; color: var(--cad-text-muted);">INCIDENT #{{ report.id }}</span>
+                        <span style="font-size: 0.8rem; font-weight: 700; color: var(--cad-text-muted);">INCIDENT {{ report.id }}</span>
                         <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0.2rem 0; color: var(--cad-text-main);">
                             {{ report.reporter_phone|default:"အမည်မသိ သတင်းပို့သူ" }}
                         </h4>
@@ -404,7 +404,7 @@ const viewKey = 'incident_list_view';
 
             const popup = `
                 <div class="map-popup-card">
-                    <h4>Incident #${r.id}</h4>
+                    <h4>Incident ${r.id}</h4>
                     <p><strong>Caller:</strong> ${r.phone}</p>
                     <p><strong>Severity:</strong> Level ${r.scale}</p>
                     <p><strong>Status:</strong> ${FireRouteStatus.html(r.status)}</p>

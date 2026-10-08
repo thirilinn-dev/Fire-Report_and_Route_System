@@ -393,13 +393,13 @@ class ConcurrentReservationTests(TransactionTestCase):
         from django.db import connection
         if connection.vendor != 'mysql':self.skipTest('Requires MySQL row locking')
         self.station=FireStation.objects.create(name='Concurrent',address='Mandalay',contact_number='1',latitude=21.97,longitude=96.08)
-        admin_role=Role.objects.create(role_name='Administrator')
-        ff_role=Role.objects.create(role_name='Firefighter')
+        admin_role,_=Role.objects.get_or_create(role_name='Administrator')
+        ff_role,_=Role.objects.get_or_create(role_name='Firefighter')
         self.admin=User.objects.create(username='concurrent_admin',role=admin_role,email=None)
         self.person=User.objects.create(username='concurrent_ff',role=ff_role,station=self.station,email=None)
         now=timezone.now()
         Duty.objects.create(employee=self.person,starts_at=now-timedelta(hours=1),ends_at=now+timedelta(hours=1),task='Respond')
-        kind=VehicleType.objects.create(name='Concurrent engine')
+        kind,_=VehicleType.objects.get_or_create(name='Concurrent engine')
         self.vehicle=Vehicle.objects.create(registration='CONCURRENT',station=self.station,kind=kind)
         self.incidents=[FireReport.objects.create(user_id=self.admin.pk,status='Confirmed',fire_scale=0,address='Concurrency demo',home_station=self.station,lead_station=self.station,latitude=21.98,longitude=96.09,coordinates_confirmed=True) for _ in range(2)]
 

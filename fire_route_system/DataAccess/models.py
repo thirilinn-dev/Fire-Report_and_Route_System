@@ -114,8 +114,9 @@ class User(models.Model):
         role_map = {
             'admin': {'admin', 'administrator'},
             'administrator': {'admin', 'administrator'},
-            'dispatcher': {'dispatcher', 'operator'},
-            'operator': {'dispatcher', 'operator'},
+            'dispatcher': {'dispatcher', 'operator', 'station admin'},
+            'operator': {'dispatcher', 'operator', 'station admin'},
+            'station admin': {'station admin', 'dispatcher', 'operator'},
             'firefighter': {'firefighter', 'responder'},
             'responder': {'firefighter', 'responder'},
             'citizen': {'citizen', 'reporter'},
@@ -331,10 +332,11 @@ class Dispatch(models.Model):
 
     dispatched_at = models.DateTimeField(auto_now_add=True)
     resolved_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=30, default='Dispatched')
     resources_deployed = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return f"Dispatch {self.id}"
+        return f"Dispatch {self.id} ({self.status})"
 
 
 class Location(models.Model):

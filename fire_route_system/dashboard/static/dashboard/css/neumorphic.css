@@ -1,0 +1,1009 @@
+/* ==========================================================================
+   FIRE ROUTE — SOFT / NEUMORPHIC COMPONENT LAYER
+   Inspired by the supplied soft-UI component kit (raised cards, inset inputs,
+   round icon buttons, segmented controls, switches, progress bars, stat
+   blocks). The brand palette (Emergency Red, Fire Gold, Command Navy) is
+   NOT changed — only surfaces, depth, radii and component shapes.
+
+   Loaded AFTER cad_theme.css and page CSS so it restyles every page that
+   extends base.html. Everything is driven by the --nm-* tokens below, plus
+   overrides of the existing --cad-* tokens, so light/dark both work.
+   ========================================================================== */
+
+:root {
+    --nm-bg: #EAEEF4;
+    --nm-hi: rgba(255, 255, 255, 0.95);
+    --nm-lo: rgba(139, 154, 178, 0.50);
+    --nm-radius: 18px;
+    --nm-radius-sm: 12px;
+    --nm-raise: 7px 7px 16px var(--nm-lo), -7px -7px 16px var(--nm-hi);
+    --nm-raise-sm: 4px 4px 9px var(--nm-lo), -4px -4px 9px var(--nm-hi);
+    --nm-raise-xs: 2px 2px 5px var(--nm-lo), -2px -2px 5px var(--nm-hi);
+    --nm-inset: inset 4px 4px 9px var(--nm-lo), inset -4px -4px 9px var(--nm-hi);
+    --nm-inset-sm: inset 2px 2px 5px var(--nm-lo), inset -2px -2px 5px var(--nm-hi);
+    --nm-track: rgba(139, 154, 178, 0.22);
+    --nm-dash: rgba(139, 154, 178, 0.35);
+
+    /* Re-point the existing CAD tokens at the soft surface */
+    --cad-bg-canvas: var(--nm-bg);
+    --cad-card-bg: var(--nm-bg);
+    --cad-card-header-bg: transparent;
+    --cad-border: rgba(139, 154, 178, 0.25);
+    --cad-border-subtle: rgba(139, 154, 178, 0.15);
+    --cad-input-bg: var(--nm-bg);
+    --cad-input-border: transparent;
+    --cad-table-header-bg: transparent;
+    --cad-table-hover-bg: rgba(139, 154, 178, 0.14);
+    --cad-shadow-sm: var(--nm-raise-sm);
+    --cad-shadow-md: var(--nm-raise);
+    --cad-shadow-lg: 12px 12px 28px var(--nm-lo), -10px -10px 24px var(--nm-hi);
+    --radius-sm: 12px;
+    --radius-md: 18px;
+    --radius-lg: 24px;
+}
+
+[data-theme="dark"] {
+    --nm-bg: #0C1824;
+    --nm-hi: rgba(52, 82, 118, 0.26);
+    --nm-lo: rgba(0, 0, 0, 0.58);
+    --nm-track: rgba(128, 146, 167, 0.18);
+    --nm-dash: rgba(128, 146, 167, 0.28);
+    --cad-border: rgba(128, 146, 167, 0.18);
+    --cad-border-subtle: rgba(128, 146, 167, 0.10);
+    --cad-table-hover-bg: rgba(128, 146, 167, 0.10);
+}
+
+html, body { background: var(--nm-bg); }
+.cad-main-wrapper { background: var(--nm-bg); }
+
+/* ---------- Top bar (High-Tech Modern Command Deck) ---------- */
+.cad-topbar {
+    height: 62px;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.02);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.75rem;
+    flex-shrink: 0;
+    z-index: 100;
+    transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+[data-theme="dark"] .cad-topbar {
+    background: rgba(10, 20, 32, 0.88);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.cad-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    min-width: 0;
+}
+
+.cad-live-beacon-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.22rem 0.65rem;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    border-radius: 9999px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #10b981;
+    user-select: none;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+}
+
+[data-theme="dark"] .cad-live-beacon-pill {
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #34d399;
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+}
+
+.cad-beacon-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: cadLivePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes cadLivePulse {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.cad-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--cad-text-muted);
+}
+
+.cad-breadcrumb-dept {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.07);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--cad-text-secondary);
+}
+
+[data-theme="dark"] .cad-breadcrumb-dept {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+}
+
+.cad-breadcrumb-sep {
+    color: var(--cad-text-muted);
+    font-size: 0.85rem;
+    opacity: 0.45;
+}
+
+.cad-breadcrumb-active {
+    color: var(--cad-text-main);
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: -0.01em;
+}
+
+.cad-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    flex-shrink: 0;
+}
+
+.cad-user-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Modern Notification Chip */
+.cad-notice-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.85rem;
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 9999px;
+    color: #475569;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    text-decoration: none !important;
+}
+
+[data-theme="dark"] .cad-notice-chip {
+    background: rgba(18, 32, 48, 0.85);
+    border-color: rgba(255, 255, 255, 0.09);
+    color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.cad-notice-chip:hover {
+    border-color: rgba(245, 158, 11, 0.5);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+    transform: translateY(-1px);
+}
+
+.cad-notice-icon-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    color: var(--cad-text-secondary);
+}
+
+.cad-notice-icon-wrap .cad-icon {
+    width: 15px;
+    height: 15px;
+}
+
+.cad-notice-dot {
+    display: none;
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 0 2px #ffffff;
+}
+
+[data-theme="dark"] .cad-notice-dot {
+    box-shadow: 0 0 0 2px #0a1420;
+}
+
+.cad-notice-chip.has-unread {
+    border-color: rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.06);
+    color: #dc2626;
+}
+
+.cad-notice-count-text {
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Operator Badge */
+.cad-operator-link {
+    text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+}
+
+.cad-operator-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.3rem 0.75rem 0.3rem 0.35rem;
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 9999px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 6px rgba(15, 23, 42, 0.02);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+[data-theme="dark"] .cad-operator-badge {
+    background: rgba(18, 32, 48, 0.85);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.cad-operator-badge:hover {
+    transform: translateY(-1px);
+    border-color: rgba(56, 189, 248, 0.5);
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.16);
+}
+
+.cad-operator-avatar-box {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.cad-operator-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(234, 88, 12, 0.35);
+    border: 1.5px solid rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .cad-operator-avatar {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.cad-operator-online-indicator {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    border: 2px solid #ffffff;
+}
+
+[data-theme="dark"] .cad-operator-online-indicator {
+    border-color: #0c1824;
+}
+
+.cad-operator-username {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--cad-text-main);
+    letter-spacing: -0.01em;
+}
+
+.cad-role-tag {
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    white-space: nowrap;
+}
+
+[data-theme="dark"] .cad-role-tag {
+    background: rgba(245, 158, 11, 0.18);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+/* Logout Button */
+.cad-logout-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.36rem 0.85rem;
+    border-radius: 9999px;
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.24);
+    color: #dc2626;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+[data-theme="dark"] .cad-logout-action {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.32);
+    color: #f87171;
+}
+
+.cad-logout-icon {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s ease;
+}
+
+.cad-logout-action:hover {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-color: #ef4444;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    transform: translateY(-1px);
+}
+
+.cad-logout-action:hover .cad-logout-icon {
+    transform: translateX(2px);
+    stroke: #ffffff;
+}
+
+/* ---------- Raised surfaces ---------- */
+.cad-panel,
+.cad-kpi-card,
+.cad-filter-bar,
+.cad-modal-container,
+.dx-card,
+.emergency-console section,
+.emergency-console .card,
+.emergency-console .filters,
+.emergency-console .table-wrap {
+    background: var(--nm-bg);
+    border: 0;
+    border-radius: var(--nm-radius);
+    box-shadow: var(--nm-raise);
+}
+.cad-panel-header,
+.cad-modal-header {
+    background: transparent;
+    border-bottom: 1px dashed var(--nm-dash);
+}
+.cad-kpi-card::before { border-radius: var(--nm-radius) 0 0 var(--nm-radius); }
+.cad-kpi-icon-wrap,
+.cad-kpi-card .cad-kpi-icon-wrap { border: 0 !important; border-radius: 50%; box-shadow: var(--nm-raise-xs); background: var(--nm-bg) !important; }
+.cad-modal-overlay { background: rgba(7, 17, 25, 0.55); }
+
+/* ---------- Buttons ---------- */
+.cad-btn {
+    border-radius: 14px;
+    border: 0;
+    padding: 0.6rem 1.15rem;
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+.cad-btn:active { transform: translateY(1px); }
+.cad-btn-outline,
+.cad-btn-navy {
+    background: var(--nm-bg);
+    color: var(--cad-text-main) !important;
+    box-shadow: var(--nm-raise-sm);
+}
+.cad-btn-outline:hover,
+.cad-btn-navy:hover { background: var(--nm-bg); box-shadow: var(--nm-raise-xs); transform: translateY(-1px); }
+.cad-btn-outline:active,
+.cad-btn-navy:active { box-shadow: var(--nm-inset-sm); }
+.cad-btn-emergency {
+    background: linear-gradient(145deg, #ff2a2b, #d00001);
+    box-shadow: 5px 5px 12px rgba(253, 0, 1, 0.30), -4px -4px 10px var(--nm-hi);
+}
+.cad-btn-emergency:hover {
+    background: linear-gradient(145deg, #ff3b3c, #e00002);
+    box-shadow: 7px 7px 16px rgba(253, 0, 1, 0.38), -4px -4px 10px var(--nm-hi);
+}
+.cad-btn-emergency:active { box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.3); }
+.cad-btn-gold {
+    background: linear-gradient(145deg, #ffb42a, #e08a00);
+    box-shadow: 5px 5px 12px rgba(245, 158, 11, 0.30), -4px -4px 10px var(--nm-hi);
+}
+.cad-btn-gold:hover { background: linear-gradient(145deg, #ffc04a, #ea9300); }
+.cad-btn-danger-outline {
+    background: var(--nm-bg);
+    color: var(--cad-red-primary);
+    box-shadow: var(--nm-raise-sm);
+}
+.cad-btn-danger-outline:hover { background: var(--nm-bg); box-shadow: var(--nm-inset-sm); }
+.cad-mobile-toggle { border-radius: 12px; box-shadow: var(--nm-raise-xs); padding: .3rem .55rem; }
+
+/* ---------- Forms (inset fields) ---------- */
+.cad-input,
+.cad-select,
+.cad-textarea,
+.cad-form-control,
+.emergency-console input:not([type=checkbox]),
+.emergency-console select,
+.emergency-console textarea {
+    background: var(--nm-bg);
+    border: 0;
+    border-radius: 14px;
+    box-shadow: var(--nm-inset);
+    padding: .7rem 1rem;
+}
+.cad-input:focus,
+.cad-select:focus,
+.cad-textarea:focus,
+.emergency-console input:focus,
+.emergency-console select:focus,
+.emergency-console textarea:focus {
+    outline: none;
+    border: 0;
+    box-shadow: var(--nm-inset), 0 0 0 2px var(--cad-gold-glow);
+}
+.cad-label,
+.emergency-console label { letter-spacing: .1px; }
+
+/* Neumorphic checkbox (inset well, red tick) */
+.emergency-console input[type=checkbox] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    background: var(--nm-bg);
+    box-shadow: var(--nm-inset-sm);
+    display: inline-grid;
+    place-content: center;
+    cursor: pointer;
+    transition: box-shadow .15s;
+}
+.emergency-console input[type=checkbox]::after {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--cad-red-primary);
+    transform: scale(0);
+    transition: transform .15s;
+}
+.emergency-console input[type=checkbox]:checked::after { transform: scale(1); }
+
+/* ---------- Badges / pills ---------- */
+.cad-badge {
+    border: 0;
+    border-radius: 999px;
+    padding: .28rem .75rem;
+    box-shadow: var(--nm-raise-xs);
+    background-color: var(--nm-bg);
+}
+.cad-badge-scale-0 { color: #2563EB; }
+.cad-badge-scale-1 { color: #10B981; }
+.cad-badge-scale-2 { color: #D97706; }
+.cad-badge-scale-3 { color: #EA580C; }
+.cad-badge-scale-4 { color: #DC2626; }
+.cad-badge-scale-5 { background: linear-gradient(145deg, #ff2a2b, #d00001); }
+.cad-badge-pending, .cad-badge-maintenance { color: var(--cad-gold-primary); }
+.cad-badge-confirmed { color: #2563EB; }
+.cad-badge-dispatched { color: #DC2626; }
+.cad-badge-under-control { color: #0284C7; }
+.cad-badge-resolved, .cad-badge-active { color: #10B981; }
+.cad-badge-inactive { color: var(--cad-text-muted); }
+.badge { border-radius: 999px; }
+
+/* ---------- Tables & Responsive Containers ---------- */
+.cad-table-container,
+.table-responsive,
+.table-wrap,
+.emergency-console .table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--nm-radius);
+}
+
+.cad-table,
+.emergency-console table {
+    width: 100%;
+    min-width: 620px;
+    background: transparent;
+    border-collapse: collapse;
+}
+
+.cad-table th,
+.emergency-console th {
+    background: transparent;
+    border-bottom: 2px solid var(--nm-dash);
+    padding: 0.85rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.cad-table td,
+.emergency-console td {
+    border-bottom: 1px dashed var(--nm-dash);
+    padding: 0.95rem 1rem;
+    vertical-align: middle;
+}
+
+.cad-table tbody tr:hover,
+.emergency-console tr:hover td {
+    background: var(--cad-table-hover-bg);
+}
+
+.cad-table-card {
+    background: var(--nm-bg);
+    border: 0;
+    border-radius: var(--nm-radius);
+    box-shadow: var(--nm-raise);
+    overflow: hidden;
+    margin: 1.25rem 0;
+}
+
+/* ---------- Emergency console controls ---------- */
+.emergency-console button,
+.emergency-console .button {
+    border: 0;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #ff2a2b, #d00001);
+    box-shadow: 5px 5px 12px rgba(253, 0, 1, 0.28), -4px -4px 10px var(--nm-hi);
+}
+.emergency-console button:hover,
+.emergency-console .button:hover {
+    background: linear-gradient(145deg, #ff3b3c, #e00002);
+    transform: translateY(-1px);
+}
+.emergency-console button:active,
+.emergency-console .button:active { box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.3); transform: none; }
+.emergency-console .message,
+.emergency-console .errorlist {
+    border: 0;
+    border-left: 4px solid var(--cad-gold-primary);
+    border-radius: 14px;
+    background: var(--nm-bg);
+    box-shadow: var(--nm-raise-sm);
+}
+.emergency-console .map,
+.cad-map-wrapper,
+.leaflet-container { border-radius: var(--nm-radius-sm); }
+.emergency-console details { border-radius: var(--nm-radius-sm); }
+.emergency-console summary { padding: .5rem 0; }
+
+/* ---------- Sidebar navigation (dark soft-UI) ---------- */
+.cad-sidebar {
+    background: linear-gradient(180deg, #0b1620 0%, #08111a 60%, #060d14 100%);
+    border-right: 0;
+    box-shadow: 10px 0 28px -8px rgba(0, 0, 0, 0.45);
+}
+
+/* Brand */
+.cad-brand-container {
+    padding: 1.25rem 1.1rem 1rem;
+    border-bottom: 0;
+    background: radial-gradient(120% 90% at 0% 0%, rgba(253, 0, 1, 0.16) 0%, transparent 60%);
+    gap: 0.9rem;
+}
+.cad-brand-emblem {
+    height: 46px; width: 46px; max-width: none; padding: 5px;
+    border-radius: 50%;
+    background: #0e1a27;
+    box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.55), -3px -3px 9px rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(245, 158, 11, 0.35);
+    filter: none;
+}
+.cad-brand-title { font-size: 1.2rem; letter-spacing: 1px; }
+.cad-brand-subtitle { letter-spacing: .6px; font-size: .64rem; }
+.cad-status-telemetry {
+    background: #09121b;
+    border: 0;
+    border-radius: 999px;
+    padding: .42rem .85rem;
+    box-shadow: inset 3px 3px 7px rgba(0, 0, 0, 0.6), inset -2px -2px 6px rgba(255, 255, 255, 0.04);
+}
+
+/* Scroll area */
+.cad-nav-scroll { padding: .6rem .85rem 1rem; gap: 1.1rem; scrollbar-width: thin; scrollbar-color: rgba(128, 146, 167, .35) transparent; }
+.cad-nav-section { gap: .35rem; }
+.cad-nav-section-title {
+    display: flex; align-items: center; gap: .55rem;
+    padding: 0 .4rem .3rem;
+    font-size: .66rem; letter-spacing: 1.2px; color: #6f839a;
+}
+.cad-nav-section-title::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(128, 146, 167, .35), transparent); }
+
+/* Items: soft tile icon + label */
+.cad-nav-item {
+    position: relative;
+    padding: .55rem .7rem;
+    border: 0;
+    border-radius: 16px;
+    color: #b6c4d4;
+    font-weight: 600;
+    line-height: 1.45;
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
+}
+.cad-nav-item-content { gap: .8rem; min-width: 0; }
+.cad-nav-item-content > span:last-child { overflow-wrap: anywhere; }
+.cad-nav-icon,
+.cad-nav-item .cad-nav-icon {
+    width: 36px; height: 36px; flex-shrink: 0;
+    display: grid; place-items: center;
+    border-radius: 12px;
+    background: #0e1a27;
+    color: #8da2b9;
+    box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.55), -2px -2px 6px rgba(255, 255, 255, 0.05);
+    transition: inherit;
+}
+.cad-nav-icon .cad-icon { width: 1.1rem; height: 1.1rem; }
+.cad-nav-item:hover {
+    background: rgba(255, 255, 255, 0.025);
+    color: #fff;
+    box-shadow: none;
+    transform: translateX(3px);
+}
+.cad-nav-item:hover .cad-nav-icon { color: var(--cad-gold-primary); }
+.cad-nav-item.active {
+    color: #fff;
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.16), rgba(245, 158, 11, 0.03) 70%);
+    border-left: 0;
+    box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.45), inset -2px -2px 6px rgba(255, 255, 255, 0.03);
+    transform: none;
+}
+.cad-nav-item.active::before {
+    content: ""; position: absolute; left: -.85rem; top: 22%; bottom: 22%; width: 4px;
+    border-radius: 0 6px 6px 0; background: var(--cad-gold-primary);
+    box-shadow: 0 0 12px var(--cad-gold-glow);
+}
+.cad-nav-item.active .cad-nav-icon {
+    color: #1a1000;
+    background: linear-gradient(145deg, #ffc24a, #e08a00);
+    box-shadow: 0 4px 12px var(--cad-gold-glow), inset 1px 1px 2px rgba(255, 255, 255, 0.5);
+}
+.cad-nav-item .cad-icon-emergency { stroke: #ff5c5d; }
+.cad-nav-item.active .cad-icon-emergency { stroke: #1a1000; }
+
+/* Hero Emergency Action Callout Card */
+.cad-nav-emergency {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0.75rem 0.85rem;
+    margin-bottom: 0.65rem;
+    border-radius: 14px;
+    color: #ffffff !important;
+    text-decoration: none;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 45%, #991b1b 100%);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    box-shadow: 0 8px 20px -3px rgba(220, 38, 38, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+/* Diagonal glass light reflection effect */
+.cad-nav-emergency::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.15) 45%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.15) 55%, transparent 65%);
+    transform: translateX(-100%);
+    transition: transform 0.65s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.cad-nav-emergency:hover::before {
+    transform: translateX(100%);
+}
+
+.cad-nav-emergency:hover {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 45%, #be123c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px -3px rgba(225, 29, 72, 0.6), 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    border-color: rgba(255, 255, 255, 0.38);
+    text-decoration: none !important;
+}
+
+.cad-nav-emergency:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px -2px rgba(220, 38, 38, 0.45), inset 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.cad-nav-emergency::after {
+    content: none !important;
+}
+
+/* Left Group */
+.cad-nav-emergency .cad-nav-item-content,
+.cad-nav-emergency .emergency-btn-body {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+    flex: 1;
+    position: relative;
+    z-index: 2;
+}
+
+/* Siren Icon Badge */
+.cad-nav-emergency .cad-nav-icon,
+.cad-nav-emergency .emergency-siren-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    animation: emergencySirenPulse 2.4s infinite ease-in-out;
+}
+
+@keyframes emergencySirenPulse {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 0 rgba(255, 255, 255, 0.4);
+    }
+    50% {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 5px rgba(255, 255, 255, 0);
+    }
+}
+
+.cad-nav-emergency .cad-icon,
+.cad-nav-emergency .cad-icon-emergency,
+.cad-nav-emergency .emergency-siren-svg {
+    width: 20px;
+    height: 20px;
+    stroke: #ffffff !important;
+    fill: none;
+    stroke-width: 2.2;
+}
+
+/* Live beacon dot on siren */
+.cad-nav-emergency .emergency-beacon-live {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    border: 1.5px solid #dc2626;
+    box-shadow: 0 0 6px #22c55e;
+    animation: liveBeaconBlink 1.5s infinite;
+}
+
+@keyframes liveBeaconBlink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* Typography Container */
+.cad-nav-emergency .emergency-text-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    flex: 1;
+}
+
+.cad-nav-emergency .emergency-title,
+.cad-nav-emergency .cad-nav-item-content > span:not(.cad-nav-icon) {
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: #ffffff !important;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.2px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.cad-nav-emergency .emergency-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88);
+    line-height: 1.2;
+    margin-top: 2px;
+    white-space: nowrap;
+}
+
+/* Hotline Pill Badge (191) */
+.cad-nav-emergency .cad-badge,
+.cad-nav-emergency .emergency-badge-pill {
+    background: rgba(0, 0, 0, 0.35) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    padding: 0.22rem 0.6rem !important;
+    border-radius: 999px !important;
+    font-size: 0.74rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.8px !important;
+    flex-shrink: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    line-height: 1 !important;
+    position: relative;
+    z-index: 2;
+    text-transform: uppercase;
+}
+
+.cad-nav-emergency .emergency-live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 6px #ef4444;
+    animation: liveDotPulse 1.4s infinite;
+}
+
+@keyframes liveDotPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.7; }
+}
+
+.cad-notification-pill { border-radius: 999px; box-shadow: 0 0 10px var(--cad-red-glow); }
+
+/* Footer: theme + language as one soft segmented dock */
+.cad-sidebar-footer {
+    flex-direction: row;
+    gap: .6rem;
+    padding: .85rem .85rem 1rem;
+    border-top: 0;
+    background: transparent;
+}
+.cad-toggle-btn {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    padding: .6rem .5rem;
+    border: 0;
+    border-radius: 14px;
+    background: #0e1a27;
+    color: #c4d1df;
+    font-size: .74rem;
+    gap: .45rem;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.55), -3px -3px 8px rgba(255, 255, 255, 0.045);
+}
+.cad-toggle-btn:hover {
+    color: #fff;
+    background: #0e1a27;
+    box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.55), inset -2px -2px 6px rgba(255, 255, 255, 0.04);
+}
+.cad-toggle-btn .theme-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+@media (prefers-reduced-motion: reduce) { .cad-nav-emergency .cad-nav-icon { animation: none; } .cad-nav-item { transition: none; } }
+
+/* ---------- Empty state / dialogs ---------- */
+.cad-empty-state { border-radius: var(--nm-radius); }
+.swal2-popup { border-radius: 22px !important; background: var(--nm-bg) !important; box-shadow: var(--nm-raise) !important; color: var(--cad-text-main) !important; }
+.swal2-title, .swal2-html-container { color: var(--cad-text-main) !important; }
+
+/* ==========================================================================
+   REUSABLE COMPONENT KIT  (use these classes in any template)
+   ========================================================================== */
+.nm-raised { background: var(--nm-bg); border-radius: var(--nm-radius); box-shadow: var(--nm-raise); }
+.nm-inset  { background: var(--nm-bg); border-radius: var(--nm-radius); box-shadow: var(--nm-inset); }
+
+/* Pill / rectangular buttons ("IPSUM" / "DOLOR") */
+.nm-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    padding: .65rem 1.3rem; border: 0; border-radius: 14px; cursor: pointer;
+    font: inherit; font-size: .85rem; font-weight: 700; color: var(--cad-text-main);
+    background: var(--nm-bg); box-shadow: var(--nm-raise-sm); text-decoration: none;
+    transition: transform .18s, box-shadow .18s;
+}
+.nm-btn:hover { transform: translateY(-1px); box-shadow: var(--nm-raise-xs); text-decoration: none; }
+.nm-btn:active, .nm-btn.is-active { box-shadow: var(--nm-inset-sm); transform: none; }
+.nm-btn-primary {
+    color: #fff; background: linear-gradient(145deg, #ff2a2b, #d00001);
+    box-shadow: 5px 5px 12px rgba(253, 0, 1, .30), -4px -4px 10px var(--nm-hi);
+}
+.nm-btn-primary:hover { box-shadow: 7px 7px 16px rgba(253, 0, 1, .38), -4px -4px 10px var(--nm-hi); }
+.nm-btn-primary:active { box-shadow: inset 3px 3px 8px rgba(0, 0, 0, .3); }
+
+/* Round icon buttons / icon badges */
+.nm-icon-btn {
+    width: 46px; height: 46px; border-radius: 50%; border: 0; display: inline-grid; place-items: center;
+    color: var(--cad-red-primary); background: var(--nm-bg); box-shadow: var(--nm-raise-sm); cursor: pointer;
+    transition: transform .18s, box-shadow .18s;
+}
+.nm-icon-btn:hover { transform: translateY(-2px); box-shadow: var(--nm-raise-xs); }
+.nm-icon-btn:active { box-shadow: var(--nm-inset-sm); }
+.nm-icon-btn svg { width: 22px; height: 22px; }
+.nm-icon-btn.is-solid { color: #fff; background: var(--c, var(--cad-red-primary)); box-shadow: 4px 4px 10px color-mix(in srgb, var(--c, var(--cad-red-primary)) 38%, transparent), -3px -3px 8px var(--nm-hi); }
+
+/* Segmented range control (1D 1W 1M ...) */
+.nm-segment { display: inline-flex; gap: .35rem; padding: .3rem; border-radius: 14px; background: var(--nm-bg); box-shadow: var(--nm-inset-sm); }
+.nm-segment button, .nm-segment a {
+    border: 0; border-radius: 10px; padding: .3rem .7rem; font: inherit; font-size: .72rem; font-weight: 700;
+    color: var(--cad-text-muted); background: transparent; cursor: pointer; text-decoration: none;
+}
+.nm-segment .is-active { color: #fff; background: linear-gradient(145deg, #ff2a2b, #d00001); box-shadow: var(--nm-raise-xs); }
+
+/* Toggle switch: <label class="nm-switch"><input type="checkbox"><i></i></label> */
+.nm-switch { position: relative; display: inline-block; width: 56px; height: 28px; }
+.nm-switch input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; cursor: pointer; z-index: 1; margin: 0; }
+.nm-switch i { position: absolute; inset: 0; border-radius: 999px; background: var(--nm-bg); box-shadow: var(--nm-inset-sm); transition: .2s; }
+.nm-switch i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--nm-bg); box-shadow: var(--nm-raise-xs); transition: .2s; }
+.nm-switch input:checked + i { background: linear-gradient(145deg, #ff2a2b, #d00001); }
+.nm-switch input:checked + i::after { transform: translateX(28px); }
+
+/* Progress bar */
+.nm-progress { height: 12px; border-radius: 999px; background: var(--nm-bg); box-shadow: var(--nm-inset-sm); overflow: hidden; }
+.nm-progress > span { display: block; height: 100%; width: var(--w, 0%); border-radius: 999px; background: linear-gradient(90deg, #d00001, #ff4d4f); box-shadow: 0 0 8px var(--cad-red-glow); animation: nmFill .9s ease-out both; }
+.nm-progress.is-gold > span { background: linear-gradient(90deg, #d97706, #ffc54d); box-shadow: 0 0 8px var(--cad-gold-glow); }
+.nm-progress.is-green > span { background: linear-gradient(90deg, #0e9f8e, #34d8c0); box-shadow: none; }
+@keyframes nmFill { from { width: 0; } }
+
+/* Stat block: soft card with a solid coloured value block on the right ("9$") */
+.nm-stat { display: flex; align-items: stretch; border-radius: 16px; overflow: hidden; background: var(--nm-bg); box-shadow: var(--nm-raise); }
+.nm-stat-main { display: flex; align-items: center; gap: .85rem; padding: .85rem 1rem; flex: 1; min-width: 0; }
+.nm-stat-value { display: grid; place-items: center; min-width: 72px; padding: 0 .9rem; font-size: 1.5rem; font-weight: 800; color: #fff; background: var(--c, var(--cad-red-primary)); font-feature-settings: 'tnum' 1; }
+
+/* Dashed list card ("Dolor sit / Lorem ipsum / Sit amet") */
+.nm-list > * { padding: .6rem 0; border-bottom: 1px dashed var(--nm-dash); }
+.nm-list > *:last-child { border-bottom: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+    .nm-progress > span { animation: none; }
+    .cad-btn, .nm-btn, .nm-icon-btn { transition: none; }
+}

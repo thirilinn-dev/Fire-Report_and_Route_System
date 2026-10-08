@@ -71,4 +71,6 @@ home.addEventListener('change',schedulePlanLead);level.addEventListener('change'
  document.getElementById('route-station').addEventListener('change',event=>showRoute(Number(event.target.value)));
  new ResizeObserver(()=>map.invalidateSize()).observe(document.getElementById('routes'));
 })();
-</script>{% endif %}{% endblock %}
+</script>
+{% endif %}
+{% endblock %}

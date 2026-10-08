@@ -53,9 +53,9 @@ def dispatch(actor, incident_id, vehicle_ids, reason='', manual_reason=''):
             VehicleParticipation.objects.create(deployment=deployment,vehicle=vehicle)
             vehicle.status='Reserved'; vehicle.save(update_fields=['status'])
         for user in User.objects.filter(station=station,status='Active',role__role_name='Station Admin'):
-            Notice.objects.create(recipient=user,incident=incident,message=f'ဖြစ်စဉ် #{incident.pk} စေလွှတ်အမိန့်')
+            Notice.objects.create(recipient=user,incident=incident,message=f'ဖြစ်စဉ် {incident.pk} စေလွှတ်အမိန့်')
         for assignment in ActingAssignment.objects.filter(station=station,leave__status='Approved',starts_at__lte=timezone.now(),ends_at__gt=timezone.now()):
-            Notice.objects.create(recipient=assignment.employee,incident=incident,message=f'ဖြစ်စဉ် #{incident.pk} စေလွှတ်အမိန့်')
+            Notice.objects.create(recipient=assignment.employee,incident=incident,message=f'ဖြစ်စဉ် {incident.pk} စေလွှတ်အမိန့်')
     incident.status='Dispatched';incident.save(update_fields=['status'])
     audit(actor,'dispatch',incident,vehicles=vehicle_ids,reason=reason,manual_reason=manual_reason)
 
@@ -137,3 +137,229 @@ def aggregate(incident):
         rows.append({'station':deployment.station.name,'water_gallons':str(report.water_gallons),'narrative':report.narrative,'staff':list(deployment.personnel.filter(actual=True).values('employee_id','employee__full_name','employee__username')),'vehicles':list(deployment.vehicles.filter(actual=True).values('vehicle_id','vehicle__registration','vehicle__kind__name'))})
     if not rows: raise ValidationError('စခန်းစေလွှတ်မှု မရှိပါ။')
     return {'stations':rows,'water_gallons':str(sum(StationReport.objects.filter(deployment__incident=incident).exclude(deployment__state='Cancelled').values_list('water_gallons',flat=True)))}
+
+
+@transaction.atomic
+def calculate_all_routes_and_dispatch(incident, actor=None, fire_scale=None):
+    """
+    Automatic Dijkstra Route Calculation and Responding Station Selection:
+    1. Incident Location (verifies coordinates)
+    2. Eligible/Active Fire Stations
+    3. Dijkstra Road calculation for ALL active stations
+    4. Vehicle/Engine availability check for each station
+    5. Compare valid routes and select shortest with available engine
+    6. Deterministic tie-breaking
+    7. Assign responding station and engine
+    8. Idempotently create/update Deployment and Dispatch
+    """
+    import math
+    from DataAccess.models import Dispatch
+
+    if fire_scale is not None:
+        incident.fire_scale = int(fire_scale)
+        incident.save(update_fields=['fire_scale'])
+
+    # Ensure coordinates exist
+    if incident.latitude is None or incident.longitude is None:
+        return {
+            'success': False,
+            'error': 'မီးလောင်ရာ တည်နေရာ Coordinates မရှိပါ။',
+            'routes': [],
+            'selected_station': None,
+            'selected_route': None,
+            'selected_engine': None,
+        }
+
+    # Ensure coordinates_confirmed is set
+    if not incident.coordinates_confirmed:
+        incident.coordinates_confirmed = True
+        incident.save(update_fields=['coordinates_confirmed'])
+
+    # Find all eligible / active Fire Stations
+    active_stations = list(FireStation.objects.filter(status='Active').order_by('pk'))
+    if not active_stations:
+        return {
+            'success': False,
+            'error': 'No active fire station is currently available. (အသင့်ရှိသော မီးသတ်စခန်း မရှိပါ)',
+            'routes': [],
+            'selected_station': None,
+            'selected_route': None,
+            'selected_engine': None,
+        }
+
+    # Calculate routes from ALL active stations to Incident
+    calculated_routes = []
+    for station in active_stations:
+        # Check engine availability (Available or already assigned to this incident's deployment)
+        already_participating_ids = VehicleParticipation.objects.filter(
+            deployment__incident=incident,
+            deployment__station=station,
+            active=True
+        ).values_list('vehicle_id', flat=True)
+        available_engine = Vehicle.objects.filter(
+            Q(station=station, status='Available') | Q(pk__in=already_participating_ids)
+        ).select_related('kind').first()
+        available_engines_count = Vehicle.objects.filter(
+            Q(station=station, status='Available') | Q(pk__in=already_participating_ids)
+        ).count()
+
+        # Calculate road Dijkstra route
+        route_res = route_between(station, incident)
+        is_valid_route = not route_res.get('error') and bool(route_res.get('coordinates'))
+        total_metres = route_res.get('total_metres') or route_res.get('metres') if is_valid_route else math.inf
+
+        route_item = {
+            'station_id': station.pk,
+            'station_name': station.name,
+            'station_address': station.address,
+            'station_lat': station.latitude,
+            'station_lng': station.longitude,
+            'metres': route_res.get('metres', 0) if is_valid_route else 0,
+            'total_metres': total_metres,
+            'distance_km': round(total_metres / 1000.0, 2) if is_valid_route and total_metres != math.inf else None,
+            'coordinates': route_res.get('coordinates', []),
+            'instructions': route_res.get('instructions', []),
+            'start_connector_metres': route_res.get('start_connector_metres', 0),
+            'end_connector_metres': route_res.get('end_connector_metres', 0),
+            'has_engine': available_engines_count > 0,
+            'engine_id': available_engine.pk if available_engine else None,
+            'engine_name': f"{available_engine.registration} ({available_engine.kind.name})" if available_engine else None,
+            'engine_available_count': available_engines_count,
+            'error': route_res.get('error', '') if not is_valid_route else '',
+            'is_valid': is_valid_route,
+            'is_selected': False,
+        }
+        calculated_routes.append(route_item)
+
+    # Filter eligible stations with valid route and available engine
+    valid_candidates = [
+        r for r in calculated_routes if r['is_valid'] and r['has_engine']
+    ]
+
+    # Error handling per specification
+    if not any(r['is_valid'] for r in calculated_routes):
+        return {
+            'success': False,
+            'error': 'No valid road route could be calculated. (သွားနိုင်သော လမ်းကြောင်း မရှိပါ)',
+            'routes': calculated_routes,
+            'selected_station': None,
+            'selected_route': None,
+            'selected_engine': None,
+        }
+
+    if not valid_candidates:
+        return {
+            'success': False,
+            'error': 'No available fire engine is currently available for dispatch. (စေလွှတ်ရန် အသင့်ရှိသော မီးသတ်ယာဉ် မရှိပါ)',
+            'routes': calculated_routes,
+            'selected_station': None,
+            'selected_route': None,
+            'selected_engine': None,
+        }
+
+    # Deterministic tie-breaking:
+    # Sort by: (total_metres, station_id)
+    valid_candidates.sort(key=lambda r: (r['total_metres'], r['station_id']))
+    selected_item = valid_candidates[0]
+    selected_item['is_selected'] = True
+
+    # Mark the selected route in calculated_routes
+    for r in calculated_routes:
+        if r['station_id'] == selected_item['station_id']:
+            r['is_selected'] = True
+
+    selected_station = FireStation.objects.get(pk=selected_item['station_id'])
+    selected_engine = Vehicle.objects.get(pk=selected_item['engine_id'])
+
+    # Update Incident
+    incident.home_station = selected_station
+    incident.lead_station = selected_station
+    if incident.status in ['Pending', 'Confirmed']:
+        incident.status = 'Dispatched'
+    incident.save(update_fields=['home_station', 'lead_station', 'status'])
+
+    # Response Route Data Dictionary
+    selected_route_dict = {
+        'station_id': selected_station.pk,
+        'station_name': selected_station.name,
+        'coordinates': selected_item['coordinates'],
+        'metres': selected_item['metres'],
+        'total_metres': selected_item['total_metres'],
+        'start_connector_metres': selected_item['start_connector_metres'],
+        'end_connector_metres': selected_item['end_connector_metres'],
+        'instructions': selected_item['instructions'],
+        'all_routes': calculated_routes,
+    }
+
+    # Idempotent Deployment creation / update
+    deployment = Deployment.objects.filter(
+        incident=incident,
+        station=selected_station
+    ).exclude(state__in=['Returned', 'Cancelled']).first()
+
+    if deployment is None:
+        deployment = Deployment.objects.create(
+            incident=incident,
+            station=selected_station,
+            state='Ordered',
+            route=selected_route_dict
+        )
+    else:
+        deployment.route = selected_route_dict
+        deployment.save(update_fields=['route'])
+
+    # Vehicle assignment (idempotent)
+    participation = VehicleParticipation.objects.filter(
+        deployment=deployment,
+        active=True
+    ).first()
+    if not participation:
+        VehicleParticipation.objects.create(
+            deployment=deployment,
+            vehicle=selected_engine
+        )
+        selected_engine.status = 'Reserved'
+        selected_engine.save(update_fields=['status'])
+    else:
+        selected_engine = participation.vehicle
+
+    # Idempotent Dispatch record
+    operator_user = actor if (actor and actor.is_authenticated) else User.objects.filter(role__role_name__in=['Administrator', 'Admin']).first()
+    if operator_user:
+        Dispatch.objects.update_or_create(
+            report=incident,
+            defaults={
+                'station': selected_station,
+                'operator': operator_user,
+                'resources_deployed': f"{selected_engine.registration} ({selected_engine.kind.name})"
+            }
+        )
+
+    # Notice notifications
+    for st_admin in User.objects.filter(station=selected_station, status='Active', role__role_name='Station Admin'):
+        Notice.objects.get_or_create(
+            recipient=st_admin,
+            incident=incident,
+            defaults={'message': f'ဖြစ်စဉ် {incident.pk} အလိုအလျောက် စေလွှတ်အမိန့် ({selected_item["distance_km"]} km)'}
+        )
+    for ff in User.objects.filter(station=selected_station, status='Active', role__role_name='Firefighter'):
+        Notice.objects.get_or_create(
+            recipient=ff,
+            incident=incident,
+            defaults={'message': f'ဖြစ်စဉ် {incident.pk} အလိုအလျောက် စေလွှတ်အမိန့် ({selected_item["distance_km"]} km)'}
+        )
+
+    if actor and actor.is_authenticated:
+        audit(actor, 'auto_dispatch', incident,
+              station=selected_station.pk,
+              vehicle=selected_engine.pk,
+              distance_km=selected_item['distance_km'])
+
+    return {
+        'success': True,
+        'error': '',
+        'selected_station': selected_station,
+        'selected_engine': selected_engine,
+        'selected_route': selected_item,
+        'routes': calculated_routes,
+    }
