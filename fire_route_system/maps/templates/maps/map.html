@@ -133,7 +133,7 @@
                         Lat: {{ station.latitude|floatformat:4 }}, Lng: {{ station.longitude|floatformat:4 }}
                     </span>
                     <br>
-                    <span data-status="{{ station.status }}" class="status-badge {% if station.status == 'Active' %}status-active{% else %}status-inactive{% endif %}">
+                    <span class="status-badge {% if station.status == 'Active' %}status-active{% else %}status-inactive{% endif %}">
                         {{ station.status }}
                     </span>
                 </div>
@@ -180,9 +180,19 @@
         const markerGroup = L.featureGroup();
 
         // Fire Station Icon (red truck pin)
-        const stationIcon = window.fireRouteMapIcon;
+        const stationIcon = L.divIcon({
+            className: 'custom-marker-station',
+            html: `<div style="background-color: #c30010; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 8px rgba(195, 0, 16, 0.7); transform: scale(1.1);"></div>`,
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+        });
 
-        const inactiveIcon = window.fireRouteMapIcon;
+        const inactiveIcon = L.divIcon({
+            className: 'custom-marker-station-inactive',
+            html: `<div style="background-color: #777; width: 14px; height: 14px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 6px rgba(0,0,0,0.3);"></div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
 
         // Load fire station data from Django context JSON
         const stations = {{ stations_json|safe }};
@@ -195,7 +205,9 @@
                     <h3 style="color: #c30010; font-size: 1rem; margin: 0 0 0.4rem 0; font-weight: 700;">${station.name}</h3>
                     <p style="font-size: 0.85rem; color: #333; margin: 0 0 0.25rem 0;">${station.address}</p>
                     <p style="font-size: 0.85rem; color: #333; margin: 0 0 0.35rem 0;">${station.contact_number}</p>
-                    ${FireRouteStatus.html(station.status)}
+                    <span style="display: inline-block; padding: 0.15rem 0.6rem; border-radius: 50px; font-size: 0.7rem; font-weight: 700; background-color: ${statusColor}20; color: ${statusColor}; text-transform: uppercase;">
+                        ${station.status}
+                    </span>
                 </div>
             `;
             const marker = L.marker([station.latitude, station.longitude], { icon: icon }).bindPopup(popupHTML);

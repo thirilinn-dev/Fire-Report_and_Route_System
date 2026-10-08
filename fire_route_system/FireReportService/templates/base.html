@@ -33,19 +33,11 @@
     <link rel="stylesheet" href="{% static 'dashboard/css/cad_theme.css' %}">
     
     {% block extra_css %}{% endblock %}
-    <link rel="stylesheet" href="{% static 'dashboard/css/arc_brand.css' %}?v=2">
-    <link rel="stylesheet" href="{% static 'dashboard/css/compact.css' %}?v=2">
-    <link rel="stylesheet" href="{% static 'dashboard/css/pagination.css' %}?v=2">
-    <link rel="stylesheet" href="{% static 'dashboard/css/spacing.css' %}?v=1">
-    <link rel="stylesheet" href="{% static 'dashboard/css/topbar.css' %}?v=1">
-    <link rel="stylesheet" href="{% static 'dashboard/css/sidebar.css' %}?v=1">
-    <link rel="stylesheet" href="{% static 'dashboard/vendor/flatpickr/flatpickr.min.css' %}">
-    <link rel="stylesheet" href="{% static 'dashboard/css/status_badges.css' %}?v=1">
-    <script src="{% static 'dashboard/js/status_badges.js' %}?v=1"></script>
+
+    <!-- Soft / neumorphic component layer (must load after page CSS) -->
+    <link rel="stylesheet" href="{% static 'dashboard/css/neumorphic.css' %}?v=nm-2">
 </head>
-<!-- Shared pagination appearance for legacy and emergency lists. -->
 <body>
-    <a class="cad-skip-link" href="#cad-main-content">အဓိကအကြောင်းအရာသို့ သွားရန်</a>
     <!-- CAD Vector Icon Sprite -->
     {% include 'cad_icons.html' %}
 
@@ -218,34 +210,48 @@
             <!-- CAD Top Command Bar -->
             <header class="cad-topbar">
                 <div class="cad-topbar-left">
-                    <button class="cad-mobile-toggle" onclick="toggleCadSidebar()" aria-label="Open Navigation" aria-controls="cadSidebar" aria-expanded="false">
+                    <button class="cad-mobile-toggle" onclick="toggleCadSidebar()" aria-label="Open Navigation">
                         <svg class="cad-icon"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
-                    {% if request.user.is_authenticated %}
-                    <form class="cad-topbar-search" action="{% url 'emergency:incidents' %}" method="get" role="search">
-                        <svg class="cad-icon" aria-hidden="true"><use href="#cad-icon-search"/></svg>
-                        <input type="search" name="q" aria-label="Search incidents by address or phone" placeholder="လိပ်စာ / ဖုန်းနံပါတ် ရှာရန်" value="{% if request.resolver_match.url_name == 'incidents' %}{{ request.GET.q|default:'' }}{% endif %}">
-                        <button type="submit" aria-label="Search incidents" title="Search incidents">↵</button>
-                    </form>
-                    {% endif %}
-
+                    <button class="cad-btn cad-btn-secondary cad-btn-sm cad-topbar-back-btn" onclick="if(window.history.length>1){window.history.back();}else{window.location.href='/emergency/';}" title="နောက်သို့ (Back)" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.65rem; font-size: 0.8rem; font-weight: 600; border-radius: 6px; cursor: pointer; text-decoration: none;">
+                        <svg class="cad-icon cad-icon-xs"><use href="#cad-icon-arrow-left"/></svg>
+                        <span id="topbar-back-text">နောက်သို့</span>
+                    </button>
+                    <div class="cad-live-beacon-pill" title="Live CAD Operations System Online">
+                        <span class="cad-beacon-dot"></span>
+                        <span class="cad-beacon-label">LIVE</span>
+                    </div>
+                    <div class="cad-breadcrumb">
+                        <span class="cad-breadcrumb-dept">
+                            <svg class="cad-icon cad-icon-xs"><use href="#cad-icon-shield"/></svg>
+                            <span id="cad-region-title">Mandalay Region Command</span>
+                        </span>
+                        <span class="cad-breadcrumb-sep">/</span>
+                        <span class="cad-breadcrumb-active">{% block breadcrumb %}CAD Operational Console{% endblock %}</span>
+                    </div>
                 </div>
 
                 <div class="cad-topbar-right">
                     {% block topbar_notifications %}{% endblock %}
                     {% if request.user.is_authenticated %}
-                    <a href="{% url 'emergency:report' %}" class="cad-topbar-report no-modal"><svg class="cad-icon"><use href="#cad-icon-plus"/></svg><span data-ui-copy>မီးသတင်းပို့ရန်</span></a>
-                    <details class="cad-account-menu">
-                        <summary aria-label="Account menu" title="Account menu">
-                            <span class="cad-operator-avatar">{{ request.user.username|slice:":2"|upper }}</span>
-                            <span class="cad-account-copy"><strong>{{ request.user.username }}</strong><small data-ui-copy>{{ request.user.role_name }}</small></span>
-                            <span class="cad-account-chevron" aria-hidden="true">⌄</span>
-                        </summary>
-                        <div class="cad-account-popover">
-                            <a href="{% url 'profile' %}" class="no-modal"><svg class="cad-icon"><use href="#cad-icon-user"/></svg><span data-ui-copy>မိမိအချက်အလက်</span></a>
-                            <a href="{% url 'logout' %}" class="no-modal" id="cad-logout-btn"><svg class="cad-icon"><use href="#cad-icon-logout"/></svg><span id="cad-logout-text">Logout</span></a>
-                        </div>
-                    </details>
+                    <div class="cad-user-actions">
+                        <a href="{% url 'profile' %}" class="cad-operator-link" title="Manage Profile">
+                            <div class="cad-operator-badge">
+                                <div class="cad-operator-avatar-box">
+                                    <span class="cad-operator-avatar">{{ request.user.username|slice:":2"|upper }}</span>
+                                    <span class="cad-operator-online-indicator"></span>
+                                </div>
+                                <span class="cad-operator-username">{{ request.user.username }}</span>
+                                <span class="cad-role-tag cad-role-{{ request.user.role_name|lower|slugify }}">
+                                    {{ request.user.role_name|upper }}
+                                </span>
+                            </div>
+                        </a>
+                        <a href="{% url 'logout' %}" class="cad-logout-action" id="cad-logout-btn" title="Sign Out">
+                            <svg class="cad-icon cad-logout-icon"><use href="#cad-icon-logout"/></svg>
+                            <span id="cad-logout-text">Logout</span>
+                        </a>
+                    </div>
                     {% else %}
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <a href="{% url 'login' %}" class="cad-btn cad-btn-emergency" id="cad-top-login-btn" style="padding: 0.4rem 1rem; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
@@ -256,17 +262,10 @@
                     {% endif %}
                 </div>
             </header>
-            <div class="cad-page-context" aria-label="Current page">
-                    <div class="cad-breadcrumb">
-                        <span id="cad-region-title">Mandalay Region Command</span>
-                        <span>/</span>
-                        <span class="cad-breadcrumb-active">{% block breadcrumb %}CAD Operational Console{% endblock %}</span>
-                    </div>
-            </div>
 
             <!-- Main Scrollable Content Layout -->
             {% block main_layout %}
-            <main class="cad-content-area" id="cad-main-content" tabindex="-1">
+            <main class="cad-content-area">
                 {% block content %}
                 {% endblock %}
             </main>
@@ -356,38 +355,15 @@
         });
     </script>
 
-    <script>
-        window.fireRouteMapIcon = L.icon({
-            iconUrl: "{% static 'dashboard/img/logo.svg' %}",
-            iconSize: [32, 32],
-            iconAnchor: [16, 16],
-            popupAnchor: [0, -16],
-            tooltipAnchor: [0, -16]
-        });
-    </script>
-    <script src="{% static 'dashboard/vendor/flatpickr/flatpickr.min.js' %}"></script>
-    <script src="{% static 'dashboard/js/datepickers.js' %}?v=1"></script>
     {% block extra_js %}{% endblock %}
 
-    <script>
-        const accountMenu = document.querySelector('.cad-account-menu');
-        document.addEventListener('click', event => {
-            if (accountMenu && !accountMenu.contains(event.target)) accountMenu.open = false;
-        });
-        document.addEventListener('keydown', event => {
-            if (event.key === 'Escape' && accountMenu && accountMenu.open) {
-                accountMenu.open = false;
-                accountMenu.querySelector('summary').focus();
-            }
-        });
-    </script>
     <!-- Live Telemetry Clock Script -->
     <script>
         function updateCadClock() {
             const clockEl = document.getElementById("cadLiveClock");
             if (clockEl) {
                 const now = new Date();
-                clockEl.innerText = window.formatDateTime(now);
+                clockEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
             }
         }
         setInterval(updateCadClock, 1000);
@@ -396,24 +372,9 @@
         function toggleCadSidebar() {
             const sidebar = document.getElementById("cadSidebar");
             const overlay = document.getElementById("cadSidebarOverlay");
-            const trigger = document.querySelector(".cad-mobile-toggle");
-            const open = sidebar.classList.toggle("open");
-            overlay.classList.toggle("active", open);
-            trigger.setAttribute("aria-expanded", String(open));
-            if (open) sidebar.querySelector("a, button").focus();
-            else trigger.focus();
+            if (sidebar) sidebar.classList.toggle("open");
+            if (overlay) overlay.classList.toggle("active");
         }
-        document.addEventListener("keydown", function(event) {
-            const sidebar = document.getElementById("cadSidebar");
-            if (!sidebar.classList.contains("open") || !matchMedia("(max-width: 768px)").matches) return;
-            if (event.key === "Escape") toggleCadSidebar();
-            if (event.key === "Tab") {
-                const controls = Array.from(sidebar.querySelectorAll("a[href], button")).filter(el => el.getClientRects().length);
-                const first = controls[0], last = controls[controls.length - 1];
-                if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-                else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-            }
-        });
     </script>
 
     <!-- AJAX Modal Form Loader Controller -->
@@ -682,7 +643,6 @@
         window.applyGlobalLanguage = function(lang) {
             const data = globalTranslations[lang];
             if (!data) return;
-            document.documentElement.lang = lang;
 
             const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
 
@@ -697,7 +657,7 @@
             const logoutText = document.getElementById("cad-logout-text");
             if (logoutText) logoutText.innerText = data.logoutBtn;
 
-            const navEmergency = document.querySelector(".nav-emergency-btn .cad-nav-item-content > span:last-child");
+            const navEmergency = document.getElementById("cad-nav-emergency-text") || document.getElementById("cad-nav-emergency-text-en") || document.querySelector(".nav-emergency-btn .emergency-title") || document.querySelector(".nav-emergency-btn .cad-nav-item-content span:last-child");
             if (navEmergency) navEmergency.innerText = data.navEmergency;
 
             const navDashboard = document.querySelector("#nav-dashboard .cad-nav-item-content span:last-child");
@@ -785,8 +745,122 @@
                 window.updateUI();
             }
         });
+
+        // ── Responsive CAD Alert & Confirmation System (SweetAlert2) ──
+        window.cadAlert = function(title, text, icon) {
+            icon = icon || 'info';
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            return Swal.fire({
+                title: title || '',
+                text: text || '',
+                icon: icon,
+                customClass: {
+                    popup: 'cad-swal-popup',
+                    title: 'cad-swal-title',
+                    htmlContainer: 'cad-swal-html',
+                    confirmButton: 'cad-swal-confirm-btn'
+                },
+                buttonsStyling: false,
+                background: isDark ? '#131d31' : '#ffffff',
+                color: isDark ? '#f1f5f9' : '#1e293b'
+            });
+        };
+
+        window.cadToast = function(title, icon) {
+            icon = icon || 'success';
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                customClass: {
+                    popup: 'cad-swal-toast'
+                },
+                background: isDark ? '#1e293b' : '#ffffff',
+                color: isDark ? '#f1f5f9' : '#1e293b'
+            });
+            return Toast.fire({
+                icon: icon,
+                title: title
+            });
+        };
+
+        window.cadConfirm = function(options) {
+            options = options || {};
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const isMy = (localStorage.getItem('lang') || 'my') === 'my';
+            const defaults = {
+                title: isMy ? 'အတည်ပြုရန် လိုအပ်ပါသည်' : 'Confirmation Required',
+                text: isMy ? 'ဤလုပ်ဆောင်ချက်ကို ဆက်လက်လုပ်ဆောင်ရန် သေချာပါသလား။' : 'Are you sure you want to proceed with this action?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: isMy ? 'သေချာပါသည်' : 'Yes, Proceed',
+                cancelButtonText: isMy ? 'မလုပ်တော့ပါ' : 'Cancel',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'cad-swal-popup',
+                    title: 'cad-swal-title',
+                    htmlContainer: 'cad-swal-html',
+                    confirmButton: 'cad-swal-confirm-btn',
+                    cancelButton: 'cad-swal-cancel-btn'
+                },
+                buttonsStyling: false,
+                background: isDark ? '#131d31' : '#ffffff',
+                color: isDark ? '#f1f5f9' : '#1e293b'
+            };
+            return Swal.fire(Object.assign(defaults, options));
+        };
+
+        // Automatically replace native confirm() and intercept forms
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('form[onsubmit*="confirm("]').forEach(form => {
+                const onsubmitAttr = form.getAttribute('onsubmit');
+                const match = onsubmitAttr.match(/confirm\(['"](.*?)['"]\)/);
+                const confirmMsg = match ? match[1] : 'Are you sure?';
+                form.removeAttribute('onsubmit');
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const isReject = confirmMsg.includes('Fake') || confirmMsg.includes('ပယ်ဖျက်') || confirmMsg.includes('Reject') || form.action.includes('reject');
+                    const isDelete = confirmMsg.includes('Delete') || confirmMsg.includes('ဖျက်') || form.action.includes('delete');
+                    const isMy = (localStorage.getItem('lang') || 'my') === 'my';
+                    
+                    let title = isMy ? 'အတည်ပြုရန်' : 'Confirm Action';
+                    if (isReject) title = isMy ? 'သတင်းမှားအဖြစ် ပယ်ဖျက်မည်' : 'Reject as Fake Report';
+                    else if (isDelete) title = isMy ? 'ပယ်ဖျက်ရန် အတည်ပြုပါ' : 'Confirm Deletion';
+
+                    cadConfirm({
+                        title: title,
+                        text: confirmMsg,
+                        icon: isReject || isDelete ? 'warning' : 'question',
+                        confirmButtonText: isMy ? (isReject ? 'ပယ်ဖျက်မည်' : (isDelete ? 'ဖျက်မည်' : 'သေချာပါသည်')) : (isReject ? 'Reject' : (isDelete ? 'Delete' : 'Confirm')),
+                        cancelButtonText: isMy ? 'မလုပ်တော့ပါ' : 'Cancel'
+                    }).then(result => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+        });
     </script>
-    <script src="{% static 'Emergency/locale.js' %}?v=1"></script>
-    <script src="{% static 'dashboard/js/pagination.js' %}?v=1"></script>
+    {% if messages %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% for message in messages %}
+            {% if 'error' in message.tags %}
+                cadToast("{{ message|escapejs }}", "error");
+            {% elif 'warning' in message.tags %}
+                cadToast("{{ message|escapejs }}", "warning");
+            {% elif 'success' in message.tags %}
+                cadToast("{{ message|escapejs }}", "success");
+            {% else %}
+                cadToast("{{ message|escapejs }}", "info");
+            {% endif %}
+        {% endfor %}
+    });
+    </script>
+    {% endif %}
 </body>
 </html>

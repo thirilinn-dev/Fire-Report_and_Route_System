@@ -239,7 +239,6 @@ class FireReport(models.Model):
 
     @property
     def scale_display(self):
-        if self.fire_scale is None:return 'အဆင့် မသိရသေး'
         scale_map = {
             0: 'နယ်မြေခံ',
             1: 'အဆင့် ၁',

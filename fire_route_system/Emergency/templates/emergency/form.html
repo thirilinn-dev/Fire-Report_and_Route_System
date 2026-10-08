@@ -1,19 +1,30 @@
-{% extends 'emergency/base.html' %}{% block content %}<div class="page-heading">
-<h1>{{ title }}</h1>
+{% extends 'emergency/base.html' %}
+{% block content %}
+<div class="cad-dash-header" style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; gap: 0.85rem;">
+    <a href="javascript:history.back()" class="cad-btn cad-btn-secondary cad-btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.8rem; font-weight: 600; text-decoration: none;" title="နောက်သို့ (Back)">
+      <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-arrow-left"/></svg>
+      <span>နောက်သို့</span>
+    </a>
+    <h1 style="margin: 0;">{{ title }}</h1>
+  </div>
 </div>
-<section class="form-card">
-<form method="post">{% csrf_token %}{{ form.non_field_errors }}{% for hidden in form.hidden_fields %}{{ hidden.errors }}{{ hidden }}{% endfor %}
-
-{% for field in form.visible_fields %}<div class="field">{{ field.label_tag }}{{ field }}{% if field.help_text %}<div class="helptext" id="{{ field.auto_id }}_helptext">{{ field.help_text|safe }}</div>{% endif %}{{ field.errors }}</div>{% endfor %}
-{% if township_references %}<datalist id="myanmar-townships">{% for township in township_references %}<option value="{{ township.name_my|default:township.name_en }}">{{ township.name_en }} · {{ township.pcode }}</option>{% endfor %}</datalist>{% endif %}
-{% if location_picker %}<div class="location-tools">
-<button type="button" id="gps">လက်ရှိတည်နေရာ ရယူရန်</button>
-<p id="gps-message" role="status" data-ui-copy>GPS က သင့်လက်ရှိနေရာကို ပြပါမည်။ မီးလောင်ရာနေရာကို မြေပုံနှိပ်၍ ပြင်ပါ။ လိပ်စာဖြင့်လည်း သတင်းပို့နိုင်ပါသည်။</p>
-<div id="picker" class="map">
-</div>
-</div>{% endif %}<div class="form-actions">
-<button type="submit">{% if location_picker %}မီးလောင်မှု သတင်းပို့ရန်{% else %}သိမ်းဆည်းရန်{% endif %}</button>
-</div>
-</form>
-</section>{% endblock %}
-{% block scripts %}{% if location_picker %}<script>const map=L.map('picker').setView([21.975,96.083],12);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(map);let marker;function pin(lat,lng){document.getElementById('id_latitude').value=lat;document.getElementById('id_longitude').value=lng;if(marker)marker.setLatLng([lat,lng]);else marker=L.marker([lat,lng],{icon:window.fireRouteMapIcon,draggable:true}).addTo(map).on('dragend',()=>{const p=marker.getLatLng();pin(p.lat,p.lng);});}map.on('click',e=>pin(e.latlng.lat,e.latlng.lng));document.getElementById('gps').onclick=()=>{if(!navigator.geolocation){document.getElementById('gps-message').textContent='GPS မရပါ။ လိပ်စာဖြည့်ပါ။';return;}navigator.geolocation.getCurrentPosition(p=>{document.getElementById('id_reporter_latitude').value=p.coords.latitude;document.getElementById('id_reporter_longitude').value=p.coords.longitude;pin(p.coords.latitude,p.coords.longitude);map.setView([p.coords.latitude,p.coords.longitude],15);document.getElementById('gps-message').textContent='မီးလောင်ရာနေရာကို စစ်ပြီး လိုအပ်ပါက pin ပြင်ပါ။';},()=>{document.getElementById('gps-message').textContent='GPS ခွင့်မရပါ။ လိပ်စာ သို့မဟုတ် Map pin အသုံးပြုပါ။';});};</script>{% endif %}{% endblock %}
+<section class="cad-panel" style="padding: 1.5rem; max-width: 800px;">
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    {% if location_picker %}
+      <div style="margin: 1rem 0;">
+        <button type="button" id="gps" class="cad-btn cad-btn-secondary cad-btn-sm" style="margin-bottom: 0.5rem;">လက်ရှိ GPS နေရာ ရယူပါ</button>
+        <p id="gps-message" role="status" style="font-size: 0.85rem; color: var(--cad-text-secondary); margin-bottom: 0.5rem;">GPS သည် သတင်းပို့သူ၏နေရာဖြစ်သည်။ မီးလောင်ရာကို Map နှိပ်၍ ပြင်နိုင်ပါသည်။ လိပ်စာသီးသန့်ဖြင့်လည်း တင်နိုင်ပါသည်။</p>
+        <div id="picker" class="map" style="height: 350px; border-radius: 8px; border: 1px solid var(--cad-border);"></div>
+      </div>
+    {% endif %}
+    <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+      <button type="submit" class="cad-btn cad-btn-emergency">သိမ်းဆည်းရန်</button>
+      <a href="javascript:history.back()" class="cad-btn cad-btn-secondary">ပယ်ဖျက်ရန်</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}{% if location_picker %}<script>const map=L.map('picker').setView([21.975,96.083],12);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(map);let marker;function pin(lat,lng){document.getElementById('id_latitude').value=lat;document.getElementById('id_longitude').value=lng;if(marker)marker.setLatLng([lat,lng]);else marker=L.marker([lat,lng],{draggable:true}).addTo(map).on('dragend',()=>{const p=marker.getLatLng();pin(p.lat,p.lng);});}map.on('click',e=>pin(e.latlng.lat,e.latlng.lng));document.getElementById('gps').onclick=()=>{if(!navigator.geolocation){document.getElementById('gps-message').textContent='GPS မရပါ။ လိပ်စာဖြည့်ပါ။';return;}navigator.geolocation.getCurrentPosition(p=>{document.getElementById('id_reporter_latitude').value=p.coords.latitude;document.getElementById('id_reporter_longitude').value=p.coords.longitude;pin(p.coords.latitude,p.coords.longitude);map.setView([p.coords.latitude,p.coords.longitude],15);document.getElementById('gps-message').textContent='မီးလောင်ရာနေရာကို စစ်ပြီး လိုအပ်ပါက pin ပြင်ပါ။';},()=>{document.getElementById('gps-message').textContent='GPS ခွင့်မရပါ။ လိပ်စာ သို့မဟုတ် Map pin အသုံးပြုပါ။';});};</script>{% endif %}{% endblock %}

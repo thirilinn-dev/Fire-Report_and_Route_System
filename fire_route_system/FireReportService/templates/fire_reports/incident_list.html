@@ -4,6 +4,7 @@
 {% block breadcrumb %}Incident Operations Directory{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
     .cad-view-toggle-group {
         display: inline-flex;
@@ -131,7 +132,7 @@
             <!-- Date Filter -->
             <div style="flex: 1; min-width: 140px;" class="cad-form-group">
                 <label class="cad-label" id="lbl-filter-date">Incident Date</label>
-                <input type="text" name="date" id="inc-date-input" data-datepicker="date" value="{{ selected_date }}" placeholder="dd-mm-yyyy" autocomplete="off" class="cad-input">
+                <input type="text" name="date" id="inc-date-input" value="{{ selected_date }}" placeholder="dd-mm-yyyy" autocomplete="off" class="cad-input">
             </div>
 
             <!-- Status Filter -->
@@ -219,12 +220,13 @@
                             {% endif %}
                         </td>
                         <td>
-                            <span data-status="{{ report.status }}" class="cad-badge {% if report.status == 'Resolved' %}cad-badge-resolved{% elif report.status == 'Dispatched' %}cad-badge-dispatched{% elif report.status == 'Under Control' %}cad-badge-under-control{% else %}cad-badge-confirmed{% endif %}">
+                            <span class="cad-badge {% if report.status == 'Resolved' %}cad-badge-resolved{% elif report.status == 'Dispatched' %}cad-badge-dispatched{% elif report.status == 'Under Control' %}cad-badge-under-control{% else %}cad-badge-confirmed{% endif %}">
                                 {{ report.status_display }}
                             </span>
                         </td>
                         <td>
-                            <span style="font-size: 0.78rem; color: var(--cad-text-muted);">{{ report.reported_at|date:"d-m-Y h:i A" }}</span>
+                            <span class="font-numeric" style="font-weight: 600;">{{ report.reported_at|date:"d-m-Y" }}</span>
+                            <span style="font-size: 0.78rem; color: var(--cad-text-muted);">{{ report.reported_at|date:"h:i A" }}</span>
                         </td>
                         <td style="text-align: right;">
                             <div class="cad-table-actions" style="justify-content: flex-end;">
@@ -293,7 +295,7 @@
                     </div>
                     <div>
                         <strong style="color: var(--cad-text-muted);">အခြေအနေ:</strong>
-                        <span data-status="{{ report.status }}" class="cad-badge {% if report.status == 'Resolved' %}cad-badge-resolved{% elif report.status == 'Dispatched' %}cad-badge-dispatched{% elif report.status == 'Under Control' %}cad-badge-under-control{% else %}cad-badge-confirmed{% endif %}">
+                        <span class="cad-badge {% if report.status == 'Resolved' %}cad-badge-resolved{% elif report.status == 'Dispatched' %}cad-badge-dispatched{% elif report.status == 'Under Control' %}cad-badge-under-control{% else %}cad-badge-confirmed{% endif %}">
                             {{ report.status_display }}
                         </span>
                     </div>
@@ -334,9 +336,14 @@
 {% endblock %}
 
 {% block extra_js %}
-
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const viewKey = 'incident_list_view';
+    flatpickr("#inc-date-input", {
+        dateFormat: "d-m-Y",
+        allowInput: true
+    });
+
+    const viewKey = 'incident_list_view';
     let currentView = localStorage.getItem(viewKey) || 'table';
 
     function switchView(view) {
@@ -399,15 +406,21 @@ const viewKey = 'incident_list_view';
 
         const markerGroup = L.featureGroup();
 
+        const INCIDENT_FLAME_ICON = '/static/dashboard/img/incident_flame.svg';
         reportsData.forEach(r => {
-            const fireIcon = window.fireRouteMapIcon;
+            const fireIcon = L.divIcon({
+                className: 'custom-marker-fire',
+                html: `<div class="marker-pin-fire scale-${r.scale}" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;position:relative;"><img src="${INCIDENT_FLAME_ICON}" style="width:24px;height:24px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));"/></div>`,
+                iconSize: [34, 34],
+                iconAnchor: [17, 17]
+            });
 
             const popup = `
                 <div class="map-popup-card">
                     <h4>Incident ${r.id}</h4>
                     <p><strong>Caller:</strong> ${r.phone}</p>
                     <p><strong>Severity:</strong> Level ${r.scale}</p>
-                    <p><strong>Status:</strong> ${FireRouteStatus.html(r.status)}</p>
+                    <p><strong>Status:</strong> ${r.status}</p>
                     <p><strong>Time:</strong> ${r.time}</p>
                 </div>
             `;

@@ -36,51 +36,6 @@ class EmergencyTests(TestCase):
         user=User.objects.create(username=name,role=self.roles[role],station=station,email=None,phone_number=None)
         user.set_password('StrongDemo2026!');user.save();return user
     def auth(self,user):self.client.force_login(user,backend='DataAccess.backends.RoleAuthBackend')
-    def test_dashboard_poll_includes_public_map_on_request(self):
-        self.auth(self.citizen)
-        ordinary=self.client.get('/emergency/api/poll/').json()
-        self.assertNotIn('map',ordinary)
-        combined=self.client.get('/emergency/api/poll/?map=1').json()
-        self.assertEqual(combined['map'],self.client.get('/emergency/api/map/').json())
-        self.assertNotIn('reporter_phone',combined['map']['incidents'][0])
-        self.incident.status='Pending';self.incident.save()
-        self.assertEqual(self.client.get('/emergency/api/poll/?map=1').json()['map']['incidents'],[])
-        self.client.logout()
-        self.assertEqual(self.client.get('/emergency/api/poll/?map=1').status_code,401)
-
-    def test_admin_dashboard_charts_exclude_finished_deployments(self):
-        from .dashboard_analytics import admin_chart_data
-        for state in ['Ordered', 'Accepted', 'Departed', 'Arrived', 'Returned', 'Cancelled']:
-            Deployment.objects.create(incident=self.incident,station=self.station,state=state)
-        self.vehicles[0].status='Deployed';self.vehicles[0].save()
-        self.vehicles[1].status='Maintenance';self.vehicles[1].save()
-        data=admin_chart_data(FireReport.objects.all())
-        stations={station['name']:station for station in data['stations']}
-        self.assertEqual(stations['A'],{'name':'A','open':4,'available':1,'committed':1,'unavailable':1})
-        self.assertEqual(stations['B'],{'name':'B','open':0,'available':0,'committed':0,'unavailable':0})
-
-    def test_admin_dashboard_chart_dates_fill_zero_days(self):
-        from .dashboard_analytics import admin_chart_data
-        old=self.now-timedelta(days=14)
-        FireReport.objects.filter(pk=self.incident.pk).update(reported_at=old)
-        data=admin_chart_data(FireReport.objects.all())
-        self.assertEqual(len(data['dates']),14)
-        self.assertEqual(data['dates'][-1],timezone.localdate().isoformat())
-        self.assertEqual(data['reported'],[0]*14)
-        FireReport.objects.filter(pk=self.incident.pk).update(reported_at=self.now)
-        self.assertEqual(admin_chart_data(FireReport.objects.all())['reported'][-1],1)
-
-    def test_dashboard_charts_are_admin_only(self):
-        self.auth(self.admin)
-        self.assertContains(self.client.get('/emergency/'),'id="admin-chart-data"')
-        for user in [self.station_admin,self.firefighter,self.citizen]:
-            self.auth(user)
-            with patch('Emergency.views.admin_chart_data') as analytics:
-                response=self.client.get('/emergency/')
-                self.assertNotContains(response,'id="admin-chart-data"')
-                self.assertNotContains(response,'code.highcharts.com')
-                analytics.assert_not_called()
-
     def send(self,vehicles=None,reason=''):
         with patch('Emergency.services.route_between',return_value={'coordinates':[[21.97,96.08],[21.975,96.083]],'metres':700,'instructions':[]}):
             dispatch(self.admin,self.incident.pk,[v.pk for v in vehicles or self.vehicles[:2]],reason)
@@ -217,8 +172,6 @@ class EmergencyTests(TestCase):
         self.auth(self.admin)
         response=self.client.get('/emergency/incidents/')
         self.assertContains(response,'စီမံရန်')
-        self.assertContains(response,'flatpickr.min.js')
-        self.assertContains(response,'data-datepicker="date"')
         self.assertContains(response,timezone.localtime(self.incident.reported_at).strftime('%d-%m-%Y %I:%M %p'))
         self.auth(self.citizen)
         response=self.client.get('/emergency/incidents/')
@@ -243,20 +196,10 @@ class EmergencyTests(TestCase):
 
     def test_duty_form_accepts_am_pm(self):
         from .forms import FORM_TYPES
-        form=FORM_TYPES['duties'][1]({'employee':self.firefighter.pk,'starts_at':'20-10-2026 09:00 PM','ends_at':'21-10-2026 06:00 AM','task':'Night duty'})
+        form=FORM_TYPES['duties'][1]({'employee':self.firefighter.pk,'starts_at':'20/10/2026 09:00 PM','ends_at':'21/10/2026 06:00 AM','task':'Night duty'})
         self.assertTrue(form.is_valid(),form.errors)
         self.assertEqual(form.cleaned_data['starts_at'].hour,21)
         self.assertEqual(form.cleaned_data['ends_at'].hour,6)
-        self.assertIn('data-datepicker="datetime"', str(form['starts_at']))
-
-    def test_incident_date_filter_uses_hyphens(self):
-        self.auth(self.admin)
-        today=timezone.localtime(self.incident.reported_at).strftime('%d-%m-%Y')
-        response=self.client.get('/emergency/incidents/', {'start':today,'end':today})
-        self.assertIn(self.incident, response.context['page_obj'])
-        tomorrow=(timezone.localdate(self.incident.reported_at)+timedelta(days=1)).strftime('%d-%m-%Y')
-        response=self.client.get('/emergency/incidents/', {'start':tomorrow})
-        self.assertNotIn(self.incident, response.context['page_obj'])
 
     def test_route_preview_without_dispatch_and_missing_coordinates(self):
         self.auth(self.admin)

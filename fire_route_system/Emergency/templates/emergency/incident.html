@@ -1,75 +1,528 @@
-{% extends 'emergency/base.html' %}{% load date_formats %}{% block content %}
-<h1><span data-ui-copy>ဖြစ်စဉ်</span> #{{ incident.pk }}</h1><p>{{ incident.address|default:'GPS နေရာ' }} · {{ incident.scale_display }} · <span data-status="{{ incident.status }}" id="incident-state" class="status-tag">{{ incident.status_display }}</span> {% if incident.closed_at %}စာရင်းပိတ်ပြီး {{ incident.closed_at|date:"d-m-Y h:i A" }}{% endif %}</p>
-{% if incident.source_data.record_type == 'historical_reference' %}<section><h2>သမိုင်းမှတ်တမ်း · {{ incident.source_data.title_my }}</h2><p>{{ incident.source_data.summary_my }}</p><p>{{ incident.source_data.region }} · {{ incident.source_data.township }} · {{ incident.reported_at|date:'d-m-Y h:i A' }}</p><p><a href="{{ incident.source_data.url }}" target="_blank" rel="noopener">{{ incident.source_data.publisher }} · {{ incident.source_data.published_on|display_date }}</a></p><p>သေဆုံးသူ: {{ incident.source_data.deaths_reported|default_if_none:'မဖော်ပြထား' }} · ဒဏ်ရာရသူ: {{ incident.source_data.injuries_reported|default_if_none:'မဖော်ပြထား' }}</p><p>{{ incident.source_data.notes_my }}</p><small>သတင်းရင်းမြစ်အခြေခံ မှတ်တမ်းဖြစ်သည်။ စနစ်တွင် မော်ကွန်းတင်ပိတ်ထားခြင်းသည် တရားဝင် နောက်ဆုံးအစီရင်ခံစာ အတည်ပြုခြင်းမဟုတ်ပါ။</small></section>{% endif %}
-{% if user.is_admin or user.is_station_admin or user.is_firefighter %}<a class="button" href="{% url 'emergency:incident_pdf' incident.pk %}" data-ui-copy>Route / ဖြစ်စဉ် PDF</a>{% endif %}
-{% if form %}<section><h2>စိစစ် / Level / စခန်းသတ်မှတ်ရန်</h2><p>အနီးဆုံးစခန်းအကြံပြုချက်: {{ nearest|default:'Coordinate လိုအပ်သည်' }}</p><small data-ui-copy>နယ်မြေခံစခန်းနှင့် Level ကိုပြင်ပြီး သိမ်းပါ။ ကြိုသတ်မှတ်ထားသောဦးဆောင်စခန်းကို Plan စာရင်းမှကြည့်နိုင်ပါသည်။</small><form method="post" action="{% url 'emergency:action' incident.pk 'confirm' %}">{% csrf_token %}{{ form.as_p }}<button>အတည်ပြု / သိမ်းရန်</button></form></section>
-<section><h2>စေလွှတ်မည့်စာရင်း စစ်ဆေးရန်</h2><p><span data-ui-copy>အစီအစဉ်</span>: {{ plan|default:'အစီအစဉ် မသတ်မှတ်ရသေး' }} · <span data-ui-copy>ဦးဆောင်စခန်း</span>: {{ plan.lead_station }}</p><div class="table-wrap" role="region" aria-label="အချက်အလက်စာရင်း" tabindex="0"><table><tr><th>စခန်း / အမျိုးအစား</th><th>စုစုပေါင်းလို</th><th>ပါဝင်ဆဲ</th><th>ထပ်လို</th><th>အသင့်ရှိ</th></tr>{% for row in requirements %}<tr><td>{{ row.station }} / {{ row.kind }}</td><td>{{ row.total }}</td><td>{{ row.current }}</td><td>{{ row.needed }}</td><td>{{ row.available }}</td></tr>{% endfor %}</table></div>
-<form method="post" action="{% url 'emergency:action' incident.pk 'dispatch' %}">{% csrf_token %}<details><summary>အသင့်ရှိယာဉ် / အစားထိုးရွေးရန်</summary>{% for v in available %}<label><input type="checkbox" name="vehicles" value="{{ v.pk }}">{{ v }}</label>{% empty %}<p data-ui-copy>အသင့်ရှိယာဉ် မရှိပါ။</p>{% endfor %}</details><label>အစီအစဉ်မပြည့်စုံပါက အကြောင်းပြချက်<textarea name="reason"></textarea></label><label>Route မရပါက manual စေလွှတ်ရသည့်အကြောင်းပြချက်<textarea name="manual_reason"></textarea></label><button>Admin အတည်ပြုပြီး စေလွှတ်ရန်</button></form></section>
-<section><h2>ဖြစ်စဉ်အခြေအနေ</h2><form method="post" action="{% url 'emergency:action' incident.pk 'state' %}">{% csrf_token %}<select name="status"><option>Confirmed</option><option>Under Control</option><option>Resolved</option><option>False Alarm</option></select><button>အခြေအနေပြောင်းရန်</button></form></section>{% endif %}
-{% if can_view_routes %}<section><h2>လမ်းကြောင်းကြည့်ရန်</h2><form method="get"><label>ထွက်ခွာစခန်း<select name="route_station"><option value="">သတ်မှတ်စခန်း / အနီးဆုံးစခန်း</option>{% for station in route_stations %}<option value="{{ station.pk }}" {% if request.GET.route_station == station.pk|stringformat:'s' %}selected{% endif %}>{{ station.name }}</option>{% endfor %}</select></label><button>လမ်းကြောင်းတွက်ရန်</button></form><small data-ui-copy>လမ်းကြောင်းကြည့်ခြင်းသည် စေလွှတ်အမိန့်မဟုတ်ပါ။</small>{% if route_error %}<p role="status">{{ route_error }}</p>{% endif %}</section>{% endif %}{% if routes %}<section><h2>စခန်းမှ မီးလောင်ရာသို့ လမ်းကြောင်း</h2><label>လမ်းကြောင်းကြည့်မည့် စခန်း<select id="route-station">{% for route in routes %}<option value="{{ forloop.counter0 }}">{{ route.station_name }}</option>{% endfor %}</select></label><p id="route-distance" aria-live="polite"></p><small id="route-connector-note"></small><p id="route-map-status" role="status"></p><div id="routes" class="map"></div>{{ routes|json_script:'route-data' }}{{ road_background|json_script:'road-background-data' }}</section>{% endif %}
-{% for d in deployments %}<section><h2>{{ d.station }} — <span data-status="{{ d.state }}" id="deployment-state-{{ d.pk }}">{{ d.state }}</span></h2>{% if d.route.error %}<p>{{ d.route.error }}</p>{% else %}<p>လမ်းကွန်ရက်ပေါ် အကွာအဝေး {{ d.route.metres }} m · လမ်းသို့ဝင်ရန် {{ d.route.start_connector_metres }} m / နေရာသို့ချိတ်ဆက်ရန် {{ d.route.end_connector_metres }} m</p><details><summary>လမ်းညွှန်ချက်</summary><ol>{% for step in d.route.instructions %}<li>{{ step.turn }} · {{ step.road }} · {{ step.direction }} · {{ step.metres }} m</li>{% endfor %}</ol></details>{% endif %}
-<h3>ယာဉ်များ</h3>{% for v in d.vehicles.all %}<p>{{ v.vehicle.registration }} / {{ v.vehicle.kind }} · {% if v.active %}<span data-status="Participating">ပါဝင်ဆဲ</span>{% else %}<span data-status="Returned">ပြန်ရောက်/ရုတ်သိမ်း</span>{% endif %} · {% if v.actual %}အမှန်တကယ်ထွက်ခွာ{% endif %}</p>{% if user.is_admin and v.active %}<form method="post" action="{% url 'emergency:deployment_action' d.pk 'withdraw' %}">{% csrf_token %}<input type="hidden" name="vehicle" value="{{ v.pk }}"><label>ရုတ်သိမ်းရသည့်အကြောင်းပြချက်<input name="reason" required></label><button>ယာဉ်ပြန်ရောက် အတည်ပြု / ရုတ်သိမ်း</button></form>{% endif %}{% endfor %}
-<h3>ဝန်ထမ်းများ</h3>{% for p in d.personnel.all %}<p>{{ p.employee.full_name|default:p.employee.username }} · {{ p.employee.rank }} · {% if p.actual %}အမှန်တကယ်လိုက်ပါ{% else %}ရွေးထား{% endif %} · {% if p.active %}<span data-status="Participating">ပါဝင်ဆဲ</span>{% else %}<span data-status="Returned">ပြန်လွှတ်ပြီး</span>{% endif %}</p>{% if d.can_manage and p.active %}<form method="post" action="{% url 'emergency:deployment_action' d.pk 'release' %}">{% csrf_token %}<input type="hidden" name="person" value="{{ p.pk }}"><button>ပြန်လွှတ် / လူစားလဲရန်</button></form>{% endif %}{% empty %}<p data-ui-copy>မရွေးရသေးပါ။</p>{% endfor %}
-{% if d.can_manage and not incident.closed_at %}<form method="post" action="{% url 'emergency:deployment_action' d.pk 'state' %}">{% csrf_token %}{% if d.state == 'Ordered' %}<button name="state" value="Accepted">အမိန့်လက်ခံ</button>{% elif d.state == 'Accepted' %}<button name="state" value="Departed">ထွက်ခွာပြီး</button>{% elif d.state == 'Departed' %}<button name="state" value="Arrived">မီးလောင်ရာရောက်ရှိ</button>{% elif d.state == 'Arrived' %}<button name="state" value="Returned">စခန်းပြန်ရောက်၊ ယာဉ်/ဝန်ထမ်း အသင့်ဖြစ်</button>{% endif %}</form>
-{% if d.state != 'Returned' and d.state != 'Ordered' %}<form method="post" action="{% url 'emergency:deployment_action' d.pk 'staff' %}">{% csrf_token %}<h3>တာဝန်ကျဝန်ထမ်းရွေးရန်</h3>{% for employee in d.eligible %}<label><input type="checkbox" name="employees" value="{{ employee.pk }}">{{ employee.full_name|default:employee.username }} / {{ employee.rank }}</label>{% empty %}<p data-ui-copy>တာဝန်ကျပြီး အသင့်ရှိဝန်ထမ်းမရှိပါ။ တာဝန်စာရင်းကို စစ်ပါ။</p>{% endfor %}<button>လိုက်ပါရန် ရွေးပေး</button></form>{% endif %}
-<form method="post" action="{% url 'emergency:action' incident.pk 'update' %}">{% csrf_token %}<input type="hidden" name="station" value="{{ d.station_id }}"><label>မြေပြင်အခြေအနေမှတ်တမ်း<textarea name="message" required></textarea></label><button>အခြေအနေတင်ရန်</button></form>
-{% if d.state == 'Returned' %}<form method="post" action="{% url 'emergency:deployment_action' d.pk 'report' %}">{% csrf_token %}<h3>မိမိစခန်း အစီရင်ခံစာ</h3><label>ဖြစ်ပွားပုံ / ဆောင်ရွက်မှု<textarea name="narrative" required>{{ d.station_report.narrative }}</textarea></label><label>အသုံးပြုရေဂါလန်<input type="number" name="water_gallons" min="0" step="0.01" value="{{ d.station_report.water_gallons|default:'0' }}" required></label><button>စခန်းအစီရင်ခံစာတင်ရန်</button></form>{% endif %}{% endif %}
-{% if d.station_report %}<p>ရေဂါလန် {{ d.station_report.water_gallons }} · {{ d.station_report.narrative }}</p>{% endif %}</section>{% endfor %}
-{% if can_final %}<section><h2>ဦးဆောင်စခန်း နောက်ဆုံးအစီရင်ခံစာ</h2>{% if not incident.closed_at %}<form method="post" action="{% url 'emergency:action' incident.pk 'final' %}">{% csrf_token %}<label>ဖြစ်ပွားပုံနှင့် စုစည်းအစီရင်ခံချက်<textarea name="narrative" required>{{ incident.final_report.narrative }}</textarea></label><button>စခန်းစာရင်းများ စုစည်းပြီးတင်ရန်</button></form>{% endif %}{% if incident.final_report %}<p><span data-status="{{ incident.final_report.state }}">{{ incident.final_report.state }}</span> · {{ incident.final_report.review_note }}</p><p>စုစုပေါင်း ရေဂါလန် {{ incident.final_report.snapshot.water_gallons }}</p>{% endif %}
-{% if user.is_admin and not incident.closed_at and incident.final_report.state == 'Submitted' %}<form method="post" action="{% url 'emergency:action' incident.pk 'review-final' %}">{% csrf_token %}<label>စိစစ်မှတ်ချက်<textarea name="note"></textarea></label><button name="decision" value="Approved">အတည်ပြုပြီး စာရင်းပိတ်</button><button name="decision" value="Revision">ပြန်ပြင်ခိုင်း</button></form>{% endif %}</section>{% endif %}
-<section><h2>အခြေအနေမှတ်တမ်း</h2><div id="updates">{% for update in updates %}<p>{{ update.created_at|date:"d-m-Y h:i A" }} · {{ update.station|default:'ဗဟို' }} · {{ update.message }}</p>{% empty %}<p data-ui-copy>မှတ်တမ်းမရှိပါ။</p>{% endfor %}</div></section>{% endblock %}
-{% block poll_query %}?scope=incident&incident={{ incident.pk }}{% endblock %}{% block scripts %}<script>
-window.addEventListener('emergency-update',e=>{
- const d=e.detail;if(d.incident){FireRouteStatus.set(document.getElementById('incident-state'),d.incident.status,d.incident.status_display);}
- (d.deployments||[]).forEach(row=>{const el=document.getElementById('deployment-state-'+row.id);FireRouteStatus.set(el,row.state);});
- if(d.updates){const root=document.getElementById('updates');root.replaceChildren();d.updates.forEach(row=>{const p=document.createElement('p');p.textContent=window.formatDateTime(row.created_at)+' · '+(row.station__name||'ဗဟို')+' · '+row.message;root.append(p);});}
-});
-{% if form %}
-const home=document.getElementById('id_home_station'),level=document.getElementById('id_fire_scale'),lead=document.getElementById('id_lead_station');
-let planTimer,planRequest;
-async function planLead(){
- const station=home.value,scale=level.value;if(!station)return;
- const controller=new AbortController();planRequest=controller;
- try{const r=await fetch('{% url "emergency:plan_preview" %}?station='+encodeURIComponent(station)+'&level='+encodeURIComponent(scale),{signal:controller.signal});
- if(r.ok){const d=await r.json();if(!controller.signal.aborted&&home.value===station&&level.value===scale&&d.lead_station)lead.value=d.lead_station;}}
- catch(error){if(error.name!=='AbortError')console.warn('Plan preview unavailable');}
-}
-function schedulePlanLead(){clearTimeout(planTimer);if(planRequest)planRequest.abort();planTimer=setTimeout(planLead,200);}
-home.addEventListener('change',schedulePlanLead);level.addEventListener('change',schedulePlanLead);
+{% extends 'emergency/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="cad-dash-header" style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; gap: 0.85rem;">
+    <a href="{% url 'emergency:incidents' %}" onclick="if(window.history.length>1){window.history.back();return false;}" class="cad-btn cad-btn-secondary cad-btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.8rem; font-weight: 600; text-decoration: none;" title="နောက်သို့ (Back)">
+      <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-arrow-left"/></svg>
+      <span>နောက်သို့</span>
+    </a>
+    <div>
+      <h1 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+        <svg class="cad-icon cad-icon-emergency"><use href="#cad-icon-flame"/></svg>
+        မီးလောင်မှုဖြစ်စဉ် ID: {{ incident.pk }}
+      </h1>
+      <p class="cad-dash-subtitle">
+        {{ incident.address|default:'GPS တည်နေရာ' }} · {{ incident.scale_display }} · 
+        <span id="incident-state" class="cad-badge {% if incident.status == 'Dispatched' %}cad-badge-scale-4{% elif incident.status == 'Confirmed' %}cad-badge-scale-2{% elif incident.status == 'Resolved' %}cad-badge-active{% elif incident.status == 'False Alarm' %}cad-badge-scale-1{% else %}cad-badge-scale-0{% endif %}">
+          {{ incident.status_display }}
+        </span>
+        {% if incident.closed_at %} · စာရင်းပိတ်ချိန်: {{ incident.closed_at|date:"d-m-Y h:i A" }}{% endif %}
+        {% if incident.reporter_phone %} · သတင်းပို့သူဖုန်း: <a href="tel:{{ incident.reporter_phone }}" style="font-weight: 600;">{{ incident.reporter_phone }}</a>{% endif %}
+      </p>
+    </div>
+  </div>
+  <div style="display: flex; gap: 0.5rem; align-items: center;">
+    {% if user.is_admin or user.is_station_admin or user.is_firefighter %}
+    <a class="cad-btn cad-btn-secondary cad-btn-sm" href="{% url 'emergency:incident_pdf' incident.pk %}" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+      <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-report"/></svg> Route / PDF ထုတ်ရန်
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+{% if form and can_manage and not incident.closed_at %}
+<!-- ADMIN INCIDENT MANAGEMENT: SELECT FIRE LEVEL ONLY -->
+<div class="cad-panel" style="margin-bottom: 1.5rem; border-left: 4px solid var(--cad-red-primary);">
+  <div class="cad-panel-header">
+    <div class="cad-panel-title">
+      <svg class="cad-icon cad-icon-sm cad-icon-emergency"><use href="#cad-icon-siren"/></svg>
+      Incident Management — Fire Level သတ်မှတ်ခြင်း
+    </div>
+    <span class="cad-badge cad-badge-scale-{{ incident.fire_scale }}">လက်ရှိ: {{ incident.scale_display }}</span>
+  </div>
+  <div style="padding: 1.25rem;">
+    <p style="margin-bottom: 1rem; color: var(--cad-text-secondary); font-size: 0.95rem;">
+      Admin သည် မီးလောင်မှုအဆင့် (<strong>Fire Level</strong>) တစ်ခုတည်းကိုသာ ရွေးချယ်သတ်မှတ်ရန် လိုအပ်ပါသည်။ စနစ်မှ အသင့်ရှိမီးသတ်စခန်းများအားလုံးသို့ <strong>Real-Road Dijkstra Algorithm</strong> ဖြင့် လမ်းကြောင်းများကို အလိုအလျောက်တွက်ချက်ပြီး၊ မီးသတ်ယာဉ်အသင့်ရှိသော အနီးဆုံးစခန်းအား Responding Station အဖြစ် တိုက်ရိုက်ရွေးချယ်စေလွှတ် (Auto Dispatch) ပေးမည်ဖြစ်ပါသည်။
+    </p>
+
+    <form method="post" action="{% url 'emergency:action' incident.pk 'confirm' %}" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin-bottom: 1rem;">
+      {% csrf_token %}
+      <div>
+        <label for="id_fire_scale" style="display: block; font-weight: 700; margin-bottom: 0.35rem; font-size: 0.9rem;">
+          မီးလောင်မှုအဆင့် (Fire Level ရွေးချယ်ပါ):
+        </label>
+        {{ form.fire_scale }}
+      </div>
+      <div>
+        <button type="submit" class="cad-btn cad-btn-emergency" style="display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.6rem 1.25rem;">
+          <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-bolt"/></svg>
+          Fire Level သတ်မှတ်ပြီး အလိုအလျောက် စေလွှတ်ရန် (Auto Dispatch)
+        </button>
+      </div>
+    </form>
+
+    <div style="display: flex; gap: 0.75rem; border-top: 1px solid var(--cad-border); padding-top: 0.75rem; align-items: center;">
+      <span style="font-size: 0.85rem; color: var(--cad-text-muted);">အခြားလုပ်ဆောင်ချက်:</span>
+      <form method="post" action="{% url 'emergency:action' incident.pk 'reject' %}" style="margin: 0; display: inline;" onsubmit="return confirm('သတင်းမှားအဖြစ် ပယ်ဖျက်ရန် သေချာပါသလား။ (Reject as Fake Report?)');">
+        {% csrf_token %}
+        <button type="submit" class="cad-btn cad-btn-sm cad-btn-danger" style="background: #dc2626 !important; color: #ffffff !important; border: 1px solid #b91c1c !important; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
+          သတင်းမှားအဖြစ် ပယ်ဖျက်ရန် (Reject / Fake Report)
+        </button>
+      </form>
+      <form method="post" action="{% url 'emergency:action' incident.pk 'state' %}" style="margin: 0; display: inline-flex; gap: 0.35rem; align-items: center;">
+        {% csrf_token %}
+        <select name="status" class="cad-select cad-select-sm" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">
+          <option value="Confirmed" {% if incident.status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+          <option value="Under Control" {% if incident.status == 'Under Control' %}selected{% endif %}>Under Control</option>
+          <option value="Resolved" {% if incident.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+          <option value="False Alarm" {% if incident.status == 'False Alarm' %}selected{% endif %}>False Alarm</option>
+        </select>
+        <button type="submit" class="cad-btn cad-btn-sm cad-btn-secondary">အခြေအနေပြောင်းရန်</button>
+      </form>
+    </div>
+  </div>
+</div>
 {% endif %}
-</script>{% if routes %}<script>
-(()=>{
- const routes=JSON.parse(document.getElementById('route-data').textContent);
- const map=L.map('routes'),group=L.featureGroup().addTo(map);
- map.createPane('localRoads');map.getPane('localRoads').style.zIndex=190;
- const localRoads=JSON.parse(document.getElementById('road-background-data').textContent);
- localRoads.forEach(road=>{
-  const line=L.polyline(road.coordinates,{pane:'localRoads',color:'#8494a4',weight:2,opacity:.85}).addTo(map);
-  if(road.name){const label=document.createElement('span');label.textContent=road.name;line.bindTooltip(label);}
- });
- document.getElementById('routes').style.background='#edf1f5';
- map.attributionControl.addAttribution('Local road graph © OpenStreetMap contributors');
- L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,referrerPolicy:'strict-origin-when-cross-origin',attribution:'© OpenStreetMap contributors'})
- .on('tileerror',()=>{document.getElementById('route-map-status').textContent='Online မြေပုံနောက်ခံ မရပါ။ သိမ်းထားသော OSM လမ်းဒေတာ၊ route နှင့် pin များကို ပြထားပါသည်။';}).addTo(map);
- function showRoute(index){
-  group.clearLayers();
-  const route=routes[index];
-  const metres=Number(route.metres);
-  document.getElementById('route-distance').textContent=Number.isFinite(metres)?'လမ်းကြောင်းအကွာအဝေး: '+(metres>=1000?(metres/1000).toFixed(2)+' km':Math.round(metres)+' m'):'လမ်းအကွာအဝေး မရပါ။';
-  const start=Number(route.start_connector_metres||0),end=Number(route.end_connector_metres||0);
-  document.getElementById('route-connector-note').textContent=(start||end)?'OSM လမ်းပေါ်က အကွာအဝေးဖြစ်သည်။ စခန်းမှ လမ်းသို့ '+start+' m၊ လမ်းမှ မီးလောင်ရာသို့ '+end+' m ကို တိုက်ရိုက်ချိတ်ဆက်မှုအဖြစ်သာ ခန့်မှန်းထားပြီး လမ်းအကွာအဝေးထဲ မပေါင်းထားပါ။':'';
-  const points=(route.coordinates||[]).filter(point=>Array.isArray(point)&&point.length===2&&point.every(Number.isFinite));
-  if(points.length<2)return;
-  const color='#fd0001';
-  L.polyline(points,{color,weight:5}).addTo(group);
-  L.marker(points[0],{icon:window.fireRouteMapIcon}).bindTooltip('ထွက်ခွာစခန်း').addTo(group);
-  L.marker(points[points.length-1],{icon:window.fireRouteMapIcon}).bindTooltip('မီးလောင်ရာ').addTo(group);
- if(group.getBounds().isValid())map.fitBounds(group.getBounds(),{padding:[30,30],maxZoom:16});
- else {map.setView([21.975,96.083],12);document.getElementById('route-map-status').textContent='လမ်းကြောင်း coordinate မပြည့်စုံပါ။';}
- }
- showRoute(0);
- document.getElementById('route-station').addEventListener('change',event=>showRoute(Number(event.target.value)));
- new ResizeObserver(()=>map.invalidateSize()).observe(document.getElementById('routes'));
+
+<!-- AUTOMATIC ROUTE CALCULATION & DISPATCH SUMMARY -->
+<div class="cad-panel" style="margin-bottom: 1.5rem;">
+  <div class="cad-panel-header">
+    <div class="cad-panel-title">
+      <svg class="cad-icon cad-icon-sm cad-icon-gold"><use href="#cad-icon-dashboard"/></svg>
+      Automatic Route Calculation & Dispatch Result
+    </div>
+    {% if primary_deployment %}
+    <span class="cad-badge cad-badge-active">✓ Completed & Dispatched</span>
+    {% elif all_station_routes %}
+    <span class="cad-badge cad-badge-scale-2">Routes Calculated</span>
+    {% else %}
+    <span class="cad-badge cad-badge-scale-0">Pending Fire Level</span>
+    {% endif %}
+  </div>
+
+  <div style="padding: 1.25rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+      <div style="background: var(--cad-card-bg, #f8fafc); padding: 1rem; border-radius: 8px; border: 1px solid var(--cad-border);">
+        <span style="font-size: 0.8rem; color: var(--cad-text-muted); text-transform: uppercase;">Responding Station</span>
+        <div style="font-size: 1.15rem; font-weight: 700; color: var(--cad-red-primary); margin-top: 0.25rem;">
+          {{ incident.home_station.name|default:'စနစ်မှ အလိုအလျောက် ရွေးချယ်မည်' }}
+        </div>
+        <small style="color: var(--cad-text-muted);">Automatic Selection by Dijkstra</small>
+      </div>
+
+      <div style="background: var(--cad-card-bg, #f8fafc); padding: 1rem; border-radius: 8px; border: 1px solid var(--cad-border);">
+        <span style="font-size: 0.8rem; color: var(--cad-text-muted); text-transform: uppercase;">Assigned Fire Engine</span>
+        <div style="font-size: 1.15rem; font-weight: 700; color: var(--cad-text-main); margin-top: 0.25rem;">
+          {% if assigned_engine %}
+            {{ assigned_engine.registration }} ({{ assigned_engine.kind.name }})
+          {% else %}
+            စနစ်မှ အသင့်ရှိယာဉ် အလိုအလျောက် သတ်မှတ်မည်
+          {% endif %}
+        </div>
+        <small style="color: var(--cad-text-muted);">Operational & Available</small>
+      </div>
+
+      <div style="background: var(--cad-card-bg, #f8fafc); padding: 1rem; border-radius: 8px; border: 1px solid var(--cad-border);">
+        <span style="font-size: 0.8rem; color: var(--cad-text-muted); text-transform: uppercase;">Response Route Distance</span>
+        <div style="font-size: 1.15rem; font-weight: 700; color: var(--cad-green-active); margin-top: 0.25rem;">
+          {% if primary_deployment.route.total_metres %}
+            {{ primary_deployment.route.total_metres|floatformat:0 }} m ({{ primary_deployment.route.total_metres|divisibleby:1000|default:'' }}{% widthratio primary_deployment.route.total_metres 1000 1 %} km)
+          {% elif primary_deployment.route.metres %}
+            {{ primary_deployment.route.metres }} m
+          {% else %}
+            တွက်ချက်ဆဲ
+          {% endif %}
+        </div>
+        <small style="color: var(--cad-text-muted);">Real Road Network Dijkstra</small>
+      </div>
+
+      <div style="background: var(--cad-card-bg, #f8fafc); padding: 1rem; border-radius: 8px; border: 1px solid var(--cad-border);">
+        <span style="font-size: 0.8rem; color: var(--cad-text-muted); text-transform: uppercase;">Dispatch Status</span>
+        <div style="font-size: 1.15rem; font-weight: 700; color: var(--cad-text-main); margin-top: 0.25rem;">
+          {{ incident.status_display }}
+        </div>
+        <small style="color: var(--cad-text-muted);">Deployment: {{ primary_deployment.state|default:'Not Ordered' }}</small>
+      </div>
+    </div>
+
+    <!-- COMPARISON TABLE: ALL ELIGIBLE STATIONS -->
+    {% if all_station_routes %}
+    <h3 style="margin-bottom: 0.75rem; font-size: 1.05rem; display: flex; align-items: center; gap: 0.4rem;">
+      <svg class="cad-icon cad-icon-sm cad-icon-blue"><use href="#cad-icon-station"/></svg>
+      Available Stations & Real-Road Dijkstra Distance Comparison:
+    </h3>
+    <div class="cad-table-container" style="margin-bottom: 1.5rem;">
+      <table class="cad-table">
+        <thead>
+          <tr>
+            <th style="width: 50px;">No</th>
+            <th>Fire Station</th>
+            <th>Road Distance (Dijkstra)</th>
+            <th>Available Engines</th>
+            <th>Assigned Unit</th>
+            <th style="text-align: right;">Selection Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for st in all_station_routes %}
+          <tr class="{% if st.is_selected %}row-selected-station{% endif %}" style="{% if st.is_selected %}background-color: rgba(224, 36, 36, 0.08); font-weight: 600;{% endif %}">
+            <td>{{ forloop.counter }}</td>
+            <td>
+              <strong>{{ st.station_name }}</strong>
+              <div style="font-size: 0.8rem; color: var(--cad-text-muted);">{{ st.station_address }}</div>
+            </td>
+            <td>
+              {% if st.distance_km %}
+                <span class="font-numeric" style="font-size: 1rem; font-weight: 700; color: {% if st.is_selected %}var(--cad-red-primary){% else %}var(--cad-text-main){% endif %};">
+                  {{ st.distance_km }} km
+                </span>
+                <span style="font-size: 0.75rem; color: var(--cad-text-muted);">({{ st.total_metres }} m)</span>
+              {% elif st.is_valid %}
+                <span>{{ st.metres }} m</span>
+              {% else %}
+                <span style="color: #dc2626; font-size: 0.85rem;">{{ st.error|default:'လမ်းကြောင်း မရပါ' }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if st.has_engine %}
+                <span class="cad-badge cad-badge-active" style="display: inline-flex; align-items: center; gap: 0.25rem;">
+                  <svg class="cad-icon cad-icon-xs"><use href="#cad-icon-check"/></svg>
+                  {{ st.engine_available_count }} ယာဉ် အသင့်ရှိ
+                </span>
+              {% else %}
+                <span class="cad-badge cad-badge-scale-4" style="color: #dc2626; border-color: #dc2626;">
+                  မီးသတ်ယာဉ် မရှိပါ (NO ENGINE)
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              {{ st.engine_name|default:'-' }}
+            </td>
+            <td style="text-align: right;">
+              {% if st.is_selected %}
+                <span class="cad-badge cad-badge-scale-5" style="background-color: var(--cad-red-primary); color: #fff; padding: 0.35rem 0.65rem; font-weight: 700;">
+                  ★ SELECTED RESPONDING STATION
+                </span>
+              {% elif not st.has_engine %}
+                <span style="font-size: 0.8rem; color: var(--cad-text-muted); font-style: italic;">ယာဉ်မရှိ၍ ကျော်သွားသည်</span>
+              {% elif st.is_valid %}
+                <span style="font-size: 0.8rem; color: var(--cad-text-muted);">အရံစခန်း</span>
+              {% else %}
+                <span style="font-size: 0.8rem; color: #dc2626;">လမ်းမပေါက်ပါ</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- ADMIN MAP VIEW: DISPLAY ALL ROUTES + HIGHLIGHT SELECTED ROUTE -->
+    {% if map_routes %}
+    <div style="margin-top: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+        <h3 style="margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 0.4rem;">
+          <svg class="cad-icon cad-icon-sm cad-icon-emergency"><use href="#cad-icon-map"/></svg>
+          Admin Map — စခန်းအားလုံးမှ လမ်းကြောင်းများနှင့် ရွေးချယ်ထားသော တုံ့ပြန်လမ်းကြောင်း
+        </h3>
+        <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.85rem;">
+          <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+            <span style="width: 20px; height: 5px; background: #dc2626; border-radius: 3px; display: inline-block;"></span>
+            <strong>ရွေးချယ်ထားသော လမ်းကြောင်း (Selected)</strong>
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+            <span style="width: 20px; height: 3px; background: #64748b; border-radius: 2px; display: inline-block; border-top: 1px dashed #64748b;"></span>
+            <span style="color: var(--cad-text-muted);">အခြားစခန်းများ လမ်းကြောင်း</span>
+          </span>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 0.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <label style="font-size: 0.9rem; font-weight: 600;">
+          စခန်းအလိုက် လမ်းညွှန်ချက်ကြည့်ရန်:
+          <select id="route-station-picker" class="cad-select cad-select-sm" style="margin-left: 0.5rem;">
+            {% for r in map_routes %}
+            <option value="{{ forloop.counter0 }}" {% if r.is_selected %}selected{% endif %}>
+              {{ r.station_name }} ({{ r.distance_km|default:'?' }} km){% if r.is_selected %} — [SELECTED]{% endif %}
+            </option>
+            {% endfor %}
+          </select>
+        </label>
+        <span id="route-distance-display" style="font-weight: 700; color: var(--cad-red-primary); font-size: 0.95rem;"></span>
+      </div>
+
+      <div id="admin-map" class="map" style="height: 520px; border-radius: 8px; border: 1px solid var(--cad-border); position: relative;"></div>
+      <p id="route-map-status" role="status" style="font-size: 0.85rem; color: var(--cad-text-muted); margin-top: 0.35rem;"></p>
+
+      {{ map_routes|json_script:'map-routes-data' }}
+      {{ road_background|json_script:'road-background-data' }}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- DEPLOYMENT EXECUTION & STATUS FLOW -->
+{% for d in deployments %}
+<div class="cad-panel" style="margin-bottom: 1.5rem; border-left: 4px solid var(--cad-green-active);">
+  <div class="cad-panel-header">
+    <div class="cad-panel-title">
+      <svg class="cad-icon cad-icon-sm cad-icon-station"><use href="#cad-icon-station"/></svg>
+      {{ d.station.name }} တပ်ဖြန့်မှု — <span id="deployment-state-{{ d.pk }}" class="cad-badge cad-badge-active">{{ d.state }}</span>
+    </div>
+    <span style="font-size: 0.85rem; color: var(--cad-text-muted);">စေလွှတ်ချိန်: {{ d.ordered_at|date:"d-m-Y h:i A" }}</span>
+  </div>
+
+  <div style="padding: 1.25rem;">
+    {% if d.route.error %}
+      <p style="color: #dc2626;">{{ d.route.error }}</p>
+    {% else %}
+      <p style="margin-bottom: 0.75rem;">
+        <strong>Dijkstra လမ်းကွန်ရက် အကွာအဝေး:</strong> {{ d.route.metres }} m 
+        {% if d.route.total_metres %}(စုစုပေါင်း: {{ d.route.total_metres }} m){% endif %}
+        · လမ်းသို့ဝင်ရန်: {{ d.route.start_connector_metres }} m · နေရာသို့ချိတ်ဆက်ရန်: {{ d.route.end_connector_metres }} m
+      </p>
+
+      {% if d.route.instructions %}
+      <details style="margin-bottom: 1rem; background: var(--cad-card-bg, #f8fafc); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--cad-border);">
+        <summary style="font-weight: 600; cursor: pointer;">အလှည့်အကွေ့ လမ်းညွှန်ချက် (Turn-by-turn Navigation - {{ d.route.instructions|length }} ဆင့်)</summary>
+        <ol style="margin: 0.5rem 0 0 1.25rem; font-size: 0.9rem; line-height: 1.6;">
+          {% for step in d.route.instructions %}
+          <li><strong>{{ step.turn }}</strong> → {{ step.road }} (ဦးတည်ရာ: {{ step.direction }}) · {{ step.metres }} m</li>
+          {% endfor %}
+        </ol>
+      </details>
+      {% endif %}
+    {% endif %}
+
+    <!-- VEHICLES -->
+    <h4 style="margin: 0.5rem 0; font-size: 0.95rem;">စေလွှတ်ထားသော မီးသတ်ယာဉ်များ</h4>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+      {% for v in d.vehicles.all %}
+      <div style="background: var(--cad-card-bg, #f8fafc); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid var(--cad-border); display: inline-flex; align-items: center; gap: 0.5rem;">
+        <svg class="cad-icon cad-icon-sm cad-icon-emergency"><use href="#cad-icon-dispatch"/></svg>
+        <span><strong>{{ v.vehicle.registration }}</strong> ({{ v.vehicle.kind.name }})</span>
+        <span class="cad-badge {% if v.active %}cad-badge-scale-4{% else %}cad-badge-scale-0{% endif %}" style="font-size: 0.75rem;">
+          {% if v.active %}တာဝန်ထမ်းဆောင်ဆဲ{% else %}ပြန်ရောက်{% endif %}
+        </span>
+      </div>
+      {% empty %}
+      <p style="color: var(--cad-text-muted);">ယာဉ်မရှိသေးပါ။</p>
+      {% endfor %}
+    </div>
+
+    <!-- PERSONNEL -->
+    <h4 style="margin: 0.5rem 0; font-size: 0.95rem;">တာဝန်ကျ မီးသတ်တပ်ဖွဲ့ဝင်များ</h4>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+      {% for p in d.personnel.all %}
+      <div style="background: var(--cad-card-bg, #f8fafc); padding: 0.4rem 0.65rem; border-radius: 6px; border: 1px solid var(--cad-border); display: inline-flex; align-items: center; gap: 0.35rem;">
+        <svg class="cad-icon cad-icon-xs"><use href="#cad-icon-staff"/></svg>
+        <span>{{ p.employee.full_name|default:p.employee.username }} ({{ p.employee.rank }})</span>
+      </div>
+      {% empty %}
+      <p style="color: var(--cad-text-muted); font-size: 0.9rem;">စခန်းမှ တပ်ဖွဲ့ဝင် ရွေးချယ်ပေးရန် စောင့်ဆိုင်းဆဲ။</p>
+      {% endfor %}
+    </div>
+
+    <!-- DISPATCH STATE PROGRESSION BUTTONS -->
+    {% if d.can_manage and not incident.closed_at %}
+    <div style="background: rgba(14, 159, 110, 0.05); padding: 1rem; border-radius: 6px; border: 1px solid rgba(14, 159, 110, 0.2); margin-top: 1rem;">
+      <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem;">တပ်ဖွဲ့တုံ့ပြန်မှု အဆင့်ဆင့် ဆောင်ရွက်ချက်:</h4>
+      <form method="post" action="{% url 'emergency:deployment_action' d.pk 'state' %}" style="display: inline-flex; gap: 0.5rem; flex-wrap: wrap; margin: 0;">
+        {% csrf_token %}
+        {% if d.state == 'Ordered' %}
+          <button type="submit" name="state" value="Accepted" class="cad-btn cad-btn-emerald cad-btn-sm">
+            ✓ အမိန့်လက်ခံပါ (Accept Dispatch)
+          </button>
+        {% elif d.state == 'Accepted' %}
+          <button type="submit" name="state" value="Departed" class="cad-btn cad-btn-warning cad-btn-sm">
+            ▶ စခန်းမှ ထွက်ခွာပြီ (Departed)
+          </button>
+        {% elif d.state == 'Departed' %}
+          <button type="submit" name="state" value="Arrived" class="cad-btn cad-btn-blue cad-btn-sm">
+            ★ မီးလောင်ရာသို့ ရောက်ရှိ (Arrived on Scene)
+          </button>
+        {% elif d.state == 'Arrived' %}
+          <button type="submit" name="state" value="Returned" class="cad-btn cad-btn-secondary cad-btn-sm">
+            ✔ စခန်းသို့ ပြန်လည်ရောက်ရှိ (Returned)
+          </button>
+        {% endif %}
+      </form>
+    </div>
+
+    {% if d.state != 'Returned' and d.state != 'Ordered' and d.eligible.exists %}
+    <form method="post" action="{% url 'emergency:deployment_action' d.pk 'staff' %}" style="margin-top: 1rem;">
+      {% csrf_token %}
+      <h4 style="margin: 0.5rem 0; font-size: 0.9rem;">လိုက်ပါမည့် တာဝန်ကျတပ်ဖွဲ့ဝင် ရွေးချယ်ရန်:</h4>
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+        {% for employee in d.eligible %}
+        <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.9rem;">
+          <input type="checkbox" name="employees" value="{{ employee.pk }}">
+          {{ employee.full_name|default:employee.username }} / {{ employee.rank }}
+        </label>
+        {% endfor %}
+      </div>
+      <button type="submit" class="cad-btn cad-btn-sm cad-btn-secondary">တပ်ဖွဲ့ဝင် အတည်ပြုရွေးချယ်ရန်</button>
+    </form>
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endfor %}
+
+<!-- INCIDENT UPDATES LOG -->
+<div class="cad-panel" style="margin-bottom: 1.5rem;">
+  <div class="cad-panel-header">
+    <div class="cad-panel-title">
+      <svg class="cad-icon cad-icon-sm cad-icon-muted"><use href="#cad-icon-alert"/></svg>
+      ဖြစ်စဉ် ဖြစ်ရပ်မှတ်တမ်း (Incident Updates Log)
+    </div>
+  </div>
+  <div style="padding: 1.25rem;">
+    <div id="updates">
+      {% for update in updates %}
+      <p style="padding: 0.4rem 0; border-bottom: 1px solid var(--cad-border); font-size: 0.9rem; margin: 0;">
+        <span class="font-numeric" style="color: var(--cad-text-muted);">{{ update.created_at|date:"d-m-Y h:i A" }}</span> · 
+        <strong>{{ update.station.name|default:'ကွပ်ကဲမှုဗဟို' }}</strong>: {{ update.message }}
+      </p>
+      {% empty %}
+      <p style="color: var(--cad-text-muted);">မှတ်တမ်းမရှိသေးပါ။</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+window.addEventListener('emergency-update', e => {
+  const d = e.detail;
+  if (d.incident) {
+    const stateEl = document.getElementById('incident-state');
+    if (stateEl) stateEl.textContent = d.incident.status_display;
+  }
+  (d.deployments || []).forEach(row => {
+    const el = document.getElementById('deployment-state-' + row.id);
+    if (el) el.textContent = row.state;
+  });
+});
+</script>
+
+{% if map_routes %}
+<script>
+(() => {
+  const mapRoutes = JSON.parse(document.getElementById('map-routes-data').textContent);
+  const localRoads = JSON.parse(document.getElementById('road-background-data').textContent || '[]');
+  
+  const map = L.map('admin-map');
+  const routesGroup = L.featureGroup().addTo(map);
+
+  // Background road edges
+  if (localRoads && localRoads.length > 0) {
+    map.createPane('localRoads');
+    map.getPane('localRoads').style.zIndex = 190;
+    localRoads.forEach(road => {
+      const line = L.polyline(road.coordinates, {
+        pane: 'localRoads',
+        color: '#94a3b8',
+        weight: 1.5,
+        opacity: 0.6
+      }).addTo(map);
+      if (road.name) {
+        line.bindTooltip(road.name);
+      }
+    });
+  }
+
+  // OpenStreetMap Tile Layer
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).on('tileerror', () => {
+    const statusEl = document.getElementById('route-map-status');
+    if (statusEl) statusEl.textContent = 'Online မြေပုံနောက်ခံ ချိတ်ဆက်မှု မရပါ။ သိမ်းထားသော OSM လမ်းဒေတာ၊ route နှင့် pin များကို ပြထားပါသည်။';
+  }).addTo(map);
+
+  const polylines = [];
+
+  // Incident coordinate
+  const incidentLat = {{ incident.latitude|default:"null" }};
+  const incidentLng = {{ incident.longitude|default:"null" }};
+  if (incidentLat !== null && incidentLng !== null) {
+    L.marker([incidentLat, incidentLng], { icon: firePin('incident') })
+      .bindPopup('<strong>မီးလောင်ရာ တည်နေရာ (Incident)</strong><br>{{ incident.address|default:"GPS" }}')
+      .addTo(routesGroup);
+  }
+
+  // Render all station routes
+  mapRoutes.forEach((route, idx) => {
+    const points = (route.coordinates || []).filter(p => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite));
+    if (points.length < 2) return;
+
+    // Station marker at route start
+    const stMarker = L.marker(points[0], { icon: firePin('station') })
+      .bindTooltip(route.station_name)
+      .bindPopup('<strong>' + route.station_name + '</strong><br>' + (route.distance_km ? route.distance_km + ' km' : route.metres + ' m'))
+      .addTo(routesGroup);
+
+    // Selected responding route vs alternative station routes
+    const isSelected = Boolean(route.is_selected);
+    const polyline = L.polyline(points, {
+      color: isSelected ? '#dc2626' : '#64748b',
+      weight: isSelected ? 6 : 3,
+      opacity: isSelected ? 0.95 : 0.45,
+      dashArray: isSelected ? null : '4, 6'
+    }).addTo(routesGroup);
+
+    polyline.bindTooltip(route.station_name + ': ' + (route.distance_km ? route.distance_km + ' km' : route.metres + ' m'));
+    polylines.push({ idx, polyline, route, isSelected });
+  });
+
+  // Fit bounds to routes or fallback
+  if (routesGroup.getBounds().isValid()) {
+    map.fitBounds(routesGroup.getBounds(), { padding: [40, 40], maxZoom: 16 });
+  } else if (incidentLat !== null && incidentLng !== null) {
+    map.setView([incidentLat, incidentLng], 13);
+  }
+
+  // Route selector dropdown interaction
+  const picker = document.getElementById('route-station-picker');
+  const distDisplay = document.getElementById('route-distance-display');
+
+  function updateActiveRoute(chosenIdx) {
+    polylines.forEach(item => {
+      if (item.idx === chosenIdx) {
+        item.polyline.setStyle({
+          color: '#dc2626',
+          weight: 6,
+          opacity: 1
+        });
+        item.polyline.bringToFront();
+        if (distDisplay) {
+          distDisplay.textContent = item.route.station_name + ' → မီးလောင်ရာ အကွာအဝေး: ' + (item.route.distance_km ? item.route.distance_km + ' km' : item.route.metres + ' m');
+        }
+      } else {
+        item.polyline.setStyle({
+          color: item.isSelected ? '#e11d48' : '#64748b',
+          weight: item.isSelected ? 5 : 2.5,
+          opacity: item.isSelected ? 0.8 : 0.35,
+          dashArray: item.isSelected ? null : '4, 6'
+        });
+      }
+    });
+  }
+
+  if (picker) {
+    picker.addEventListener('change', e => {
+      updateActiveRoute(Number(e.target.value));
+    });
+    // Set initial display
+    updateActiveRoute(Number(picker.value));
+  }
+
+  new ResizeObserver(() => map.invalidateSize()).observe(document.getElementById('admin-map'));
 })();
 </script>
 {% endif %}

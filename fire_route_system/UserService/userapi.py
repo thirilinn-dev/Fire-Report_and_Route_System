@@ -3,7 +3,6 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
 from DataAccess.models import Role, User
-from DataAccess.api_pagination import list_response
 
 def serialize_role(role):
     return {
@@ -104,8 +103,8 @@ def role_detail(request, pk):
 @csrf_exempt
 def user_list_create(request):
     if request.method == 'GET':
-        users = User.objects.select_related('role').all()
-        return list_response(request, users, serialize_user)
+        users = User.objects.all()
+        return JsonResponse([serialize_user(u) for u in users], safe=False)
 
     elif request.method == 'POST':
         try:
@@ -144,7 +143,7 @@ def user_list_create(request):
 @csrf_exempt
 def user_detail(request, pk):
     try:
-        user = User.objects.select_related('role').get(pk=pk)
+        user = User.objects.get(pk=pk)
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)
 

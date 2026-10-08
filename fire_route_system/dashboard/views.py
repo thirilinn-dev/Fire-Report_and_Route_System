@@ -37,7 +37,7 @@ def dashboard_view(request):
             'longitude': report.longitude,
             'fire_scale': report.fire_scale,
             'status': report.status,
-            'reported_at': report.reported_at.strftime('%d-%m-%Y %I:%M %p') if report.reported_at else ''
+            'reported_at': report.reported_at.strftime('%I:%M %p') if report.reported_at else ''
         })
 
     # Active Station Pins

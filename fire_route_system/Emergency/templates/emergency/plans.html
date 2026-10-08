@@ -1,6 +1,14 @@
 {% extends 'emergency/base.html' %}
 {% block content %}
-<h1>{{ title }}</h1>
+<div class="cad-page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+  <div style="display: flex; align-items: center; gap: 0.85rem;">
+    <a href="javascript:history.back()" class="cad-btn cad-btn-secondary cad-btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.8rem; font-weight: 600; text-decoration: none;" title="နောက်သို့ (Back)">
+      <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-arrow-left"/></svg>
+      <span>နောက်သို့</span>
+    </a>
+    <h1 style="margin: 0; font-size: 1.6rem; font-weight: 800; color: var(--cad-text-main);">{{ title }}</h1>
+  </div>
+</div>
 <form class="filters">
   <label>Level<select name="level">
     <option value="">အားလုံး</option>
@@ -15,15 +23,19 @@
   <label>နယ်မြေ ရှာရန်<input name="q" value="{{ query }}"></label>
   <button>ရှာရန်</button>
 </form>
-{% if can_create %}<a class="button" href="{% url 'emergency:create' kind %}" data-ui-copy>အသစ်ထည့်ရန်</a>{% endif %}
-<div class="table-wrap"><table>
-  <thead><tr><th>မြို့နယ်</th><th>Level</th><th>စခန်းအသေးစိတ်</th><th>လုပ်ဆောင်ရန်</th></tr></thead>
-  <tbody>{% for obj in page_obj %}<tr>
-    <td>{{ obj.home_station.township|default:'မြို့နယ် မသတ်မှတ်ရသေး' }}</td>
-    <td>{% if obj.level == 0 %}Normal{% else %}Level {{ obj.level }}{% endif %}</td>
-    <td><details><summary>စခန်းများ ကြည့်ရန်</summary><p>နယ်မြေခံစခန်း: {{ obj.home_station.name }}</p><p>ဦးဆောင်စခန်း: {{ obj.lead_station.name }}</p></details></td>
-    <td><a href="{% url 'emergency:edit' kind obj.pk %}" data-ui-copy>ပြင်ရန်</a></td>
-  </tr>{% empty %}<tr><td colspan="4">စာရင်းမရှိသေးပါ။</td></tr>{% endfor %}</tbody>
-</table></div>
+{% if can_create %}<a class="button" href="{% url 'emergency:create' kind %}">အသစ်ထည့်ရန်</a>{% endif %}
+<div class="cad-panel cad-table-card" style="margin: 1.25rem 0;">
+  <div class="cad-table-container">
+    <table class="cad-table">
+      <thead><tr><th style="min-width: 180px;">မြို့နယ်</th><th style="width: 120px;">Level</th><th style="min-width: 250px;">စခန်းအသေးစိတ်</th><th style="width: 110px; text-align: right;">လုပ်ဆောင်ရန်</th></tr></thead>
+      <tbody>{% for obj in page_obj %}<tr>
+        <td><strong>{{ obj.home_station.township|default:'မြို့နယ် မသတ်မှတ်ရသေး' }}</strong></td>
+        <td><span class="cad-badge cad-badge-scale-{{ obj.level }}">{% if obj.level == 0 %}Normal{% else %}Level {{ obj.level }}{% endif %}</span></td>
+        <td><details><summary>စခန်းများ ကြည့်ရန်</summary><p style="margin: 0.25rem 0;">နယ်မြေခံစခန်း: {{ obj.home_station.name }}</p><p style="margin: 0.25rem 0;">ဦးဆောင်စခန်း: {{ obj.lead_station.name }}</p></details></td>
+        <td style="text-align: right;"><a class="cad-btn cad-btn-sm cad-btn-outline" href="{% url 'emergency:edit' kind obj.pk %}" style="text-decoration: none;">ပြင်ရန်</a></td>
+      </tr>{% empty %}<tr><td colspan="4" style="text-align: center; padding: 2.5rem 1rem; color: var(--cad-text-muted);">စာရင်းမရှိသေးပါ။</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</div>
 {% include 'emergency/pagination.html' %}
 {% endblock %}

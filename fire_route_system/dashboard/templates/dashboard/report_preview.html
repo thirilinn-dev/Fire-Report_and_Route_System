@@ -3,6 +3,7 @@
 {% block title %}Report Portal - Fire Route System{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
     .filter-card {
         padding: 1.5rem;
@@ -15,12 +16,12 @@
     .filter-form {
         display: flex;
         flex-wrap: wrap;
-        gap: 1rem;
+        gap: 1.25rem;
         align-items: flex-end;
     }
     .filter-group {
         flex: 1;
-        min-width: min(100%, 150px);
+        min-width: 150px;
         display: flex;
         flex-direction: column;
         gap: 0.4rem;
@@ -39,8 +40,7 @@
         background-color: var(--cad-surface);
         color: var(--cad-text);
         font-family: var(--font-family);
-        min-height: 44px;
-        height: auto;
+        height: 40px;
         box-sizing: border-box;
     }
     .filter-group select:focus, .filter-group input:focus {
@@ -85,11 +85,11 @@
         <!-- Custom Date duration -->
         <div class="filter-group">
             <label id="lbl-start-date">Start Date:</label>
-            <input type="text" name="start_date" id="filter-start" data-datepicker="date" placeholder="dd-mm-yyyy" autocomplete="off" value="{{ start_date }}">
+            <input type="text" name="start_date" id="filter-start" placeholder="dd-mm-yyyy" autocomplete="off" value="{{ start_date }}">
         </div>
         <div class="filter-group">
             <label id="lbl-end-date">End Date:</label>
-            <input type="text" name="end_date" id="filter-end" data-datepicker="date" placeholder="dd-mm-yyyy" autocomplete="off" value="{{ end_date }}">
+            <input type="text" name="end_date" id="filter-end" placeholder="dd-mm-yyyy" autocomplete="off" value="{{ end_date }}">
         </div>
 
         <!-- Level -->
@@ -106,8 +106,7 @@
             </select>
         </div>
 
-        <button type="submit" class="btn btn-orange" style="min-height: 44px;
-        height: auto; font-weight: 700; padding: 0 1.5rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+        <button type="submit" class="btn btn-orange" style="height: 40px; font-weight: 700; padding: 0 1.5rem; display: inline-flex; align-items: center; gap: 0.4rem;">
             <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-search"/></svg>
             <span id="btn-filter">Filter</span>
         </button>
@@ -160,7 +159,7 @@
                         </span>
                     </td>
                     <td>
-                        <span data-status="{{ report.status }}" class="badge badge-{% if report.status|lower == 'dispatched' %}dispatched{% elif report.status|lower == 'resolved' or report.status|lower == 'verified' %}active{% else %}pending{% endif %}">
+                        <span class="badge badge-{% if report.status|lower == 'dispatched' %}dispatched{% elif report.status|lower == 'resolved' or report.status|lower == 'verified' %}active{% else %}pending{% endif %}">
                             {{ report.status_display }}
                         </span>
                     </td>
@@ -336,6 +335,17 @@
         });
     })();
 </script>
-
-
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        flatpickr("#filter-start", {
+            dateFormat: "d-m-Y",
+            allowInput: true
+        });
+        flatpickr("#filter-end", {
+            dateFormat: "d-m-Y",
+            allowInput: true
+        });
+    });
+</script>
 {% endblock %}

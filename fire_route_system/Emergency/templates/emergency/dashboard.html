@@ -1,23 +1,540 @@
-{% extends 'emergency/base.html' %}{% load static %}{% block page_css %}<link rel="stylesheet" href="{% static 'dashboard/css/dashboard.css' %}?v=admin-charts-1">{% endblock %}{% block content %}<div class="cad-dashboard-compact"><div class="cad-dash-header"><div class="cad-dash-title-group"><h1 class="cad-dash-title"><svg class="cad-icon cad-icon-gold cad-icon-lg"><use href="#cad-icon-dashboard"/></svg><span data-ui-copy>{{ user.role_name }}</span> · <span data-ui-copy>အခြေအနေအကျဉ်းချုပ်</span></h1><p class="cad-dash-subtitle" data-ui-copy>မန္တလေးတိုင်းဒေသကြီး ကွပ်ကဲမှုဗဟို · မီးဘေးအရေးပေါ်စနစ်</p></div><div class="cad-dash-live-badge"><span class="cad-pulse-dot"></span><span class="cad-live-text" data-ui-copy>အခြေအနေအကျဉ်းချုပ်</span></div></div><div class="cad-kpi-grid"><div class="cad-kpi-card cad-kpi-danger"><div class="cad-kpi-icon-wrap"><svg class="cad-icon cad-icon-xl"><use href="#cad-icon-flame"/></svg></div><div class="cad-kpi-data"><span class="cad-kpi-label" data-ui-copy>လက်ရှိဖြစ်စဉ်</span><div class="cad-kpi-value">{{ active_count }}</div><span class="cad-kpi-trend" data-ui-copy>ဆိုင်းငံ့ / စိစစ်ဆဲနှင့် မြေပြင်ဖြစ်စဉ်</span></div></div><div class="cad-kpi-card cad-kpi-warning"><div class="cad-kpi-icon-wrap"><svg class="cad-icon cad-icon-xl"><use href="#cad-icon-alert"/></svg></div><div class="cad-kpi-data"><span class="cad-kpi-label" data-ui-copy>အဆင့် ၅ ဖြစ်စဉ်</span><div class="cad-kpi-value">{{ high_severity_fires }}</div><span class="cad-kpi-trend" data-ui-copy>အရေးပေါ် မီးလောင်မှုအဆင့်</span></div></div><div class="cad-kpi-card cad-kpi-success"><div class="cad-kpi-icon-wrap"><svg class="cad-icon cad-icon-xl"><use href="#cad-icon-station"/></svg></div><div class="cad-kpi-data"><span class="cad-kpi-label" data-ui-copy>အသင့်ရှိစခန်း</span><div class="cad-kpi-value">{{ available_stations }}</div><span class="cad-kpi-trend" data-ui-copy>စေလွှတ်နိုင်သောစခန်းများ</span></div></div><div class="cad-kpi-card cad-kpi-info"><div class="cad-kpi-icon-wrap"><svg class="cad-icon cad-icon-xl"><use href="#cad-icon-dispatch"/></svg></div><div class="cad-kpi-data"><span class="cad-kpi-label">ယနေ့စေလွှတ်အမိန့်</span><div class="cad-kpi-value">{{ total_dispatches_today }}</div><span class="cad-kpi-trend" data-ui-copy>သက်ဆိုင်ရာဖြစ်စဉ်များအတွက်</span></div></div></div>{% include "emergency/dashboard_charts.html" %}<div class="cad-panel"><div class="cad-panel-header"><h2 class="cad-panel-title"><svg class="cad-icon cad-icon-gold"><use href="#cad-icon-map"/></svg>စခန်းနှင့် လက်ရှိဖြစ်စဉ်မြေပုံ</h2><a href="{% url 'emergency:map' %}" data-ui-copy>မြေပုံအပြည့်ကြည့်ရန်</a></div><div id="dashboard-map" class="map"></div></div><div class="grid"><div class="cad-panel"><div class="cad-panel-body"><h2>လက်ရှိဖြစ်စဉ်</h2><strong>{{ active_count }}</strong>{% for row in counts %}<p><span data-status="{{ row.status }}" class="status-tag">{{ row.status_display }}</span>: {{ row.total }}</p>{% endfor %}</div></div><div class="cad-panel"><div class="cad-panel-body"><h2>မိမိတာဝန်ချိန်</h2>{% for duty in duties %}<p>{{ duty.task }}<br>{{ duty.starts_at|date:"d-m-Y h:i A" }} → {{ duty.ends_at|date:"d-m-Y h:i A" }}</p>{% empty %}<p data-ui-copy>တာဝန်စာရင်းမရှိသေးပါ။</p>{% endfor %}</div></div></div><div class="cad-panel"><div class="cad-panel-body"><h2>အသိပေးချက်</h2><div id="live-notices">{% for notice in notices %}<p><a href="{% url 'emergency:incident' notice.incident_id %}">{{ notice.message }}</a> {% if not notice.read_at %}<form method="post" action="{% url 'emergency:poll' %}" class="notice-form">{% csrf_token %}<input type="hidden" name="notice" value="{{ notice.pk }}"><button>ဖတ်ပြီး</button></form>{% else %}ဖတ်ပြီး{% endif %}</p>{% empty %}<p data-ui-copy>အသိပေးချက်မရှိပါ။</p>{% endfor %}</div><small data-ui-copy>ဖတ်ပြီးခြင်းသည် စေလွှတ်အမိန့်လက်ခံခြင်း မဟုတ်ပါ။</small></div></div><div class="cad-panel"><div class="cad-panel-body"><h2>နောက်ဆုံးဖြစ်စဉ်များ</h2><div id="live-incidents">{% for i in incidents %}<p><a href="{% url 'emergency:incident' i.pk %}">#{{ i.pk }} · {{ i.address|default:'GPS နေရာ' }}</a> — <span data-status="{{ i.status }}">{{ i.status_display }}</span></p>{% empty %}<p data-ui-copy>ဖြစ်စဉ်မရှိသေးပါ။</p>{% endfor %}</div></div></div></div>{% endblock %}{% block poll_query %}?scope=dashboard&map=1{% endblock %}{% block scripts %}{% if user.is_admin %}<script src="https://code.highcharts.com/highcharts.js"></script><script src="https://code.highcharts.com/modules/accessibility.js"></script><script src="{% static 'dashboard/js/admin_charts.js' %}?v=1"></script>{% endif %}<script>
+{% extends 'emergency/base.html' %}{% load static %}
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'Emergency/dashboard.css' %}?v=tabler-v2">
+{% endblock %}
+
+{% block content %}
+<div class="tabler-dash-wrapper">
+
+  <!-- 1. Page Header (Tabler Style) -->
+  <div class="tabler-page-header">
+    <div>
+      <div class="tabler-page-pretitle">OVERVIEW</div>
+      <h1 class="tabler-page-title">
+        <svg class="cad-icon cad-icon-gold cad-icon-lg"><use href="#cad-icon-dashboard"/></svg>
+        <span>{{ user.role_name }} Dashboard</span>
+      </h1>
+      <p class="tabler-page-subtitle">မန္တလေးတိုင်းဒေသကြီး ကွပ်ကဲမှုဗဟို · အချိန်နှင့်တစ်ပြေးညီ မီးဘေးအရေးပေါ်စနစ်</p>
+    </div>
+    <div class="tabler-page-actions">
+      <div class="tabler-live-badge">
+        <span class="tabler-pulse-dot"></span>
+        <span>CAD SYSTEM LIVE</span>
+      </div>
+      <a class="tabler-btn tabler-btn-outline" href="{% url 'emergency:map' %}">
+        <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-map"/></svg>
+        <span>မြေပုံအပြည့်ကြည့်ရန်</span>
+      </a>
+      <a class="tabler-btn tabler-btn-emergency" href="{% url 'emergency:report' %}">
+        <svg class="cad-icon cad-icon-sm" style="stroke: #fff;"><use href="#cad-icon-siren"/></svg>
+        <span>+ အရေးပေါ် သတင်းပို့</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 2. Assigned Emergencies Banner (When Active Dispatches Exist) -->
+  {% if assigned_emergencies %}
+  <div class="tabler-card" style="border: 2px solid var(--cad-red-primary) !important; background: linear-gradient(135deg, rgba(220, 38, 38, 0.04) 0%, rgba(245, 158, 11, 0.04) 100%) !important;">
+    <div class="tabler-card-header" style="border-bottom: 1px solid rgba(220, 38, 38, 0.2) !important;">
+      <h2 class="tabler-card-title" style="color: var(--cad-red-primary);">
+        <span class="tabler-pulse-dot" style="background-color: var(--cad-red-primary);"></span>
+        🚨 မိမိစခန်းသို့ တာဝန်ပေးအပ်ထားသော အရေးပေါ်ဖြစ်စဉ်နှင့် လမ်းကြောင်း (Assigned Emergency Dispatch)
+      </h2>
+      <span class="tabler-badge-pill" style="background-color: var(--cad-red-primary); color: #fff;">{{ assigned_emergencies|length }} ACTIVE ASSIGNED</span>
+    </div>
+    <div class="tabler-card-body" style="display: flex; flex-direction: column; gap: 0.75rem;">
+      {% for em in assigned_emergencies %}
+      <div style="background: var(--cad-card-bg, #fff); border-radius: 6px; border: 1px solid var(--cad-border); padding: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <div>
+            <h3 style="margin: 0 0 0.25rem 0; font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <a href="{% url 'emergency:incident' em.incident_id %}" style="color: var(--cad-text-main); text-decoration: none; font-weight: 700;">
+                ဖြစ်စဉ် #{{ em.incident_id }} — {{ em.address }}
+              </a>
+              <span class="cad-badge cad-badge-scale-{{ em.fire_scale }}">{{ em.scale_display }}</span>
+              <span class="cad-badge cad-badge-active">{{ em.state }}</span>
+            </h3>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--cad-text-muted);">
+              သတင်းပို့ချိန်: <span class="font-numeric">{{ em.reported_at|date:"d-m-Y h:i A" }}</span>
+              {% if em.reporter_phone %} · ဖုန်း: <a href="tel:{{ em.reporter_phone }}">{{ em.reporter_phone }}</a>{% endif %}
+              · တာဝန်ကျစခန်း: <strong>{{ em.station_name }}</strong>
+            </p>
+          </div>
+          <div>
+            <a class="tabler-btn tabler-btn-emergency" href="{% url 'emergency:incident' em.incident_id %}" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">
+              <svg class="cad-icon cad-icon-sm" style="stroke: #fff;"><use href="#cad-icon-route"/></svg>
+              တုံ့ပြန်ဆောင်ရွက်ရန် / Route ကြည့်ရန်
+            </a>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; background: var(--cad-table-header-bg, #f8fafc); padding: 0.75rem; border-radius: 6px; font-size: 0.88rem;">
+          <div>
+            <span style="color: var(--cad-text-muted); font-size: 0.78rem; display: block;">တာဝန်ကျ မီးသတ်ယာဉ် (Assigned Engine)</span>
+            <strong style="color: var(--cad-red-primary);">{{ em.engine_name }}</strong>
+          </div>
+          <div>
+            <span style="color: var(--cad-text-muted); font-size: 0.78rem; display: block;">Dijkstra တုံ့ပြန်လမ်းကြောင်း အကွာအဝေး</span>
+            <strong style="color: var(--cad-green-active);">{% if em.route_distance_km %}{{ em.route_distance_km }} km ({{ em.route_metres }} m){% else %}တွက်ချက်ပြီး{% endif %}</strong>
+          </div>
+          <div>
+            <span style="color: var(--cad-text-muted); font-size: 0.78rem; display: block;">တပ်ဖြန့်မှု အခြေအနေ (State)</span>
+            <strong>{{ em.state }}</strong>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 3. Row 1: 4 Metric Cards (Tabler Top KPI Grid) -->
+  <div class="tabler-kpi-grid">
+    <!-- Metric 1: Active Incidents -->
+    <div class="tabler-card tabler-kpi-card">
+      <div class="tabler-kpi-top">
+        <span class="tabler-kpi-label">ACTIVE INCIDENTS</span>
+        <span class="tabler-dropdown-tag">Last 7 days <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span>
+      </div>
+      <div class="tabler-kpi-value-row">
+        <div class="tabler-kpi-value">{{ active_count }}</div>
+        <span class="tabler-trend-badge tabler-trend-danger">
+          <span>{{ active_donut.pct }}%</span>
+          <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+        </span>
+      </div>
+      <div class="tabler-kpi-footer">
+        <div class="tabler-kpi-subtext-row">
+          <span>Active Share Rate</span>
+          <span class="font-numeric">{{ active_donut.pct }}% ↗</span>
+        </div>
+        <div class="tabler-progress-track">
+          <div class="tabler-progress-fill" style="width: {{ active_donut.pct|default:25 }}%; background-color: var(--cad-red-primary);"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metric 2: Critical Severity (Level 5) with smooth sparkline wave -->
+    <div class="tabler-card tabler-kpi-card">
+      <div class="tabler-kpi-top">
+        <span class="tabler-kpi-label">CRITICAL SEVERITY</span>
+        <span class="tabler-dropdown-tag">Last 7 days <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span>
+      </div>
+      <div class="tabler-kpi-value-row">
+        <div class="tabler-kpi-value">{{ high_severity_fires }}</div>
+        <span class="tabler-trend-badge tabler-trend-warning">
+          <span>Level 5</span>
+          <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+        </span>
+      </div>
+      <div class="tabler-kpi-footer">
+        <svg style="width: 100%; height: 26px; stroke: #f59e0b; fill: none; stroke-width: 2; stroke-linecap: round;" viewBox="0 0 100 25" preserveAspectRatio="none">
+          <path d="M0,20 Q15,5 30,15 T60,8 T90,18 L100,6" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Metric 3: Online Stations with wave sparkline -->
+    <div class="tabler-card tabler-kpi-card">
+      <div class="tabler-kpi-top">
+        <span class="tabler-kpi-label">ONLINE STATIONS</span>
+        <span class="tabler-dropdown-tag">Last 7 days <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span>
+      </div>
+      <div class="tabler-kpi-value-row">
+        <div class="tabler-kpi-value">{{ available_stations }}</div>
+        <span class="tabler-trend-badge tabler-trend-positive">
+          <span>{{ station_donut.pct }}%</span>
+          <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+        </span>
+      </div>
+      <div class="tabler-kpi-footer">
+        <svg style="width: 100%; height: 26px; stroke: #10b981; fill: none; stroke-width: 2; stroke-linecap: round;" viewBox="0 0 100 25" preserveAspectRatio="none">
+          <path d="M0,18 Q20,24 40,10 T70,16 T100,4" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Metric 4: Dispatches Today with mini bar sparkline -->
+    <div class="tabler-card tabler-kpi-card">
+      <div class="tabler-kpi-top">
+        <span class="tabler-kpi-label">TODAY'S DISPATCHES</span>
+        <span class="tabler-dropdown-tag">Last 7 days <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span>
+      </div>
+      <div class="tabler-kpi-value-row">
+        <div class="tabler-kpi-value">{{ total_dispatches_today }}</div>
+        <span class="tabler-trend-badge tabler-trend-info">
+          <span>Logged</span>
+          <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+        </span>
+      </div>
+      <div class="tabler-kpi-footer">
+        <div style="display: flex; align-items: flex-end; gap: 3px; height: 26px; padding-top: 4px;">
+          <span style="flex: 1; height: 35%; background: var(--cad-blue-info); border-radius: 1px;"></span>
+          <span style="flex: 1; height: 50%; background: var(--cad-blue-info); border-radius: 1px;"></span>
+          <span style="flex: 1; height: 30%; background: var(--cad-blue-info); border-radius: 1px;"></span>
+          <span style="flex: 1; height: 65%; background: var(--cad-blue-info); border-radius: 1px;"></span>
+          <span style="flex: 1; height: 45%; background: var(--cad-blue-info); border-radius: 1px;"></span>
+          <span style="flex: 1; height: 85%; background: var(--cad-blue-info); border-radius: 1px;"></span>
+          <span style="flex: 1; height: 70%; background: var(--cad-blue-info); border-radius: 1px;"></span>
+          <span style="flex: 1; height: 95%; background: var(--cad-blue-info); border-radius: 1px;"></span>
+          <span style="flex: 1; height: 60%; background: var(--cad-blue-info); border-radius: 1px;"></span>
+          <span style="flex: 1; height: 80%; background: var(--cad-blue-info); border-radius: 1px;"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Row 2: 4 Quick Stat Cards (Tabler Social / Quick Metrics) -->
+  <div class="tabler-quick-grid">
+    <div class="tabler-card tabler-quick-card">
+      <div class="tabler-icon-square tabler-icon-square-blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg>
+      </div>
+      <div class="tabler-quick-info">
+        <div class="tabler-quick-title">{{ available_stations }} Active Stations</div>
+        <div class="tabler-quick-sub">Fleet Mission Ready</div>
+      </div>
+    </div>
+
+    <div class="tabler-card tabler-quick-card">
+      <div class="tabler-icon-square tabler-icon-square-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="tabler-quick-info">
+        <div class="tabler-quick-title">{{ resolved_donut.pct }}% Resolution Rate</div>
+        <div class="tabler-quick-sub">{{ resolved_donut.part }} / {{ resolved_donut.whole }} Incidents Resolved</div>
+      </div>
+    </div>
+
+    <div class="tabler-card tabler-quick-card">
+      <div class="tabler-icon-square tabler-icon-square-cyan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <div class="tabler-quick-info">
+        <div class="tabler-quick-title">{{ notices|length }} Active Bulletins</div>
+        <div class="tabler-quick-sub">Live Command Feed</div>
+      </div>
+    </div>
+
+    <div class="tabler-card tabler-quick-card">
+      <div class="tabler-icon-square tabler-icon-square-indigo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+      </div>
+      <div class="tabler-quick-info">
+        <div class="tabler-quick-title">{{ duties|length }} Assigned Duties</div>
+        <div class="tabler-quick-sub">Shift Personnel Online</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Row 3: Main Content (Tabler "Traffic summary" & "Locations") -->
+  <div class="tabler-main-grid">
+    <!-- Left: Activity Summary (Traffic summary style) -->
+    <div class="tabler-card tabler-panel-chart">
+      <div class="tabler-card-header">
+        <div>
+          <h3 class="tabler-card-title">
+            <svg class="cad-icon cad-icon-emergency" style="width: 18px; height: 18px;"><use href="#cad-icon-chart"/></svg>
+            <span>Traffic summary</span>
+          </h3>
+          <span class="tabler-card-subtitle">Incident volume & daily emergency load over the past 7 days</span>
+        </div>
+        <span class="tabler-dropdown-tag">Daily Count</span>
+      </div>
+      <div class="tabler-card-body" style="display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+        <!-- Clean Tabler Activity Bars -->
+        <div class="tabler-bars-row">
+          {% for b in trend_bars %}
+          <div class="tabler-bar-col" title="{{ b.label }}: {{ b.value }} ဖြစ်စဉ်">
+            <span class="tabler-bar-val">{{ b.value }}</span>
+            <div class="tabler-bar-fill" style="height: {{ b.height }}%;"></div>
+            <span class="tabler-bar-label">{{ b.label }}</span>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Secondary Summary Footer -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; padding-top: 0.5rem;">
+          <div style="background: var(--cad-table-header-bg, #f8fafc); padding: 0.65rem 0.85rem; border-radius: 6px;">
+            <span style="font-size: 0.72rem; color: var(--cad-text-muted); text-transform: uppercase; font-weight: 700; display: block;">Total Events</span>
+            <strong style="font-size: 1.15rem; color: var(--cad-text-main);">{{ total_incidents }}</strong>
+          </div>
+          <div style="background: var(--cad-table-header-bg, #f8fafc); padding: 0.65rem 0.85rem; border-radius: 6px;">
+            <span style="font-size: 0.72rem; color: var(--cad-green-active); text-transform: uppercase; font-weight: 700; display: block;">Resolved</span>
+            <strong style="font-size: 1.15rem; color: var(--cad-green-active);">{{ resolved_donut.pct }}%</strong>
+          </div>
+          <div style="background: var(--cad-table-header-bg, #f8fafc); padding: 0.65rem 0.85rem; border-radius: 6px;">
+            <span style="font-size: 0.72rem; color: var(--cad-red-primary); text-transform: uppercase; font-weight: 700; display: block;">Active Share</span>
+            <strong style="font-size: 1.15rem; color: var(--cad-red-primary);">{{ active_donut.pct }}%</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Locations / Live Tactical Map -->
+    <div class="tabler-card tabler-panel-map">
+      <div class="tabler-card-header">
+        <div>
+          <h3 class="tabler-card-title">
+            <svg class="cad-icon cad-icon-gold" style="width: 18px; height: 18px;"><use href="#cad-icon-map"/></svg>
+            <span>Locations</span>
+          </h3>
+          <span class="tabler-card-subtitle">Real-time GPS telemetry for active stations & fire reports</span>
+        </div>
+        <a href="{% url 'emergency:map' %}" class="tabler-btn tabler-btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;">Full Map →</a>
+      </div>
+      <div class="tabler-map-container">
+        <div id="dashboard-map"></div>
+      </div>
+      <div style="display: flex; gap: 1rem; font-size: 0.75rem; color: var(--cad-text-muted); padding: 0.65rem 1.25rem; border-top: 1px solid var(--cad-border);">
+        <span><i style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--cad-gold-primary); margin-right: 4px;"></i>မီးသတ်စခန်း (Stations)</span>
+        <span><i style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--cad-red-primary); margin-right: 4px;"></i>မီးလောင်ရာ (Incidents)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Row 4: Operational Cards (Recent Incidents, Status Breakdown, Duties/Notices) -->
+  <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.25rem;">
+    <!-- Recent Incidents Card -->
+    <div class="tabler-card">
+      <div class="tabler-card-header">
+        <div>
+          <h3 class="tabler-card-title">
+            <svg class="cad-icon cad-icon-emergency" style="width: 18px; height: 18px;"><use href="#cad-icon-flame"/></svg>
+            <span>Recent Incident Activity</span>
+          </h3>
+          <span class="tabler-card-subtitle">Latest emergency call logs & field operations</span>
+        </div>
+        <a href="{% url 'emergency:incidents' %}" class="tabler-btn tabler-btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;">View All</a>
+      </div>
+      <div class="tabler-card-body" id="live-incidents" style="padding: 0.5rem 1.25rem;">
+        {% for i in incidents %}
+        <div class="tabler-list-item">
+          <div>
+            <a href="{% url 'emergency:incident' i.pk %}" style="font-weight: 700; color: var(--cad-text-main); text-decoration: none; font-size: 0.88rem;">
+              ဖြစ်စဉ် #{{ i.pk }} · {{ i.address|default:'GPS တည်နေရာ' }}
+            </a>
+            <div class="tabler-list-sub">{{ i.reported_at|date:"d-m-Y h:i A" }}</div>
+          </div>
+          <div>
+            <span class="tabler-badge-pill" style="background-color: rgba(37, 99, 235, 0.1); color: var(--cad-blue-info);">{{ i.status_display }}</span>
+          </div>
+        </div>
+        {% empty %}
+        <div class="tabler-empty-state">
+          <p class="tabler-empty-desc">လက်ရှိတွင် မီးလောင်မှုဖြစ်စဉ် မရှိသေးပါ။</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Status Breakdown & Bulletins Card -->
+    <div class="tabler-card">
+      <div class="tabler-card-header">
+        <div>
+          <h3 class="tabler-card-title">
+            <svg class="cad-icon cad-icon-blue" style="width: 18px; height: 18px;"><use href="#cad-icon-siren"/></svg>
+            <span>Bulletins & Duty Shifts</span>
+          </h3>
+          <span class="tabler-card-subtitle">Shift personnel roster & active command notices</span>
+        </div>
+      </div>
+      <div class="tabler-card-body" style="display: flex; flex-direction: column; gap: 1rem;">
+        <!-- Notices Feed -->
+        <div>
+          <h4 style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cad-text-muted); margin-bottom: 0.5rem;">
+            အသိပေးချက်များ (Notices)
+          </h4>
+          <div id="live-notices">
+            {% for notice in notices|slice:":4" %}
+            <div class="tabler-list-item" style="padding: 0.5rem 0;">
+              <div>
+                <a href="{% url 'emergency:incident' notice.incident_id %}" style="font-size: 0.85rem; color: var(--cad-text-main); font-weight: 600;">
+                  {{ notice.message }}
+                </a>
+                <div class="tabler-list-sub">{{ notice.created_at|date:"h:i A" }}</div>
+              </div>
+              <div>
+                {% if not notice.read_at %}
+                <form method="post" action="{% url 'emergency:poll' %}" class="notice-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="notice" value="{{ notice.pk }}">
+                  <button type="submit" class="tabler-btn tabler-btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.72rem;">ဖတ်ပြီး</button>
+                </form>
+                {% else %}
+                <span style="font-size: 0.72rem; color: var(--cad-text-muted);">ဖတ်ပြီး</span>
+                {% endif %}
+              </div>
+            </div>
+            {% empty %}
+            <p style="font-size: 0.82rem; color: var(--cad-text-muted); margin: 0;">အသိပေးချက် မရှိသေးပါ။</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Duties Roster -->
+        <div style="border-top: 1px solid var(--cad-border); padding-top: 0.75rem;">
+          <h4 style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cad-text-muted); margin-bottom: 0.5rem;">
+            မိမိတာဝန်ချိန် (Assigned Shift)
+          </h4>
+          {% for duty in duties|slice:":3" %}
+          <div class="tabler-list-item" style="padding: 0.4rem 0;">
+            <div>
+              <strong style="font-size: 0.85rem; color: var(--cad-text-main);">{{ duty.task }}</strong>
+              <div class="tabler-list-sub">{{ duty.starts_at|date:"d-m-Y h:i A" }} → {{ duty.ends_at|date:"h:i A" }}</div>
+            </div>
+          </div>
+          {% empty %}
+          <p style="font-size: 0.82rem; color: var(--cad-text-muted); margin: 0;">လက်ရှိ တာဝန်စာရင်း မရှိသေးပါ။</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
 const notices=document.getElementById('live-notices');
-notices.addEventListener('submit',async e=>{if(!e.target.matches('.notice-form'))return;e.preventDefault();const r=await fetch(e.target.action,{method:'POST',body:new FormData(e.target)});if(r.ok)window.applyEmergencyUpdate(await r.json());});
+if (notices) {
+  notices.addEventListener('submit',async e=>{
+    if(!e.target.matches('.notice-form'))return;
+    e.preventDefault();
+    const r=await fetch(e.target.action,{method:'POST',body:new FormData(e.target)});
+    if(r.ok)poll();
+  });
+}
+
 window.addEventListener('emergency-update',e=>{
- const root=document.getElementById('live-incidents');root.replaceChildren();
- e.detail.incidents.forEach(i=>{const p=document.createElement('p'),a=document.createElement('a');a.href='/emergency/incidents/'+i.id+'/';a.textContent='#'+i.id+' · '+(i.address||'GPS နေရာ');p.append(a,document.createTextNode(' — '),FireRouteStatus.create(i.status,i.status_display));root.append(p);});
- notices.replaceChildren();
- e.detail.notices.forEach(n=>{const p=document.createElement('p'),a=document.createElement('a');a.href='/emergency/incidents/'+n.incident_id+'/';a.textContent=n.message;p.append(a);
- if(n.read_at)p.append(document.createTextNode(' · ဖတ်ပြီး'));
- else {const f=document.createElement('form');f.className='notice-form';f.action='{% url "emergency:poll" %}';f.method='post';
- [['csrfmiddlewaretoken','{{ csrf_token }}'],['notice',n.id]].forEach(([name,value])=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;f.append(input);});
- const b=document.createElement('button');b.textContent='ဖတ်ပြီး';f.append(b);p.append(f);}notices.append(p);});
-});</script><script>
+  const root=document.getElementById('live-incidents');
+  if (root && e.detail.incidents) {
+    root.replaceChildren();
+    e.detail.incidents.forEach(i=>{
+      const wrap=document.createElement('div');wrap.className='tabler-list-item';
+      const info=document.createElement('div');
+      const a=document.createElement('a');a.href='/emergency/incidents/'+i.id+'/';a.textContent='ဖြစ်စဉ် #'+i.id+' · '+(i.address||'GPS တည်နေရာ');
+      a.style.fontWeight='700';a.style.color='var(--cad-text-main)';a.style.textDecoration='none';a.style.fontSize='0.88rem';
+      info.append(a);
+      const badgeWrap=document.createElement('div');
+      const span=document.createElement('span');span.className='tabler-badge-pill';
+      span.style.backgroundColor='rgba(37, 99, 235, 0.1)';span.style.color='var(--cad-blue-info)';
+      span.textContent=i.status_display;
+      badgeWrap.append(span);
+      wrap.append(info, badgeWrap);
+      root.append(wrap);
+    });
+  }
+
+  if (notices && e.detail.notices) {
+    notices.replaceChildren();
+    e.detail.notices.forEach(n=>{
+      const wrap=document.createElement('div');wrap.className='tabler-list-item';wrap.style.padding='0.5rem 0';
+      const info=document.createElement('div');
+      const a=document.createElement('a');a.href='/emergency/incidents/'+n.incident_id+'/';a.textContent=n.message;
+      a.style.fontSize='0.85rem';a.style.color='var(--cad-text-main)';a.style.fontWeight='600';
+      info.append(a);
+      const actionWrap=document.createElement('div');
+      if(n.read_at) {
+        const span=document.createElement('span');span.style.fontSize='0.72rem';span.style.color='var(--cad-text-muted)';span.textContent='ဖတ်ပြီး';
+        actionWrap.append(span);
+      } else {
+        const f=document.createElement('form');f.className='notice-form';f.action='{% url "emergency:poll" %}';f.method='post';
+        [['csrfmiddlewaretoken','{{ csrf_token }}'],['notice',n.id]].forEach(([name,value])=>{
+          const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;f.append(input);
+        });
+        const b=document.createElement('button');b.textContent='ဖတ်ပြီး';b.className='tabler-btn tabler-btn-outline';
+        b.style.padding='0.2rem 0.5rem';b.style.fontSize='0.72rem';b.type='submit';
+        f.append(b);actionWrap.append(f);
+      }
+      wrap.append(info, actionWrap);
+      notices.append(wrap);
+    });
+  }
+});
+</script>
+
+<script>
 const dashboardMap=L.map('dashboard-map').setView([21.975,96.083],12),pins=L.layerGroup().addTo(dashboardMap);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(dashboardMap);
-let dashboardMapSnapshot='';
-window.addEventListener('emergency-update',e=>{
- const d=e.detail.map;if(!d)return;
- const snapshot=JSON.stringify(d);if(snapshot===dashboardMapSnapshot)return;
- dashboardMapSnapshot=snapshot;pins.clearLayers();
- for(const entries of [d.stations,d.incidents])entries.forEach(item=>{const label=document.createElement('span');label.textContent=item.name||'#'+item.id+' '+(item.address||'မီးလောင်ရာ');L.marker([item.latitude,item.longitude],{icon:window.fireRouteMapIcon}).bindPopup(label).addTo(pins);});
+
+function makePopupContent(item, kind) {
+  const isInc = kind === 'incident';
+  const wrap = document.createElement('div');
+  wrap.className = 'cad-map-popup ' + (isInc ? 'cad-popup-incident' : 'cad-popup-station');
+  const tag = document.createElement('span');
+  tag.className = 'cad-popup-tag';
+  tag.textContent = isInc ? '🔥 မီးလောင်မှုဖြစ်စဉ်' : '🚒 မီးသတ်စခန်း';
+  const title = document.createElement('h4');
+  title.className = 'cad-popup-title';
+  title.textContent = isInc ? (item.id + ' · ' + (item.address || 'မီးလောင်ရာ')) : (item.name || 'မီးသတ်စခန်း');
+  wrap.append(tag, title);
+  if (isInc) {
+    if (item.scale_display || item.status_display) {
+      const meta = document.createElement('div');
+      meta.className = 'cad-popup-meta';
+      meta.textContent = [item.scale_display, item.status_display].filter(Boolean).join(' · ');
+      wrap.append(meta);
+    }
+    const link = document.createElement('a');
+    link.className = 'cad-popup-link';
+    link.href = '/emergency/incidents/' + item.id + '/';
+    link.textContent = 'အသေးစိတ်ကြည့်ရန် →';
+    wrap.append(link);
+  } else {
+    if (item.address || item.contact_number) {
+      const meta = document.createElement('div');
+      meta.className = 'cad-popup-meta';
+      meta.textContent = [item.address, item.contact_number].filter(Boolean).join(' · ');
+      wrap.append(meta);
+    }
+  }
+  return wrap;
+}
+
+let openPopupKey = null;
+dashboardMap.on('popupopen', e => {
+  const latlng = e.popup.getLatLng();
+  if (latlng) openPopupKey = latlng.lat.toFixed(5) + ',' + latlng.lng.toFixed(5);
 });
-</script>{% endblock %}
+dashboardMap.on('popupclose', () => {
+  openPopupKey = null;
+});
+
+async function refreshDashboardMap(){
+  try{
+    const r=await fetch('{% url "emergency:map_data" %}');
+    if(!r.ok)return;
+    const d=await r.json();
+    pins.clearLayers();
+    let markerToOpen = null;
+    for(const [entries,kind] of [[d.stations,'station'],[d.incidents,'incident']]) {
+      (entries || []).forEach(item=>{
+        if (!item.latitude || !item.longitude) return;
+        const marker = L.marker([item.latitude,item.longitude],{icon:firePin(kind)});
+        marker.bindPopup(makePopupContent(item, kind)).addTo(pins);
+        const key = Number(item.latitude).toFixed(5) + ',' + Number(item.longitude).toFixed(5);
+        if (openPopupKey && key === openPopupKey) {
+          markerToOpen = marker;
+        }
+      });
+    }
+    if (markerToOpen) {
+      markerToOpen.openPopup();
+    }
+  }catch(e){}
+}
+refreshDashboardMap();
+setInterval(refreshDashboardMap,5000);
+
+// Ensure map recalculates size responsively
+window.addEventListener('resize', () => dashboardMap.invalidateSize());
+const mapContainer = document.getElementById('dashboard-map');
+if (window.ResizeObserver && mapContainer) {
+  new ResizeObserver(() => dashboardMap.invalidateSize()).observe(mapContainer);
+}
+setTimeout(() => dashboardMap.invalidateSize(), 300);
+</script>
+{% endblock %}

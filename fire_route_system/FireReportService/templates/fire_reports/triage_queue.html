@@ -79,7 +79,8 @@
                         {% endif %}
                     </td>
                     <td>
-                        <span style="font-size: 0.8rem; color: var(--cad-text-muted);">{{ notif.created_at|date:"d-m-Y h:i A" }}</span>
+                        <span class="font-numeric" style="font-weight: 600;">{{ notif.created_at|date:"d-m-Y" }}</span>
+                        <span style="font-size: 0.8rem; color: var(--cad-text-muted);">{{ notif.created_at|date:"h:i A" }}</span>
                     </td>
                     <td style="text-align: right;">
                         <div style="display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center; flex-wrap: wrap;">

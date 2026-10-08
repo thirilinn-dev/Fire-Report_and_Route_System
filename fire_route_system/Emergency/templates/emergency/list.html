@@ -1,1 +1,101 @@
-{% extends 'emergency/base.html' %}{% block content %}<div class="page-heading"><h1>{{ title }}</h1></div><form class="filters"><label>ရှာရန်<input name="q" value="{{ query }}"></label>{% if kind == 'stations' %}<label>ဒေတာရင်းမြစ်<select name="source"><option value="">အားလုံး</option><option value="real" {% if request.GET.source == 'real' %}selected{% endif %}>ရင်းမြစ်ပါ စခန်းမှတ်တမ်း</option></select></label>{% endif %}<label>အခြေအနေ<input name="status" value="{{ request.GET.status }}"></label><button>ရှာရန်</button></form>{% if can_create %}<a class="button" href="{% url 'emergency:create' kind %}" data-ui-copy>အသစ်ထည့်ရန်</a>{% endif %}<div class="table-wrap" role="region" aria-label="{{ title }}" tabindex="0"><table><tr><th>စာရင်း</th><th>အသေးစိတ်</th><th>လုပ်ဆောင်ရန်</th></tr>{% for obj in page_obj %}<tr><td>{{ obj }}</td><td>{% if kind == 'staff' %}{{ obj.full_name }} · {{ obj.rank }} · {{ obj.station }} · <span data-status="{{ obj.status }}" class="status-tag">{{ obj.status }}</span>{% elif kind == 'vehicles' %}<span data-status="{{ obj.status }}" class="status-tag">{{ obj.status }}</span>{% elif kind == 'duties' %}{{ obj.starts_at|date:"d-m-Y h:i A" }} → {{ obj.ends_at|date:"d-m-Y h:i A" }}{% elif kind == 'leaves' %}<span data-status="{{ obj.status }}">{{ obj.status }}</span> · {{ obj.starts_at|date:"d-m-Y h:i A" }} → {{ obj.ends_at|date:"d-m-Y h:i A" }}<p>{{ obj.reason }}</p>{{ obj.review_note }}{% elif kind == 'posts' %}{{ obj.body|linebreaksbr }} · {{ obj.audience }}{% elif kind == 'stations' %}{{ obj.address }} · <span data-status="{{ obj.status }}" class="status-tag">{{ obj.status_display }}</span>{% if obj.source_key %}<p>{{ obj.township|default:'မြို့နယ် အတည်ပြုရန်လို' }}</p><a href="{{ obj.source_data.url }}" target="_blank" rel="noopener" data-ui-copy>OpenStreetMap ရင်းမြစ်</a><small> · © OpenStreetMap contributors · အသင့်ရှိမှုကို သီးခြားစစ်ဆေးရန်လိုသည်</small>{% else %}<p><small data-ui-copy>Demo / ရင်းမြစ် မစစ်ဆေးရသေးသော မှတ်တမ်း</small></p>{% endif %}{% endif %}</td><td>{% if kind == 'leaves' %}{% if user.is_admin or user.is_station_admin %}{% if obj.status == 'Pending' %}<form method="post" action="{% url 'emergency:leave_review' obj.pk %}">{% csrf_token %}<label>ယာယီတာဝန်ခံ (Station Admin ခွင့်အတွက်)<select name="replacement"><option value="">မရွေးပါ</option>{% for employee in replacements %}<option value="{{ employee.pk }}">{{ employee }}</option>{% endfor %}</select></label><label>မှတ်ချက်<input name="note"></label><button name="decision" value="Approved">လက်ခံ</button><button name="decision" value="Rejected">ငြင်းပယ်</button></form>{% endif %}{% endif %}{% else %}{% if user.is_admin or user.is_station_admin %}<a href="{% url 'emergency:edit' kind obj.pk %}" data-ui-copy>ပြင်ရန်</a>{% endif %}{% endif %}</td></tr>{% empty %}<tr><td colspan="3">စာရင်းမရှိသေးပါ။</td></tr>{% endfor %}</table></div>{% include 'emergency/pagination.html' %}{% endblock %}
+{% extends 'emergency/base.html' %}
+{% block content %}
+<div class="cad-page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+  <div style="display: flex; align-items: center; gap: 0.85rem;">
+    <a href="javascript:history.back()" class="cad-btn cad-btn-secondary cad-btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.8rem; font-weight: 600; text-decoration: none;" title="နောက်သို့ (Back)">
+      <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-arrow-left"/></svg>
+      <span>နောက်သို့</span>
+    </a>
+    <h1 style="margin: 0; font-size: 1.6rem; font-weight: 800; color: var(--cad-text-main);">{{ title }}</h1>
+  </div>
+  {% if can_create %}
+  <a class="cad-btn cad-btn-emergency" href="{% url 'emergency:create' kind %}" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+    <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-plus"/></svg>
+    <span>အသစ်ထည့်ရန်</span>
+  </a>
+  {% endif %}
+</div>
+
+<form class="filters">
+  <label>ရှာရန်<input name="q" value="{{ query }}"></label>
+  {% if kind == 'stations' %}
+  <label>ဒေတာရင်းမြစ်<select name="source"><option value="">အားလုံး</option><option value="real" {% if request.GET.source == 'real' %}selected{% endif %}>ရင်းမြစ်ပါ စခန်းမှတ်တမ်း</option></select></label>
+  {% endif %}
+  <label>အခြေအနေ<input name="status" value="{{ request.GET.status }}"></label>
+  <button>ရှာရန်</button>
+</form>
+
+<div class="cad-panel cad-table-card" style="margin: 1.25rem 0;">
+  <div class="cad-table-container">
+    <table class="cad-table">
+      <thead>
+        <tr>
+          <th style="min-width: 180px;">စာရင်း</th>
+          <th style="min-width: 320px;">အသေးစိတ်</th>
+          <th style="min-width: 140px; text-align: right;">လုပ်ဆောင်ရန်</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for obj in page_obj %}
+        <tr>
+          <td><strong>{{ obj }}</strong></td>
+          <td>
+            {% if kind == 'staff' %}
+              {{ obj.full_name }} · {{ obj.rank }} · {{ obj.station }} · {{ obj.status }}
+            {% elif kind == 'vehicles' %}
+              <span class="cad-badge cad-badge-{{ obj.status|lower|slugify }}">{{ obj.status }}</span>
+            {% elif kind == 'duties' %}
+              {{ obj.starts_at|date:"d-m-Y h:i A" }} → {{ obj.ends_at|date:"d-m-Y h:i A" }}
+            {% elif kind == 'leaves' %}
+              {{ obj.starts_at|date:"d-m-Y h:i A" }} → {{ obj.ends_at|date:"d-m-Y h:i A" }}
+              <p style="margin: 0.25rem 0;">{{ obj.reason }}</p>
+              {{ obj.review_note }}
+            {% elif kind == 'posts' %}
+              {{ obj.body|linebreaksbr }} · <span class="cad-badge cad-badge-pending">{{ obj.audience }}</span>
+            {% elif kind == 'stations' %}
+              {{ obj.address }} · <span class="cad-badge cad-badge-active">{{ obj.status_display }}</span>
+              {% if obj.source_key %}
+                <p style="margin: 0.25rem 0;">{{ obj.township|default:'မြို့နယ် အတည်ပြုရန်လို' }}</p>
+                <a href="{{ obj.source_data.url }}" target="_blank" rel="noopener">OpenStreetMap ရင်းမြစ်</a>
+                <small> · © OpenStreetMap contributors · အသင့်ရှိမှုကို သီးခြားစစ်ဆေးရန်လိုသည်</small>
+              {% else %}
+                <p style="margin: 0.25rem 0;"><small>Demo / ရင်းမြစ် မစစ်ဆေးရသေးသော မှတ်တမ်း</small></p>
+              {% endif %}
+            {% endif %}
+          </td>
+          <td style="text-align: right;">
+            {% if kind == 'leaves' %}
+              {% if user.is_admin or user.is_station_admin %}
+                {% if obj.status == 'Pending' %}
+                  <form method="post" action="{% url 'emergency:leave_review' obj.pk %}">
+                    {% csrf_token %}
+                    <label>ယာယီတာဝန်ခံ (Station Admin ခွင့်အတွက်)
+                      <select name="replacement">
+                        <option value="">မရွေးပါ</option>
+                        {% for employee in replacements %}
+                          <option value="{{ employee.pk }}">{{ employee }}</option>
+                        {% endfor %}
+                      </select>
+                    </label>
+                    <label>မှတ်ချက်<input name="note"></label>
+                    <button name="decision" value="Approved">လက်ခံ</button>
+                    <button name="decision" value="Rejected">ငြင်းပယ်</button>
+                  </form>
+                {% endif %}
+              {% endif %}
+            {% else %}
+              {% if user.is_admin or user.is_station_admin %}
+                <a class="cad-btn cad-btn-sm cad-btn-outline" href="{% url 'emergency:edit' kind obj.pk %}" style="text-decoration: none;">ပြင်ရန်</a>
+              {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" style="text-align: center; padding: 2.5rem 1rem; color: var(--cad-text-muted);">စာရင်းမရှိသေးပါ။</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include 'emergency/pagination.html' %}
+{% endblock %}

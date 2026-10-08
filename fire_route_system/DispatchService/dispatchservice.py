@@ -6,7 +6,7 @@ from DataAccess.decorators import responder_required, dispatcher_required, admin
 @responder_required
 def dispatch_list(request):
     from django.core.paginator import Paginator
-    dispatches = Dispatch.objects.select_related('report','station','operator').order_by('-dispatched_at')
+    dispatches = Dispatch.objects.all().order_by('-dispatched_at')
 
     per_page_param = request.GET.get('per_page', '10').strip()
     try:

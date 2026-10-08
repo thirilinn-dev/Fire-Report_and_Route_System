@@ -62,16 +62,17 @@
                         <span style="color: var(--cad-text-secondary);">{{ dispatch.operator.username }}</span>
                     </td>
                     <td>
-                        <span style="font-size: 0.78rem; color: var(--cad-text-muted);">{{ dispatch.dispatched_at|date:"d-m-Y h:i A" }}</span>
+                        <span class="font-numeric" style="font-weight: 600;">{{ dispatch.dispatched_at|date:"d-m-Y" }}</span>
+                        <span style="font-size: 0.78rem; color: var(--cad-text-muted);">{{ dispatch.dispatched_at|date:"h:i A" }}</span>
                     </td>
                     <td>
                         {% if dispatch.resolved_at %}
-                            <span data-status="Resolved" class="cad-badge cad-badge-resolved" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <span class="cad-badge cad-badge-resolved" style="display: inline-flex; align-items: center; gap: 0.35rem;">
                                 <svg class="cad-icon cad-icon-sm cad-icon-green"><use href="#cad-icon-check"/></svg>
-                                <span>ငြှိမ်းသတ်ပြီးစီး ({{ dispatch.resolved_at|date:"d-m-Y h:i A" }})</span>
+                                <span>ငြှိမ်းသတ်ပြီးစီး ({{ dispatch.resolved_at|date:"h:i A" }})</span>
                             </span>
                         {% else %}
-                            <span data-status="Dispatched" class="cad-badge cad-badge-dispatched disp-active-badge">
+                            <span class="cad-badge cad-badge-dispatched disp-active-badge">
                                 တာဝန်ထမ်းဆောင်ဆဲ
                             </span>
                         {% endif %}

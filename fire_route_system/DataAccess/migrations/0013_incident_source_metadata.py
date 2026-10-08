@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('DataAccess', '0011_station_source_metadata'),
+        ('DataAccess', '0012_dispatch_status'),
     ]
 
     operations = [

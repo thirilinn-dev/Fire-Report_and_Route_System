@@ -21,7 +21,7 @@
 
 <!-- Search bar -->
 <div class="search-bar-container" style="margin-bottom: 1.5rem; width: 100%; max-width: 500px;">
-    <form method="GET" action="" class="cad-list-search" style="display: flex; width: 100%;">
+    <form method="GET" action="" style="display: flex; gap: 0.5rem; width: 100%;">
         <div class="search-input-wrapper" style="position: relative; flex: 1; display: flex; align-items: center;">
             <span style="position: absolute; left: 0.85rem; color: var(--cad-text-muted); pointer-events: none; display: flex; align-items: center; justify-content: center;"><svg class="cad-icon cad-icon-sm cad-icon-muted"><use href="#cad-icon-search"/></svg></span>
             <input type="text" name="q" value="{{ query|default:'' }}" id="users-search-input" placeholder="Search by username, email, phone..." 
@@ -78,7 +78,7 @@
                                 </span>
                             </td>
                             <td>
-                                <span data-status="{{ user.status }}" class="badge badge-{% if user.status|lower == 'active' %}active{% elif user.status|lower == 'inactive' %}inactive{% else %}dispatched{% endif %}">
+                                <span class="badge badge-{% if user.status|lower == 'active' %}active{% elif user.status|lower == 'inactive' %}inactive{% else %}dispatched{% endif %}">
                                     {{ user.status }}
                                 </span>
                             </td>

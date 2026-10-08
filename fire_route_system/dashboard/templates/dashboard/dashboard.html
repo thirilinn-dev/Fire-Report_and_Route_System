@@ -9,28 +9,17 @@
 {% endblock %}
 
 {% block content %}
-<div class="cad-dashboard-compact">
-<!-- Dashboard Header -->
-<div class="cad-dash-header">
-    <div class="cad-dash-title-group">
-        <h1 class="cad-dash-title">
-            <svg class="cad-icon cad-icon-gold cad-icon-lg"><use href="#cad-icon-dashboard"/></svg>
-            <span id="dash-title">CAD Operations Command</span>
-        </h1>
-        <p class="cad-dash-subtitle" id="dash-subtitle">Real-Time Computer-Aided Dispatch & Emergency Telemetry | Mandalay Regional Headquarters</p>
-    </div>
-    <div class="cad-dash-live-badge">
-        <span class="cad-pulse-dot"></span>
-        <span class="cad-live-text" id="dash-live">CAD SYSTEM LIVE</span>
-    </div>
-</div>
+<div class="tabler-dash-wrapper">
 
-<!-- Top Row: KPI Metric Cards -->
-<div class="cad-kpi-grid">
-    <!-- Card 1: Active Incidents -->
-    <div class="cad-kpi-card cad-kpi-danger">
-        <div class="cad-kpi-icon-wrap">
-            <svg class="cad-icon cad-icon-emergency cad-icon-xl"><use href="#cad-icon-flame"/></svg>
+    <!-- 1. Page Header (Tabler SaaS Style) -->
+    <div class="tabler-page-header">
+        <div>
+            <div class="tabler-page-pretitle" id="dash-pretitle">OVERVIEW</div>
+            <h1 class="tabler-page-title">
+                <svg class="cad-icon cad-icon-gold cad-icon-lg"><use href="#cad-icon-dashboard"/></svg>
+                <span id="dash-title">CAD Operations Command</span>
+            </h1>
+            <p class="tabler-page-subtitle" id="dash-subtitle">Real-Time Computer-Aided Dispatch & Emergency Telemetry | Mandalay Regional Headquarters</p>
         </div>
         <div class="tabler-page-actions">
             <div class="tabler-live-badge">
@@ -263,26 +252,34 @@
                                 <span class="cad-badge cad-badge-scale-{{ report.fire_scale }}">
                                     {{ report.scale_display }}
                                 </span>
-                            {% else %}
-                                {{ report.address|default:"တည်နေရာ မဖော်ပြထားပါ"|truncatechars:25 }}
-                            {% endif %}
-                        </td>
-                        <td>{{ report.reported_at|date:"d-m-Y h:i A" }}</td>
-                        <td style="text-align: right;">
-                            <a href="{% url 'dispatch_create' %}?report_id={{ report.id }}" class="cad-btn cad-btn-emergency cad-btn-sm" data-en="Dispatch" data-my="စေလွှတ်မည်">
-                                <svg class="cad-icon"><use href="#cad-icon-dispatch"/></svg>
-                                <span>Dispatch</span>
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="cad-empty-state">
-                <span class="cad-empty-icon"><svg class="cad-icon cad-icon-green" style="width: 3rem; height: 3rem;"><use href="#cad-icon-check"/></svg></span>
-                <h4 class="cad-empty-title" id="dash-pending-empty">No pending reports requiring attention</h4>
-                <p class="cad-empty-desc" id="dash-pending-desc">All incoming citizen emergency reports have been assigned or triaged.</p>
+                            </td>
+                            <td>
+                                {% if report.latitude and report.longitude %}
+                                    <span style="font-family: monospace; font-size: 0.8rem;">
+                                        {{ report.latitude|floatformat:4 }}, {{ report.longitude|floatformat:4 }}
+                                    </span>
+                                {% else %}
+                                    {{ report.address|default:"တည်နေရာ မဖော်ပြထားပါ"|truncatechars:25 }}
+                                {% endif %}
+                            </td>
+                            <td>{{ report.reported_at|date:"h:i A" }}</td>
+                            <td style="text-align: right;">
+                                <a href="{% url 'dispatch_create' %}?report_id={{ report.id }}" class="tabler-btn tabler-btn-emergency" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;" data-en="Dispatch" data-my="စေလွှတ်မည်">
+                                    <svg class="cad-icon cad-icon-sm" style="stroke: #fff;"><use href="#cad-icon-dispatch"/></svg>
+                                    <span>Dispatch</span>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="tabler-empty-state">
+                    <svg class="cad-icon cad-icon-green" style="width: 2.5rem; height: 2.5rem;"><use href="#cad-icon-check"/></svg>
+                    <h4 class="tabler-empty-title" id="dash-pending-empty">No pending reports requiring attention</h4>
+                    <p class="tabler-empty-desc" id="dash-pending-desc">All incoming citizen emergency reports have been assigned or triaged.</p>
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -298,53 +295,52 @@
                 </div>
                 <span class="tabler-badge-pill" style="background-color: rgba(37, 99, 235, 0.12); color: var(--cad-blue-info);" id="dash-active-badge">IN FIELD</span>
             </div>
-            <span class="cad-badge cad-badge-dispatched" id="dash-active-badge">IN FIELD</span>
-        </div>
-        <div class="cad-table-container">
-            {% if active_dispatches %}
-            <table class="cad-table">
-                <thead>
-                    <tr>
-                        <th id="th-d-id">Disp ID</th>
-                        <th id="th-d-incident">Incident</th>
-                        <th id="th-d-station">Station</th>
-                        <th id="th-d-operator">Operator</th>
-                        <th id="th-d-time">Time</th>
-                        <th id="th-d-action" style="text-align: right;">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for dispatch in active_dispatches %}
-                    <tr>
-                        <td><strong>#{{ dispatch.id }}</strong></td>
-                        <td>
-                            <span class="cad-badge cad-badge-scale-{{ dispatch.report.fire_scale }}">
-                                {{ dispatch.report.scale_display }}
-                            </span>
-                        </td>
-                        <td>{{ dispatch.station.name }}</td>
-                        <td>{{ dispatch.operator.username }}</td>
-                        <td>{{ dispatch.dispatched_at|date:"d-m-Y h:i A" }}</td>
-                        <td style="text-align: right;">
-                            <a href="{% url 'dispatch_update' dispatch.id %}" class="cad-btn cad-btn-outline cad-btn-sm" data-en="Manage" data-my="စီမံမည်">
-                                <svg class="cad-icon"><use href="#cad-icon-edit"/></svg>
-                                <span>Manage</span>
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="cad-empty-state">
-                <span class="cad-empty-icon"><svg class="cad-icon cad-icon-green" style="width: 3rem; height: 3rem;"><use href="#cad-icon-check"/></svg></span>
-                <h4 class="cad-empty-title" id="dash-active-empty">No active dispatches in command</h4>
-                <p class="cad-empty-desc" id="dash-active-desc">All fire units are currently standing by at their respective stations.</p>
+            <div class="tabler-table-wrap">
+                {% if active_dispatches %}
+                <table class="tabler-table">
+                    <thead>
+                        <tr>
+                            <th id="th-d-id">Disp ID</th>
+                            <th id="th-d-incident">Incident</th>
+                            <th id="th-d-station">Station</th>
+                            <th id="th-d-operator">Operator</th>
+                            <th id="th-d-time">Time</th>
+                            <th id="th-d-action" style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dispatch in active_dispatches %}
+                        <tr>
+                            <td><strong>{{ dispatch.id }}</strong></td>
+                            <td>
+                                <span class="cad-badge cad-badge-scale-{{ dispatch.report.fire_scale }}">
+                                    {{ dispatch.report.scale_display }}
+                                </span>
+                            </td>
+                            <td>{{ dispatch.station.name }}</td>
+                            <td>{{ dispatch.operator.username }}</td>
+                            <td>{{ dispatch.dispatched_at|date:"h:i A" }}</td>
+                            <td style="text-align: right;">
+                                <a href="{% url 'dispatch_update' dispatch.id %}" class="tabler-btn tabler-btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;" data-en="Manage" data-my="စီမံမည်">
+                                    <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-edit"/></svg>
+                                    <span>Manage</span>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="tabler-empty-state">
+                    <svg class="cad-icon cad-icon-green" style="width: 2.5rem; height: 2.5rem;"><use href="#cad-icon-check"/></svg>
+                    <h4 class="tabler-empty-title" id="dash-active-empty">No active dispatches in command</h4>
+                    <p class="tabler-empty-desc" id="dash-active-desc">All fire units are currently standing by at their respective stations.</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
-</div>
 </div>
 {% endblock %}
 
@@ -374,8 +370,13 @@
 
         const markerGroup = L.featureGroup();
 
-        // Load active station markers (Gold Station Pin)
-        const stationIcon = window.fireRouteMapIcon;
+        // Load active station markers
+        const stationIcon = L.divIcon({
+            className: 'custom-marker-station',
+            html: `<div class="marker-pin-station"><svg style="width:17px;height:17px;stroke:var(--cad-gold-primary);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg></div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+        });
 
         const stations = {{ station_pins_json|safe }};
         stations.forEach(st => {
@@ -383,7 +384,7 @@
                 <div class="map-popup-card">
                     <h4 style="margin:0 0 0.5rem 0; color: #10B981;">${st.name}</h4>
                     <p style="margin:2px 0;"><strong>Contact:</strong> ${st.contact_number}</p>
-                    ${FireRouteStatus.html(st.status)}
+                    <span class="cad-badge cad-badge-active" style="margin-top:0.25rem;">${st.status}</span>
                 </div>
             `;
             const marker = L.marker([st.latitude, st.longitude], { icon: stationIcon }).bindPopup(popupHTML);
@@ -392,8 +393,14 @@
 
         // Load active fire markers
         const fires = {{ fire_pins_json|safe }};
+        const INCIDENT_FLAME_ICON = '/static/dashboard/img/incident_flame.svg';
         fires.forEach(f => {
-            const fireIcon = window.fireRouteMapIcon;
+            const fireIcon = L.divIcon({
+                className: 'custom-marker-fire',
+                html: `<div class="marker-pin-fire scale-${f.fire_scale}" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;position:relative;"><img src="${INCIDENT_FLAME_ICON}" style="width:24px;height:24px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));"/></div>`,
+                iconSize: [34, 34],
+                iconAnchor: [17, 17]
+            });
 
             const popupHTML = `
                 <div class="map-popup-card">
@@ -402,8 +409,8 @@
                     <p style="margin:2px 0;"><strong>Severity:</strong> Scale ${f.fire_scale}</p>
                     <p style="margin:2px 0;"><strong>Reported:</strong> ${f.reported_at}</p>
                     <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
-                        ${FireRouteStatus.html(f.status)}
-                        <a href="/dispatch/create/?report_id=${f.id}" class="cad-btn cad-btn-emergency cad-btn-sm" style="text-decoration: none;">Dispatch</a>
+                        <span class="cad-badge cad-badge-pending">${f.status}</span>
+                        <a href="/dispatch/create/?report_id=${f.id}" class="tabler-btn tabler-btn-emergency" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; text-decoration: none;">Dispatch</a>
                     </div>
                 </div>
             `;

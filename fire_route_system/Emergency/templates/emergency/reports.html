@@ -1,1 +1,53 @@
-{% extends 'emergency/base.html' %}{% block content %}<h1>နေ့ / လ / နှစ် အစီရင်ခံစာ</h1>{% include 'emergency/filters.html' %}<p><a href="?{{ group_query }}&period=day" data-ui-copy>နေ့အလိုက်</a> · <a href="?{{ group_query }}&period=month" data-ui-copy>လအလိုက်</a> · <a href="?{{ group_query }}&period=year" data-ui-copy>နှစ်အလိုက်</a></p><a class="button" href="?{{ request.GET.urlencode }}&export=csv" data-ui-copy>CSV ထုတ်ရန်</a><a class="button" href="?{{ request.GET.urlencode }}&export=pdf" data-ui-copy>PDF ထုတ်ရန်</a><div class="table-wrap" role="region" aria-label="အချက်အလက်စာရင်း" tabindex="0"><table><tr><th>{{ period }}</th><th>Level</th><th>ဖြစ်စဉ်စုစုပေါင်း</th></tr>{% for row in page_obj %}<tr><td>{{ row.period }}</td><td>{{ row.fire_scale|default_if_none:'အဆင့် မသိရသေး' }}</td><td>{{ row.total }}</td></tr>{% empty %}<tr><td colspan="3">စာရင်းမရှိပါ။</td></tr>{% endfor %}</table></div>{% include 'emergency/pagination.html' %}{% endblock %}
+{% extends 'emergency/base.html' %}
+{% block content %}
+<div class="cad-page-header" style="display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1.25rem;">
+  <a href="javascript:history.back()" class="cad-btn cad-btn-secondary cad-btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.8rem; font-weight: 600; text-decoration: none;" title="နောက်သို့ (Back)">
+    <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-arrow-left"/></svg>
+    <span>နောက်သို့</span>
+  </a>
+  <div>
+    <h1 style="margin: 0 0 0.25rem 0; font-size: 1.6rem; font-weight: 800; color: var(--cad-text-main);">နေ့ / လ / နှစ် အစီရင်ခံစာ</h1>
+    <p style="margin: 0; color: var(--cad-text-muted); font-size: 0.9rem;">ကာလအလိုက် မီးလောင်မှုစာရင်းအင်း အစီရင်ခံစာ</p>
+  </div>
+</div>
+
+{% include 'emergency/filters.html' %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0;">
+  <div class="cad-period-selector" style="display: flex; gap: 0.5rem;">
+    <a href="?{{ group_query }}&period=day" class="cad-btn cad-btn-sm {% if period == 'day' %}cad-btn-emergency{% else %}cad-btn-outline{% endif %}">နေ့အလိုက်</a>
+    <a href="?{{ group_query }}&period=month" class="cad-btn cad-btn-sm {% if period == 'month' %}cad-btn-emergency{% else %}cad-btn-outline{% endif %}">လအလိုက်</a>
+    <a href="?{{ group_query }}&period=year" class="cad-btn cad-btn-sm {% if period == 'year' %}cad-btn-emergency{% else %}cad-btn-outline{% endif %}">နှစ်အလိုက်</a>
+  </div>
+  <div style="display: flex; gap: 0.5rem;">
+    <a class="cad-btn cad-btn-sm cad-btn-outline" href="?{{ request.GET.urlencode }}&export=csv">CSV ထုတ်ရန်</a>
+    <a class="cad-btn cad-btn-sm cad-btn-outline" href="?{{ request.GET.urlencode }}&export=pdf">PDF ထုတ်ရန်</a>
+  </div>
+</div>
+
+<div class="cad-panel cad-table-card">
+  <div class="cad-table-container">
+    <table class="cad-table">
+      <thead>
+        <tr>
+          <th>{{ period|title }}</th>
+          <th>Level</th>
+          <th style="text-align: right;">ဖြစ်စဉ်စုစုပေါင်း</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in page_obj %}
+        <tr>
+          <td><strong>{{ row.period }}</strong></td>
+          <td><span class="cad-badge cad-badge-scale-{{ row.fire_scale }}">Scale {{ row.fire_scale }}</span></td>
+          <td style="text-align: right;"><strong>{{ row.total }}</strong></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" style="text-align: center; padding: 2.5rem 1rem; color: var(--cad-text-muted);">စာရင်းမရှိပါ။</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include 'emergency/pagination.html' %}
+{% endblock %}

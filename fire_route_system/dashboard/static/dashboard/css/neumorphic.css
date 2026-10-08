@@ -466,7 +466,7 @@ html, body { background: var(--nm-bg); }
 .cad-textarea,
 .cad-form-control,
 .emergency-console input:not([type=checkbox]),
-.emergency-console select,
+.emergency-console select:not(.cad-page-size-select),
 .emergency-console textarea {
     background: var(--nm-bg);
     border: 0;
@@ -478,7 +478,7 @@ html, body { background: var(--nm-bg); }
 .cad-select:focus,
 .cad-textarea:focus,
 .emergency-console input:focus,
-.emergency-console select:focus,
+.emergency-console select:not(.cad-page-size-select):focus,
 .emergency-console textarea:focus {
     outline: none;
     border: 0;
@@ -591,11 +591,13 @@ html, body { background: var(--nm-bg); }
     border: 0;
     border-radius: 14px;
     background: linear-gradient(145deg, #ff2a2b, #d00001);
+    color: #ffffff;
     box-shadow: 5px 5px 12px rgba(253, 0, 1, 0.28), -4px -4px 10px var(--nm-hi);
 }
 .emergency-console button:hover,
 .emergency-console .button:hover {
     background: linear-gradient(145deg, #ff3b3c, #e00002);
+    color: #ffffff;
     transform: translateY(-1px);
 }
 .emergency-console button:active,

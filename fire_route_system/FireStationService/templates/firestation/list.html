@@ -223,7 +223,7 @@
         
         <!-- Search bar -->
         <div class="search-bar-container" style="max-width: 500px; width: 100%;">
-            <form method="GET" action="" class="cad-list-search" style="display: flex; width: 100%;">
+            <form method="GET" action="" style="display: flex; gap: 0.5rem; width: 100%;">
                 <div class="search-input-wrapper" style="position: relative; flex: 1; display: flex; align-items: center;">
                     <span style="position: absolute; left: 0.85rem; color: var(--cad-text-muted); pointer-events: none; display: flex; align-items: center; justify-content: center;"><svg class="cad-icon cad-icon-sm cad-icon-muted"><use href="#cad-icon-search"/></svg></span>
                     <input type="text" name="q" value="{{ query|default:'' }}" id="stations-search-input" placeholder="Search by name, contact, status..." 
@@ -299,7 +299,7 @@
                                             </a>
                                         </td>
                                         <td>
-                                            <span data-status="{{ station.status }}" class="badge badge-{% if station.status|lower == 'maintenance' %}maintenance{% elif station.status|lower == 'inactive' %}inactive{% else %}active{% endif %}">
+                                            <span class="badge badge-{% if station.status|lower == 'maintenance' %}maintenance{% elif station.status|lower == 'inactive' %}inactive{% else %}active{% endif %}">
                                                 {{ station.status_display }}
                                             </span>
                                         </td>
@@ -341,7 +341,7 @@
                                     <svg class="cad-icon cad-icon-sm cad-icon-gold"><use href="#cad-icon-station"/></svg>
                                     <span>{{ station.name }}</span>
                                 </h3>
-                                <span data-status="{{ station.status }}" class="badge badge-{% if station.status|lower == 'maintenance' %}maintenance{% elif station.status|lower == 'inactive' %}inactive{% else %}active{% endif %}" style="font-size: 0.75rem;">
+                                <span class="badge badge-{% if station.status|lower == 'maintenance' %}maintenance{% elif station.status|lower == 'inactive' %}inactive{% else %}active{% endif %}" style="font-size: 0.75rem;">
                                     {{ station.status_display }}
                                 </span>
                             </div>
@@ -463,22 +463,16 @@
         const markerGroup = L.featureGroup();
 
         // Custom Gold/Red Pin for Stations
-        const stationIcon = window.fireRouteMapIcon;
+        const stationIcon = L.divIcon({
+            className: 'custom-marker-station',
+            html: `<div style="background-color: #FD0001; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 10px rgba(253, 0, 1, 0.7); transform: scale(1.1);"></div>`,
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+        });
 
         // Load active Fire Stations via API
-        async function loadMapStations() {
-            const stations = [];
-            let page = 1, totalPages = 1;
-            do {
-                const response = await fetch('/api/firestations/?page_size=100&page=' + page);
-                if (!response.ok) throw new Error('Station map unavailable');
-                stations.push(...await response.json());
-                totalPages = Number(response.headers.get('X-Total-Pages') || 1);
-                page++;
-            } while (page <= totalPages);
-            return stations;
-        }
-        loadMapStations()
+        fetch('/api/firestations/')
+            .then(res => res.json())
             .then(stations => {
                 stationsData = stations;
                 stations.forEach(station => {
@@ -535,7 +529,6 @@
         
         // Setup Status Badge
         const badge = document.getElementById("panel-station-status-badge");
-        badge.dataset.status = station.status;
         const statusMap = {
             'active': 'အသင့်ရှိ',
             'inactive': 'ယာယီပိတ်ထား',

@@ -1,7 +1,6 @@
 from collections import Counter
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
-from django.db.models import Count
 from django.utils import timezone
 from DataAccess.models import User, FireReport, FireStation
 from .models import *
@@ -14,17 +13,13 @@ def audit(actor, action, obj, **detail):
 
 
 def preview(incident):
-    plan=ResponsePlan.objects.select_related('home_station','lead_station').filter(home_station_id=incident.home_station_id,level=incident.fire_scale).first()
+    plan=ResponsePlan.objects.filter(home_station=incident.home_station,level=incident.fire_scale).first()
     active=Counter(VehicleParticipation.objects.filter(deployment__incident=incident,active=True).values_list('vehicle__station_id','vehicle__kind_id'))
     rows=[]
     if plan:
-        requirements=list(plan.requirements.select_related('station','kind'))
-        availability={(row['station_id'],row['kind_id']):row['total'] for row in Vehicle.objects.filter(
-            station_id__in={r.station_id for r in requirements},kind_id__in={r.kind_id for r in requirements},
-            status='Available',station__status='Active').values('station_id','kind_id').annotate(total=Count('pk'))}
-        for requirement in requirements:
+        for requirement in plan.requirements.select_related('station','kind'):
             current=active[requirement.station_id,requirement.kind_id]
-            available=availability.get((requirement.station_id,requirement.kind_id),0)
+            available=Vehicle.objects.filter(station=requirement.station,kind=requirement.kind,status='Available',station__status='Active').count()
             rows.append({'station':requirement.station,'kind':requirement.kind,'total':requirement.quantity,'current':current,'needed':max(0,requirement.quantity-current),'available':available})
     return plan,rows
 

@@ -23,23 +23,23 @@
     
     <style>
         :root {
-            --cad-red: #b91c32;
-            --cad-red-hover: #991b2c;
+            --cad-red: #FD0001;
+            --cad-red-hover: #D50000;
             --cad-red-glow: rgba(253, 0, 1, 0.4);
-            --cad-gold: #c28b27;
+            --cad-gold: #F59E0B;
             --cad-gold-hover: #D97706;
             --cad-gold-glow: rgba(245, 158, 11, 0.35);
             --cad-green: #10B981;
             
             /* Dark Command Theme (Default for CAD) */
-            --bg-canvas: #1c1718;
-            --card-bg: #282122;
+            --bg-canvas: #060B11;
+            --card-bg: rgba(13, 23, 36, 0.95);
             --card-border: rgba(255, 255, 255, 0.09);
             --card-header-bg: rgba(9, 16, 26, 0.6);
             --text-primary: #F8FAFC;
             --text-secondary: #94A3B8;
             --text-muted: #64748B;
-            --input-bg: #221b1d;
+            --input-bg: #08121C;
             --input-border: #1E2E42;
             --input-focus-border: #F59E0B;
             --quick-btn-bg: rgba(15, 27, 43, 0.7);
@@ -50,7 +50,7 @@
         }
 
         [data-theme="light"] {
-            --bg-canvas: #f7f5f1;
+            --bg-canvas: #EDF2F7;
             --card-bg: #FFFFFF;
             --card-border: #E2E8F0;
             --card-header-bg: #F8FAFC;
@@ -548,18 +548,34 @@
         .cad-icon-green { stroke: var(--cad-green); }
         .cad-icon-blue { stroke: #38BDF8; }
         .cad-icon-muted { stroke: var(--text-muted); }
-
-        .auth-card { border-radius:20px; border-top-color:var(--cad-gold); box-shadow:0 16px 48px #30151b20; }
-        .auth-submit-btn { min-height:48px; box-shadow:none; border-radius:10px; }
-        .auth-submit-btn:hover { box-shadow:none; transform:none; }
-        .auth-icon-btn { min-height:44px; }
-        .brand-subtitle,.auth-alert,.form-group label { line-height:1.8; }
-        input { font-size:16px; }
-        button:focus-visible,a:focus-visible { outline:3px solid var(--cad-gold); outline-offset:3px; }
-        @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
     </style>
-    <link rel="stylesheet" href="{% static 'dashboard/css/compact.css' %}?v=1">
-    <link rel="stylesheet" href="{% static 'dashboard/css/spacing.css' %}?v=1">
+    <style>
+        /* Soft / neumorphic components (same kit as dashboard/css/neumorphic.css) */
+        :root { --nm-bg:#EAEEF4; --nm-hi:rgba(255,255,255,.95); --nm-lo:rgba(139,154,178,.50);
+            --nm-raise:7px 7px 16px var(--nm-lo),-7px -7px 16px var(--nm-hi);
+            --nm-raise-sm:4px 4px 9px var(--nm-lo),-4px -4px 9px var(--nm-hi);
+            --nm-raise-xs:2px 2px 5px var(--nm-lo),-2px -2px 5px var(--nm-hi);
+            --nm-inset:inset 4px 4px 9px var(--nm-lo),inset -4px -4px 9px var(--nm-hi);
+            --nm-inset-sm:inset 2px 2px 5px var(--nm-lo),inset -2px -2px 5px var(--nm-hi); }
+        [data-theme="dark"] { --nm-bg:#0C1824; --nm-hi:rgba(52,82,118,.26); --nm-lo:rgba(0,0,0,.58); }
+        body { background: var(--nm-bg); }
+        .auth-card { background: var(--nm-bg); border: 0; border-radius: 26px; box-shadow: 14px 14px 32px var(--nm-lo), -12px -12px 28px var(--nm-hi); }
+        .auth-telemetry, .auth-icon-btn { background: var(--nm-bg); border: 0; box-shadow: var(--nm-raise-sm); }
+        .auth-icon-btn:hover { box-shadow: var(--nm-inset-sm); }
+        .emblem-wrapper { border-radius: 50%; box-shadow: var(--nm-raise); background: var(--nm-bg); }
+        .brand-badge { background: var(--nm-bg); border: 0; box-shadow: var(--nm-inset-sm); }
+        .auth-input { background: var(--nm-bg); border: 0; border-radius: 14px; box-shadow: var(--nm-inset); }
+        .auth-input:focus { box-shadow: var(--nm-inset), 0 0 0 2px rgba(245,158,11,.35); }
+        .auth-submit-btn { border: 0; border-radius: 14px; box-shadow: 6px 6px 14px rgba(253,0,1,.30), -4px -4px 10px var(--nm-hi); }
+        .auth-submit-btn:hover { box-shadow: 8px 8px 18px rgba(253,0,1,.38), -4px -4px 10px var(--nm-hi); }
+        .auth-submit-btn:active { box-shadow: inset 3px 3px 8px rgba(0,0,0,.3); transform: none; }
+        .auth-alert { border-radius: 14px; box-shadow: var(--nm-raise-sm); }
+        .quick-roles-section { border-top: 1px dashed var(--card-border); }
+        .quick-role-card { background: var(--nm-bg); border: 0; border-radius: 14px; box-shadow: var(--nm-raise-sm); }
+        .quick-role-card:hover { background: var(--nm-bg); box-shadow: var(--nm-inset-sm); transform: none; }
+        .quick-roles-hint { border-radius: 999px; box-shadow: var(--nm-raise-xs); background: var(--nm-bg); }
+        .emergency-link-box { background: var(--nm-bg); border: 0; border-radius: 14px; box-shadow: var(--nm-inset-sm); }
+    </style>
 </head>
 <body>
     {% include 'cad_icons.html' %}
@@ -568,7 +584,7 @@
     <header class="auth-top-bar">
         <div class="auth-telemetry">
             <span class="telemetry-dot"></span>
-            <span id="telemetry-status">စနစ်အသင့်ရှိ</span>
+            <span id="telemetry-status">စနစ်အသင့်ရှိ • CAD OPERATIONAL</span>
         </div>
         
         <div class="auth-controls">
@@ -648,7 +664,7 @@
 
                 <div class="form-group">
                     <label for="password" class="form-label" id="lbl-password">
-                        စကားဝှက်
+                        စကားဝှက် (Password)
                     </label>
                     <div class="input-wrapper">
                         <span class="input-icon"><svg class="cad-icon cad-icon-sm cad-icon-muted"><use href="#cad-icon-lock"/></svg></span>
@@ -802,16 +818,16 @@
             langIcon: "🇲🇲"
         },
         my: {
-            telemetry: "စနစ်အသင့်ရှိ",
+            telemetry: "စနစ်အသင့်ရှိ • CAD OPERATIONAL",
             badgeDept: "မြန်မာနိုင်ငံ မီးသတ်တပ်ဖွဲ့",
             title: "အကောင့်ဝင်ရန်",
             subtitle: "အရေးပေါ် မီးသတ်ကွပ်ကဲမှုနှင့် စစ်ဆင်ရေးစနစ်သို့ ဝင်ရောက်ရန်",
             lblUser: "ဖုန်းနံပါတ် သို့မဟုတ် အသုံးပြုသူအမည်",
             placeholderUser: "ဥပမာ - admin သို့မဟုတ် operator",
-            lblPass: "စကားဝှက်",
+            lblPass: "စကားဝှက် (Password)",
             btnSubmit: "စနစ်သို့ ဝင်ရောက်မည်",
             demoTitle: "စမ်းသပ်အသုံးပြုရန် အကောင့်များ",
-            demoHint: "အကောင့်ဖြည့်ရန် နှိပ်ပါ",
+            demoHint: "Click to fill",
             reportText: "အရေးပေါ် မီးလောင်မှု ချက်ချင်းသတင်းပို့ရန် ဤနေရာကို နှိပ်ပါ",
             themeLight: "အလင်းမုဒ်",
             themeDark: "အမှောင်မုဒ်",
@@ -821,7 +837,6 @@
     };
 
     function applyLanguage(lang) {
-        document.documentElement.lang = lang;
         const d = i18n[lang] || i18n.my;
         const set = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
         

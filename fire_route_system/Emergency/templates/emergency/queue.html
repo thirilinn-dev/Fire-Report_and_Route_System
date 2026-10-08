@@ -1,18 +1,66 @@
 {% extends 'emergency/base.html' %}
 {% block content %}
-<h1>စိစစ်ရန်ဖြစ်စဉ်များ</h1>
-<p data-ui-copy>စောစောသတင်းပို့ထားသည့် ဖြစ်စဉ်ကို အရင်ပြထားပါသည်။ စိစစ်အတည်ပြုခြင်းနှင့် စေလွှတ်အမိန့်ကို သီးခြားဆောင်ရွက်ပါ။</p>
+<div class="cad-dash-header" style="margin-bottom: 1.25rem;">
+  <div style="display: flex; align-items: center; gap: 0.85rem;">
+    <a href="{% url 'emergency:incidents' %}" onclick="if(window.history.length>1){window.history.back();return false;}" class="cad-btn cad-btn-secondary cad-btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.8rem; font-weight: 600; text-decoration: none;" title="နောက်သို့ (Back)">
+      <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-arrow-left"/></svg>
+      <span>နောက်သို့</span>
+    </a>
+    <div>
+      <h1 style="margin: 0 0 0.25rem 0; font-size: 1.6rem; font-weight: 800;">စိစစ်ရန် ဖြစ်စဉ် Queue</h1>
+      <p style="margin: 0; color: var(--cad-text-muted); font-size: 0.9rem;">စောစောသတင်းပို့ထားသည့် ဖြစ်စဉ်ကို အရင်ပြထားပါသည်။ စိစစ်အတည်ပြုခြင်းနှင့် စေလွှတ်အမိန့်ကို သီးခြားဆောင်ရွက်ပါ။</p>
+    </div>
+  </div>
+</div>
 <form class="filters"><label>ရှာရန်<input name="q" value="{{ request.GET.q }}"></label><button>ရှာရန်</button></form>
 <div id="queue-results">
-{% include 'emergency/queue_results.html' %}
+<p>စိစစ်ရန် စုစုပေါင်း {{ page_obj.paginator.count }} ခု · ၅ စက္ကန့်ခြား update</p>
+<div class="cad-panel cad-table-card" style="margin: 1rem 0;">
+  <div class="cad-table-container">
+    <table class="cad-table">
+      <thead>
+        <tr>
+          <th style="width: 100px;">ဖြစ်စဉ် ID</th>
+          <th style="min-width: 250px;">လိပ်စာ</th>
+          <th style="width: 180px;">သတင်းပို့ချိန်</th>
+          <th style="width: 160px; text-align: right;">လုပ်ဆောင်ရန်</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for incident in page_obj %}
+        <tr>
+          <td><span class="cad-id-badge">{{ incident.pk }}</span></td>
+          <td>{{ incident.address|default:'GPS နေရာ' }}</td>
+          <td><span style="font-size: 0.85rem; color: var(--cad-text-secondary); white-space: nowrap;">{{ incident.reported_at|date:'d-m-Y h:i A' }}</span></td>
+          <td style="text-align: right; white-space: nowrap;">
+            <div style="display: inline-flex; gap: 0.35rem; align-items: center;">
+              <a class="cad-btn cad-btn-sm cad-btn-emergency" href="{% url 'emergency:incident' incident.pk %}" style="text-decoration: none;">စိစစ် / Level သတ်မှတ်ရန်</a>
+              <form method="post" action="{% url 'emergency:action' incident.pk 'reject' %}" style="margin: 0; display: inline;" onsubmit="return confirm('သတင်းမှားအဖြစ် ပယ်ဖျက်ရန် သေချာပါသလား။ (Reject as Fake Report?)');">
+                {% csrf_token %}
+                <button type="submit" class="cad-btn cad-btn-sm cad-btn-danger" style="background-color: #dc2626; color: #fff; border: none;">ပယ်ဖျက် / Fake</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="text-align: center; padding: 2.5rem 1rem; color: var(--cad-text-muted);">စိစစ်ရန် ဖြစ်စဉ် မရှိပါ။</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
-<p><a href="{% url 'emergency:incidents' %}" data-ui-copy>ဖြစ်စဉ်အားလုံး ကြည့်ရန်</a></p>
+{% include 'emergency/pagination.html' %}
+</div>
+<p><a href="{% url 'emergency:incidents' %}">ဖြစ်စဉ်အားလုံး ကြည့်ရန်</a></p>
 {% endblock %}
-{% block poll_query %}?{{ request.GET.urlencode }}&scope=queue{% endblock %}
 {% block scripts %}<script>
-window.addEventListener('emergency-update',event=>{
- if(event.detail.queue_html===undefined)return;
- const documentCopy=new DOMParser().parseFromString(event.detail.queue_html,'text/html');
- document.getElementById('queue-results').replaceChildren(...documentCopy.body.childNodes);
+let queueRefreshing=false;
+window.addEventListener('emergency-update',async()=>{
+ if(queueRefreshing)return;queueRefreshing=true;
+ try{const response=await fetch(location.href);if(!response.ok)return;
+ const documentCopy=new DOMParser().parseFromString(await response.text(),'text/html');
+ const updated=documentCopy.getElementById('queue-results');
+ if(updated)document.getElementById('queue-results').replaceChildren(...updated.childNodes);
+ }catch(error){console.warn('Queue update unavailable');}finally{queueRefreshing=false;}
 });
 </script>{% endblock %}

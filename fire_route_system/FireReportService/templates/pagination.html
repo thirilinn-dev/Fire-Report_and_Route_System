@@ -1,1 +1,97 @@
-{% load pagination_ui %}{% compact_pagination True %}
+{% if page_obj %}
+{% with paginator=page_obj.paginator %}
+<div class="cad-pagination-bar">
+    <!-- Left / Center: Stepper (Previous  [1] 2 3 4 5 ... 30  Next) -->
+    <nav class="cad-pagination-nav" aria-label="Pagination">
+        {% if page_obj.has_previous %}
+            <a href="?{% if filter_query %}{{ filter_query }}&{% else %}{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}page={{ page_obj.previous_page_number }}" class="cad-page-btn cad-page-prev pg-prev-btn" data-en="Previous" data-my="ရှေ့သို့">Previous</a>
+        {% else %}
+            <span class="cad-page-btn cad-page-prev disabled pg-prev-btn" data-en="Previous" data-my="ရှေ့သို့">Previous</span>
+        {% endif %}
+
+        {% for num in paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="cad-page-btn cad-page-num active" aria-current="page">{{ num }}</span>
+            {% elif num == 1 or num == paginator.num_pages %}
+                <a href="?{% if filter_query %}{{ filter_query }}&{% else %}{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}page={{ num }}" class="cad-page-btn cad-page-num">{{ num }}</a>
+            {% elif num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
+                <a href="?{% if filter_query %}{{ filter_query }}&{% else %}{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}page={{ num }}" class="cad-page-btn cad-page-num">{{ num }}</a>
+            {% elif page_obj.number <= 3 and num <= 5 %}
+                <a href="?{% if filter_query %}{{ filter_query }}&{% else %}{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}page={{ num }}" class="cad-page-btn cad-page-num">{{ num }}</a>
+            {% elif page_obj.number >= paginator.num_pages|add:'-2' and num >= paginator.num_pages|add:'-4' %}
+                <a href="?{% if filter_query %}{{ filter_query }}&{% else %}{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}page={{ num }}" class="cad-page-btn cad-page-num">{{ num }}</a>
+            {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' or page_obj.number <= 3 and num == 6 or page_obj.number >= paginator.num_pages|add:'-2' and num == paginator.num_pages|add:'-5' %}
+                <span class="cad-page-ellipsis">&hellip;</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?{% if filter_query %}{{ filter_query }}&{% else %}{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}page={{ page_obj.next_page_number }}" class="cad-page-btn cad-page-next pg-next-btn" data-en="Next" data-my="နောက်သို့">Next</a>
+        {% else %}
+            <span class="cad-page-btn cad-page-next disabled pg-next-btn" data-en="Next" data-my="နောက်သို့">Next</span>
+        {% endif %}
+    </nav>
+
+    <!-- Right: Items per page selector dropdown -->
+    <div class="cad-page-size-wrap">
+        <select class="cad-page-size-select" onchange="changeCadPerPage(this.value)" aria-label="Items per page">
+            <option value="5" {% if request.GET.per_page == '5' or per_page == 5 %}selected{% endif %}>5 / page</option>
+            <option value="10" {% if request.GET.per_page == '10' or per_page == 10 or not request.GET.per_page and paginator.per_page == 10 %}selected{% endif %}>10 / page</option>
+            <option value="20" {% if request.GET.per_page == '20' or per_page == 20 or not request.GET.per_page and paginator.per_page == 20 %}selected{% endif %}>20 / page</option>
+            <option value="50" {% if request.GET.per_page == '50' or per_page == 50 or not request.GET.per_page and paginator.per_page == 50 %}selected{% endif %}>50 / page</option>
+        </select>
+    </div>
+</div>
+
+<style>
+.cad-page-size-wrap {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    margin-left: auto;
+}
+.cad-page-size-select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.55rem center !important;
+    background-size: 13px 13px !important;
+    padding: 0.35rem 1.85rem 0.35rem 0.75rem !important;
+    min-height: 32px !important;
+    height: auto !important;
+    width: auto !important;
+}
+</style>
+
+<script>
+if (typeof changeCadPerPage === "undefined") {
+    window.changeCadPerPage = function(val) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('per_page', val);
+        url.searchParams.set('page', 1);
+        window.location.href = url.toString();
+    };
+}
+
+(function() {
+    function updatePaginationUI(lang) {
+        const isMy = (lang === 'my');
+        document.querySelectorAll(".pg-prev-btn").forEach(el => {
+            el.textContent = isMy ? (el.getAttribute("data-my") || 'ရှေ့သို့') : (el.getAttribute("data-en") || 'Previous');
+        });
+        document.querySelectorAll(".pg-next-btn").forEach(el => {
+            el.textContent = isMy ? (el.getAttribute("data-my") || 'နောက်သို့') : (el.getAttribute("data-en") || 'Next');
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        updatePaginationUI(localStorage.getItem("lang") || "my");
+    });
+    window.addEventListener("languageChanged", function(e) {
+        updatePaginationUI(e.detail.lang);
+    });
+})();
+</script>
+{% endwith %}
+{% endif %}

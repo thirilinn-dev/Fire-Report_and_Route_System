@@ -13,9 +13,6 @@ def serialize(incident,private=False):
     data['closed']=bool(incident.closed_at)
     data['status_display']=incident.status_display
     data['scale_display']=incident.scale_display
-    if incident.source_key and incident.source_key.startswith('history:'):
-        data['historical']=True
-        data['source_url']=incident.source_data.get('url')
     if private:data.update(reporter_phone=incident.reporter_phone,user_id=incident.user_id)
     return data
 
@@ -51,39 +48,20 @@ def incident_detail(request,pk):
     return JsonResponse(serialize(incident,request.user.is_admin))
 
 
-def map_payload():
-    incidents=FireReport.objects.exclude(status__in=['Pending','False Alarm','Resolved']).filter(latitude__isnull=False,longitude__isnull=False,coordinates_confirmed=True,closed_at__isnull=True)
-    return {'incidents':[serialize(i) for i in incidents],'stations':list(FireStation.objects.filter(status='Active').values('station_id','name','latitude','longitude','address','contact_number','status'))}
-
-
 def map_data(request):
     if not request.user.is_authenticated:return JsonResponse({'error':'Login required'},status=401)
-    return JsonResponse(map_payload())
+    incidents=FireReport.objects.exclude(status__in=['Pending','False Alarm','Resolved']).filter(latitude__isnull=False,longitude__isnull=False,coordinates_confirmed=True,closed_at__isnull=True)
+    return JsonResponse({'incidents':[serialize(i) for i in incidents],'stations':list(FireStation.objects.filter(status='Active').values('station_id','name','latitude','longitude','address','contact_number'))})
 
 
 @csrf_protect
 def poll(request):
     if not request.user.is_authenticated:return JsonResponse({'error':'Login required'},status=401)
-    scope=request.GET.get('scope','dashboard')
-    if scope not in ['notifications','dashboard','incident','queue']:
-        return JsonResponse({'error':'Invalid poll scope'},status=400)
-    if scope=='queue' and not request.user.is_admin:
-        return JsonResponse({'error':'Forbidden'},status=403)
     notices=Notice.objects.filter(recipient=request.user)
     if request.method=='POST':
         from django.utils import timezone
         notices.filter(pk=request.POST.get('notice')).update(read_at=timezone.now())
-    result={'unread':notices.filter(read_at=None).count()}
-    if scope=='dashboard':
-        result.update(notices=list(notices.order_by('-pk').values('id','incident_id','message','read_at')[:20]),incidents=[serialize(i) for i in incidents_for(request.user).order_by('-reported_at')[:20]])
-    if scope=='queue':
-        from copy import copy
-        from django.template.loader import render_to_string
-        from .views import queue_context
-        queue_request=copy(request)
-        queue_request.GET=request.GET.copy()
-        for key in ['scope','map','incident']:queue_request.GET.pop(key,None)
-        result['queue_html']=render_to_string('emergency/queue_results.html',queue_context(queue_request),request=queue_request)
+    result={'unread':notices.filter(read_at=None).count(),'notices':list(notices.order_by('-pk').values('id','incident_id','message','read_at')[:20]),'incidents':[serialize(i) for i in incidents_for(request.user).order_by('-reported_at')[:20]]}
     obj=incidents_for(request.user).filter(pk=request.GET.get('incident')).first() if request.GET.get('incident','').isdigit() else None
     if obj:
         result['incident']=serialize(obj)
@@ -97,8 +75,6 @@ def poll(request):
                 updates=updates.filter(station_id__in=ids)
             result['deployments']=list(deployments.values('id','state','station__name'))
             result['updates']=list(updates.order_by('-pk').values('id','created_at','message','station__name')[:50])
-    if request.GET.get('map') == '1':
-        result['map'] = map_payload()
     return JsonResponse(result)
 
 

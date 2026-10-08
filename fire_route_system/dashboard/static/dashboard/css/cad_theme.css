@@ -1280,45 +1280,159 @@ html, body {
 .cad-page-size-wrap {
     display: inline-flex;
     align-items: center;
+    position: relative;
     gap: 0.5rem;
 }
 
-.cad-page-size-select {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-color: #ffffff;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.65rem center;
-    background-size: 14px 14px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 0.38rem 2rem 0.38rem 0.8rem;
-    font-size: 0.825rem;
-    font-weight: 500;
-    color: #334155;
-    cursor: pointer;
-    outline: none;
-    transition: all 0.15s ease;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+.cad-page-size-select,
+.emergency-console .cad-page-size-select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-color: #ffffff !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2.2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.55rem center !important;
+    background-size: 13px 13px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 0.35rem 1.85rem 0.35rem 0.75rem !important;
+    font-size: 0.825rem !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+    color: #334155 !important;
+    cursor: pointer !important;
+    outline: none !important;
+    transition: all 0.15s ease !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
+    min-height: 32px !important;
+    height: auto !important;
+    width: auto !important;
 }
 
-[data-theme="dark"] .cad-page-size-select {
-    background-color: #1e293b;
-    border-color: rgba(255, 255, 255, 0.12);
-    color: #e2e8f0;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+[data-theme="dark"] .cad-page-size-select,
+[data-theme="dark"] .emergency-console .cad-page-size-select {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #e2e8f0 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2.2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.55rem center !important;
+    background-size: 13px 13px !important;
 }
 
 .cad-page-size-select:hover,
-.cad-page-size-select:focus {
-    border-color: #4f46e5;
+.cad-page-size-select:focus,
+.emergency-console .cad-page-size-select:hover,
+.emergency-console .cad-page-size-select:focus {
+    border-color: #4f46e5 !important;
 }
 
 [data-theme="dark"] .cad-page-size-select:hover,
-[data-theme="dark"] .cad-page-size-select:focus {
-    border-color: #818cf8;
+[data-theme="dark"] .cad-page-size-select:focus,
+[data-theme="dark"] .emergency-console .cad-page-size-select:hover,
+[data-theme="dark"] .emergency-console .cad-page-size-select:focus {
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.25) !important;
 }
+
+/* ==========================================================================
+   CAD SweetAlert2 Custom Responsive Theme
+   ========================================================================== */
+.cad-swal-popup {
+    border-radius: 16px !important;
+    padding: 1.5rem 1.25rem !important;
+    font-family: inherit !important;
+    background: #ffffff !important;
+    color: #1e293b !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    width: 90% !important;
+    max-width: 440px !important;
+}
+
+[data-theme="dark"] .cad-swal-popup {
+    background: #131d31 !important;
+    color: #f1f5f9 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.cad-swal-title {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: inherit !important;
+    padding: 0.5rem 0 0 !important;
+}
+
+.cad-swal-html {
+    font-size: 0.925rem !important;
+    color: var(--cad-text-secondary, #64748b) !important;
+    line-height: 1.5 !important;
+    margin: 0.75rem 0 1.25rem !important;
+}
+
+[data-theme="dark"] .cad-swal-html {
+    color: #94a3b8 !important;
+}
+
+.cad-swal-confirm-btn {
+    border-radius: 10px !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    padding: 0.6rem 1.25rem !important;
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3) !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+.cad-swal-confirm-btn:hover {
+    background: #b91c1c !important;
+    transform: translateY(-1px) !important;
+}
+
+.cad-swal-cancel-btn {
+    border-radius: 10px !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    padding: 0.6rem 1.25rem !important;
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+[data-theme="dark"] .cad-swal-cancel-btn {
+    background: #1e293b !important;
+    color: #cbd5e1 !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.cad-swal-cancel-btn:hover {
+    background: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .cad-swal-cancel-btn:hover {
+    background: #334155 !important;
+}
+
+/* CAD Toast Styling */
+.cad-swal-toast {
+    border-radius: 12px !important;
+    font-family: inherit !important;
+    padding: 0.75rem 1rem !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-theme="dark"] .cad-swal-toast {
+    background: #1e293b !important;
+    color: #f1f5f9 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
 
 

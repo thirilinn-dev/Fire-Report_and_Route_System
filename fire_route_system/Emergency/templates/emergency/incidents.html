@@ -1,1 +1,81 @@
-{% extends 'emergency/base.html' %}{% block content %}<div class="page-heading"><div><span class="page-eyebrow" data-ui-copy>ဖြစ်စဉ်မှတ်တမ်း</span><h1>မီးလောင်ဖြစ်စဉ်များ</h1><p data-ui-copy>ဖြစ်စဉ်အခြေအနေကို ကြည့်ရှုပြီး အသေးစိတ်ဖွင့်ပါ။</p></div></div>{% if user.is_admin %}<a class="button" href="{% url 'emergency:queue' %}"><span data-ui-copy>စိစစ်ရန်ဖြစ်စဉ်</span> ({{ pending_count }})</a>{% endif %}{% include 'emergency/filters.html' %}<div class="table-wrap" role="region" aria-label="မီးလောင်ဖြစ်စဉ်စာရင်း" tabindex="0"><table><tr><th>ဖြစ်စဉ်</th><th>မီးလောင်မှုအဆင့်</th><th>အခြေအနေ</th><th>သတင်းပို့ချိန်</th><th>လုပ်ဆောင်ရန်</th></tr>{% for i in page_obj %}<tr><td><a href="{% url 'emergency:incident' i.pk %}">#{{ i.pk }} · {{ i.address|default:'GPS နေရာ' }}</a>{% if i.source_data.record_type == 'historical_reference' %}<small> · သမိုင်းမှတ်တမ်း</small>{% endif %}</td><td>{{ i.scale_display }}</td><td><span data-status="{{ i.status }}" class="status-tag">{{ i.status_display }}</span>{% if i.closed_at %} · စာရင်းပိတ်ပြီး{% endif %}</td><td>{{ i.reported_at|date:"d-m-Y h:i A" }}</td><td><a class="button" href="{% url 'emergency:incident' i.pk %}">{% if user.is_admin or user.is_station_admin %}စီမံရန်{% else %}အသေးစိတ်ကြည့်ရန်{% endif %}</a></td></tr>{% empty %}<tr><td colspan="5">ပြသရန်ဖြစ်စဉ် မရှိပါ။ စစ်ထုတ်ထားပါက ရှာဖွေမှုကို ပြောင်းကြည့်ပါ။</td></tr>{% endfor %}</table></div>{% include 'emergency/pagination.html' %}{% endblock %}
+{% extends 'emergency/base.html' %}
+{% block content %}
+<div class="cad-page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+  <div style="display: flex; align-items: center; gap: 0.85rem;">
+    <a href="javascript:history.back()" class="cad-btn cad-btn-secondary cad-btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.8rem; font-weight: 600; text-decoration: none;" title="နောက်သို့ (Back)">
+      <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-arrow-left"/></svg>
+      <span>နောက်သို့</span>
+    </a>
+    <div>
+      <h1 style="margin: 0 0 0.25rem 0; font-size: 1.6rem; font-weight: 800; color: var(--cad-text-main);">မီးလောင်ဖြစ်စဉ်များ</h1>
+      <p style="margin: 0; color: var(--cad-text-muted); font-size: 0.9rem;">လက်ရှိနှင့် ယခင် မီးလောင်မှုဖြစ်စဉ်မှတ်တမ်းများ</p>
+    </div>
+  </div>
+  {% if user.is_admin %}
+  <a class="cad-btn cad-btn-emergency" href="{% url 'emergency:queue' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+    <svg class="cad-icon cad-icon-sm"><use href="#cad-icon-alert"/></svg>
+    <span>စိစစ်ရန် Queue ({{ pending_count }})</span>
+  </a>
+  {% endif %}
+</div>
+
+{% include 'emergency/filters.html' %}
+
+<div class="cad-panel cad-table-card">
+  <div class="cad-table-container">
+    <table class="cad-table">
+      <thead>
+        <tr>
+          <th style="min-width: 280px;">ဖြစ်စဉ် နှင့် တည်နေရာ</th>
+          <th style="width: 110px;">Level</th>
+          <th style="width: 140px;">အခြေအနေ</th>
+          <th style="width: 180px;">နေ့ရက်</th>
+          <th style="width: 120px; text-align: right;">လုပ်ဆောင်ရန်</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in page_obj %}
+        <tr class="{% if i.fire_scale >= 4 %}row-urgent{% endif %}">
+          <td>
+            <a href="{% url 'emergency:incident' i.pk %}" class="cad-incident-cell-link">
+              <span class="cad-id-badge">{{ i.pk }}</span>
+              <span class="cad-address-text">{{ i.address|default:'GPS နေရာ' }}</span>
+            </a>
+          </td>
+          <td>
+            <span class="cad-badge cad-badge-scale-{{ i.fire_scale }}">
+              {{ i.scale_display }}
+            </span>
+          </td>
+          <td>
+            <span class="cad-badge cad-badge-{{ i.status|lower|slugify }}">
+              {{ i.status_display }}
+            </span>
+            {% if i.closed_at %}
+            <span class="cad-badge cad-badge-inactive" style="margin-top: 0.2rem; display: inline-block;">စာရင်းပိတ်ပြီး</span>
+            {% endif %}
+          </td>
+          <td>
+            <span style="font-size: 0.85rem; color: var(--cad-text-secondary); white-space: nowrap;">
+              {{ i.reported_at|date:"d-m-Y h:i A" }}
+            </span>
+          </td>
+          <td style="text-align: right;">
+            <a class="cad-btn cad-btn-sm cad-btn-outline" href="{% url 'emergency:incident' i.pk %}" style="text-decoration: none;">
+              {% if user.is_admin or user.is_station_admin %}စီမံရန်{% else %}အသေးစိတ်ကြည့်ရန်{% endif %}
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 2.5rem 1rem; color: var(--cad-text-muted);">
+            ဖြစ်စဉ်မရှိပါ။
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include 'emergency/pagination.html' %}
+{% endblock %}

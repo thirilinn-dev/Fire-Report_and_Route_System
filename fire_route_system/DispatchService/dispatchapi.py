@@ -3,7 +3,6 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 from DataAccess.models import Dispatch, FireReport, FireStation, User
-from DataAccess.api_pagination import list_response
 
 def serialize_dispatch(dispatch):
     return {
@@ -20,7 +19,7 @@ def serialize_dispatch(dispatch):
 def dispatch_list_create(request):
     if request.method == 'GET':
         dispatches = Dispatch.objects.all()
-        return list_response(request, dispatches, serialize_dispatch)
+        return JsonResponse([serialize_dispatch(d) for d in dispatches], safe=False)
 
     elif request.method == 'POST':
         try:

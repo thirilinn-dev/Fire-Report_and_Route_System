@@ -1,30 +1,30 @@
 <div data-emergency-navigation>
 {% if user.is_authenticated %}<div class="cad-nav-section">
-<a href="{% url 'emergency:report' %}" class="cad-nav-item cad-nav-emergency nav-emergency-btn no-modal"><div class="cad-nav-item-content"><span class="cad-nav-icon"><svg class="cad-icon cad-icon-emergency"><use href="#cad-icon-siren"/></svg></span><span data-ui-copy>အရေးပေါ် မီးသတင်းပို့ရန်</span></div><span class="cad-badge">191</span></a></div>
-<div class="cad-nav-section"><span class="cad-nav-section-title" id="nav-sec-command" data-ui-copy>ကွပ်ကဲရေးနှင့် တာဝန်စေလွှတ်ခြင်း</span>
-{% url 'emergency:dashboard' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="ကွပ်ကဲမှုဗဟို" icon="dashboard" identifier="nav-dashboard" %}
+<a href="{% url 'emergency:report' %}" class="cad-nav-item cad-nav-emergency nav-emergency-btn no-modal" aria-label="အရေးပေါ် မီးသတင်းပို့ - Hotline 191"><div class="cad-nav-item-content"><span class="cad-nav-icon emergency-siren-box"><span class="emergency-beacon-live"></span><svg class="cad-icon cad-icon-emergency"><use href="#cad-icon-siren"/></svg></span><div class="emergency-text-group"><span class="emergency-title" id="cad-nav-emergency-text">အရေးပေါ် မီးသတင်းပို့</span><span class="emergency-subtitle">Hotline 191 · ချက်ချင်းတုံ့ပြန်</span></div></div><span class="cad-badge emergency-badge-pill"><span class="emergency-live-dot"></span>191</span></a></div>
+<div class="cad-nav-section"><span class="cad-nav-section-title" id="nav-sec-command">ကွပ်ကဲရေးနှင့် တာဝန်စေလွှတ်ခြင်း</span>
+{% url 'emergency:dashboard' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="CAD ကွပ်ကဲမှုဗဟို" icon="dashboard" identifier="nav-dashboard" %}
 {% url 'emergency:incidents' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="မီးလောင်မှုဖြစ်စဉ်များ" icon="flame" identifier="nav-incidents" %}
-{% if user.is_admin %}{% url 'emergency:queue' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="စိစစ်ရန်ဖြစ်စဉ်များ" icon="triage" identifier="" %}{% endif %}
+{% if user.is_admin %}{% url 'emergency:queue' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="စိစစ်ရန် ဖြစ်စဉ် Queue" icon="triage" identifier="" %}{% endif %}
 {% url 'emergency:map' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="ကွပ်ကဲမှုမြေပုံ" icon="map" identifier="nav-maps" %}
-</div>{% if user.is_admin or user.is_station_admin %}<div class="cad-nav-section"><span class="cad-nav-section-title" id="nav-sec-logistics" data-ui-copy>စခန်းများနှင့် ယာဉ်ယန္တရားများ</span>
+</div>{% if user.is_admin or user.is_station_admin %}<div class="cad-nav-section"><span class="cad-nav-section-title" id="nav-sec-logistics">စခန်းများနှင့် ယာဉ်ယန္တရားများ</span>
 {% url 'emergency:list' 'stations' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="မီးသတ်စခန်းများ" icon="station" identifier="nav-stations" %}
 {% url 'emergency:list' 'vehicles' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="မီးသတ်ယာဉ်များ" icon="dispatch" identifier="" %}
 {% if user.is_admin %}
 {% url 'emergency:list' 'vehicle-types' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="ယာဉ်အမျိုးအစားများ" icon="dispatch" identifier="" %}
-{% url 'emergency:list' 'plans' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="မီးလောင်မှုအဆင့်အလိုက် အစီအစဉ်များ" icon="triage" identifier="" %}
-{% url 'emergency:list' 'requirements' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="အစီအစဉ်အတွက် ယာဉ်စာရင်း" icon="file-text" identifier="" %}
+{% url 'emergency:list' 'plans' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="Level အလိုက် အစီအစဉ်များ" icon="triage" identifier="" %}
+{% url 'emergency:list' 'requirements' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="Plan ယာဉ်စာရင်း" icon="file-text" identifier="" %}
 {% endif %}</div>{% endif %}
-{% if user.is_admin or user.is_station_admin or user.is_firefighter %}<div class="cad-nav-section"><span class="cad-nav-section-title" data-ui-copy>ဝန်ထမ်းနှင့် တာဝန်စီမံမှု</span>{% if user.is_admin or user.is_station_admin %}
+{% if user.is_admin or user.is_station_admin or user.is_firefighter %}<div class="cad-nav-section"><span class="cad-nav-section-title">ဝန်ထမ်းနှင့် တာဝန်စီမံမှု</span>{% if user.is_admin or user.is_station_admin %}
 {% url 'emergency:list' 'staff' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="ဝန်ထမ်းနှင့် အကောင့်များ" icon="users" identifier="nav-users" %}
 {% endif %}
 {% url 'emergency:list' 'duties' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="တာဝန်ချိန်နှင့် တာဝန်များ" icon="file-text" identifier="" %}
 {% url 'emergency:list' 'leaves' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="ခွင့်စာများ" icon="file-text" identifier="" %}
-</div>{% endif %}{% endif %}<div class="cad-nav-section"><span class="cad-nav-section-title" id="nav-sec-admin" data-ui-copy>သတင်းနှင့် အစီရင်ခံစာများ</span>
+</div>{% endif %}{% endif %}<div class="cad-nav-section"><span class="cad-nav-section-title" id="nav-sec-admin">သတင်းနှင့် အစီရင်ခံစာများ</span>
 {% url 'emergency:posts' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="သတင်းနှင့် အသိပညာပေး" icon="file-text" identifier="" %}
 {% if user.is_admin or user.is_station_admin %}
-{% url 'emergency:list' 'posts' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="သတင်းစီမံရန်" icon="file-text" identifier="" %}
+{% url 'emergency:list' 'posts' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="Post စီမံရန်" icon="file-text" identifier="" %}
 {% url 'emergency:reports' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="အစီရင်ခံစာ ထုတ်ယူရန်" icon="file-text" identifier="nav-portal" %}
 {% endif %}{% if not user.is_authenticated %}
 {% url 'login' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="အကောင့်ဝင်ရန်" icon="key" identifier="nav-login" %}
-{% url 'emergency:register' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="ပြည်သူ့အကောင့်ဖွင့်ရန်" icon="user" identifier="" %}
+{% url 'emergency:register' as item_url %}{% include "emergency/nav_item.html" with href=item_url label="Citizen အကောင့်ဖွင့်ရန်" icon="user" identifier="" %}
 {% endif %}</div></div>

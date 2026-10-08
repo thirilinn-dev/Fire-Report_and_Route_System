@@ -96,19 +96,18 @@
 <p class="map-sidebar-description">မန္တလေးနှင့် အနီးဝန်းကျင်ရှိ စခန်းများနှင့် အတည်ပြုထားသော လက်ရှိဖြစ်စဉ်များ။ စာရင်းနှိပ်၍ မြေပုံပေါ်ကြည့်နိုင်ပါသည်။</p>
 <label for="map-search">စခန်း / ဖြစ်စဉ် ရှာရန်</label><input class="map-search" id="map-search" type="search"><p id="map-status" role="status"></p>
 <div id="map-locations" class="landmark-list"></div></aside><div id="map" class="map-container"></div></div>{% endblock %}
-{% block poll_query %}?scope=notifications&map=1{% endblock %}{% block scripts %}<script>
+{% block scripts %}<script>
 const map=L.map('map').setView([21.975,96.083],12);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).on('tileerror',()=>{document.getElementById('map-status').textContent='မြေပုံနောက်ခံ မရပါ။ စခန်းနှင့်ဖြစ်စဉ် pin များ ဆက်ကြည့်နိုင်ပါသည်။';}).addTo(map);
 const group=L.layerGroup().addTo(map),list=document.getElementById('map-locations'),search=document.getElementById('map-search');
 function filterLocations(){const term=search.value.trim().toLowerCase();list.querySelectorAll('.location-item-card').forEach(card=>{card.hidden=!card.textContent.toLowerCase().includes(term);});}
 search.addEventListener('input',filterLocations);
-function addLocation(point,title,description,isIncident,status,statusLabel){const label=document.createElement('span');label.textContent=title;
- const marker=L.marker(point,{icon:window.fireRouteMapIcon,title}).bindPopup(label).addTo(group);
- const card=document.createElement('button');card.type='button';card.className='location-item-card';const heading=document.createElement('h4'),detail=document.createElement('p');heading.textContent=title;detail.textContent=description;card.append(heading,detail,FireRouteStatus.create(status,statusLabel));card.addEventListener('click',()=>{map.flyTo(point,15);marker.openPopup();});list.append(card);}
-let mapSnapshot;
-window.addEventListener('emergency-update',event=>{const d=event.detail.map;if(!d)return;const snapshot=JSON.stringify(d);if(snapshot===mapSnapshot)return;mapSnapshot=snapshot;group.clearLayers();list.replaceChildren();document.getElementById('map-sidebar-count').textContent='စခန်း '+d.stations.length;
- d.incidents.forEach(i=>addLocation([i.latitude,i.longitude],'#'+i.id+' · '+(i.address||'မီးလောင်ရာ'),i.scale_display,true,i.status,i.status_display));
- d.stations.forEach(s=>addLocation([s.latitude,s.longitude],s.name,[s.address,s.contact_number].filter(Boolean).join(' · '),false,s.status));filterLocations();
-});
-window.addEventListener('resize',()=>map.invalidateSize());
+function addLocation(point,title,description,isIncident){const label=document.createElement('span');label.textContent=title;
+ const marker=L.marker(point,{icon:firePin(isIncident?'incident':'station')}).bindPopup(label).addTo(group);
+ const card=document.createElement('button');card.type='button';card.className='location-item-card';const heading=document.createElement('h4'),detail=document.createElement('p');heading.textContent=title;detail.textContent=description;card.append(heading,detail);card.addEventListener('click',()=>{map.flyTo(point,15);marker.openPopup();});list.append(card);}
+async function updateMap(){try{const r=await fetch('{% url "emergency:map_data" %}');if(!r.ok)return;const d=await r.json();group.clearLayers();list.replaceChildren();document.getElementById('map-sidebar-count').textContent='စခန်း '+d.stations.length;
+ d.incidents.forEach(i=>addLocation([i.latitude,i.longitude],i.id+' · '+(i.address||'မီးလောင်ရာ'),i.scale_display+' · '+i.status_display,true));
+ d.stations.forEach(s=>addLocation([s.latitude,s.longitude],s.name,[s.address,s.contact_number].filter(Boolean).join(' · '),false));filterLocations();
+ }catch(e){document.getElementById('map-status').textContent='ဆက်သွယ်မှု မရပါ။';}}
+updateMap();setInterval(updateMap,5000);window.addEventListener('resize',()=>map.invalidateSize());
 </script>{% endblock %}
